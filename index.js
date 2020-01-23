@@ -1,14 +1,18 @@
+import { uploadSurvey } from './src/controllers/AutomationController';
+
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
-
 const port = process.env.PORT || 3000;
-
-app.use(express.json());
 
 function add(dx, element) {
     return dx + element;
 }
+
+app.use(express.json());
+
+const mongoConnection = process.env.MONGODB_URI;
+mongoose.connect(mongoConnection, { useNewUrlParser: true });
 
 app.post('/new', (req, res) => {
     const featureData = req.body.feature;
@@ -22,7 +26,7 @@ app.post('/new', (req, res) => {
                         attributes.Number_Clerids4, 
                         attributes.Number_Clerids5, 
                         attributes.Number_Clerids6];
-    const cleridAverage = cleridData.reduce(add, 0);
+    const cleridAverage = cleridData.reduce(add, 0) / 6;
 
     // data about the number of SPBs which were recorded
     const SPBData = [attributes.Number_SPB1, 
@@ -31,7 +35,7 @@ app.post('/new', (req, res) => {
                     attributes.Number_SPB4, 
                     attributes.Number_SPB5, 
                     attributes.Number_SPB6];
-    const SPBAverage = SPBData.reduce(add, 0);
+    const SPBAverage = SPBData.reduce(add, 0) / 6;
 
     // data about the number of SPBs in conjunction with the number of clerids
     const hybridData = [attributes.SPB_Plus_Clerids1,
@@ -40,7 +44,7 @@ app.post('/new', (req, res) => {
                         attributes.SPB_Plus_Clerids4,
                         attributes.SPB_Plus_Clerids5,
                         attributes.SPB_Plus_Clerids6];
-    const hybridAverage = hybridData.reduce(add, 0);
+    const hybridAverage = hybridData.reduce(add, 0) / 6;
 
 
     // information about the location of the collection point
@@ -52,8 +56,11 @@ app.post('/new', (req, res) => {
     const lure = attributes.Trap_Lure;
     const collectorName = attributes.Cooperator;
 
-
+    const cleridPerDay = attributes.Overall_Clerids_PerDay;
+    const SPBPerDay = attributes.Overall_SPB_PerDay;
     /*
+
+    Example Data (sent from ArcGIS)
 
     {
     "_id": {
@@ -75,7 +82,7 @@ app.post('/new', (req, res) => {
     "totalBeetles": 9,
     "cleridsPerDay": 0.3,
     "__v": 0
-}
+    }
 
     */
 
@@ -88,6 +95,8 @@ app.post('/new', (req, res) => {
     console.log("avg. clerid: " + cleridAverage);
     console.log("avg. spb: " + SPBAverage);
     console.log("avg. hybrid: " + hybridAverage);
+
+    uploadSurvey(cleridData);
 
     res.sendStatus(200);
 });

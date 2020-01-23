@@ -8,13 +8,17 @@ const uploadSurvey = async (information) => {
         if(error) throw error;
         
         const databaseObject = db.db("heroku_cdlx19v1");
-        const myobj = { name: "Company Inc", address: "Highway 37" };
 
-        databaseObject.collection("trappings").insertOne(myobj, function(err, res) {
+        // todo:
+        // 1. using the information sent from webhook, create information JSON
+        // 2. verify upload has taken place
+        // 3. correctly calculate specific fields
+
+        /*databaseObject.collection("trappings").insertOne(information, function(err, res) {
             if (err) throw err;
-            console.log("1 document inserted");
+            console.log("Trapping successfully inserted.");
             db.close();
-          });
+          });*/
 
     });
 }

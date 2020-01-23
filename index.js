@@ -11,8 +11,8 @@ function add(dx, element) {
 
 app.use(express.json());
 
-const mongoConnection = process.env.MONGODB_URI;
-mongoose.connect(mongoConnection, { useNewUrlParser: true });
+// const mongoConnection = process.env.MONGODB_URI;
+// mongoose.connect(mongoConnection, { useNewUrlParser: true });
 
 app.post('/new', (req, res) => {
     const featureData = req.body.feature;

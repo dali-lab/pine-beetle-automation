@@ -17,6 +17,8 @@ app.post('/new', (req, res) => {
                         featureData.Clerids_PerDay5, 
                         featureData.Clerids_PerDay6];
 
+    console.log(featureData);
+    console.log(coordinateData);
     console.log(cleridData);
 
     res.sendStatus(200);

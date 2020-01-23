@@ -13,3 +13,9 @@ System is linked with ArcGIS System and automatically adds trapping record when 
 Gathering required data for the trappings table (Clerings and SPB per/day average).
 Performing calculations on the obtained information.
 Verifying connection with MongoDB by uploading test information.
+
+# Credits
+
+John McCambridge - '22
+
+

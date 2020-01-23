@@ -19,4 +19,6 @@ const uploadSurvey = async (information) => {
     });
 }
 
-export default uploadSurvey;
+const Process = { uploadSurvey }
+
+export default Process;

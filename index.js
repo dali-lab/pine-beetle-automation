@@ -96,7 +96,7 @@ app.post('/new', (req, res) => {
     console.log("avg. spb: " + SPBAverage);
     console.log("avg. hybrid: " + hybridAverage);
 
-    uploadSurvey(cleridData);
+    uploadSurvey.uploadSurvey(cleridData);
 
     res.sendStatus(200);
 });

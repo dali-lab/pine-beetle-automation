@@ -6,6 +6,10 @@ const port = process.env.PORT || 3000;
 
 app.use(express.json());
 
+function add(dx, element) {
+    return dx + element;
+}
+
 app.post('/new', (req, res) => {
     const featureData = req.body.feature;
     const attributes = featureData.attributes;
@@ -18,6 +22,7 @@ app.post('/new', (req, res) => {
                         attributes.Number_Clerids4, 
                         attributes.Number_Clerids5, 
                         attributes.Number_Clerids6];
+    const cleridAverage = cleridData.reduce(add, 0);
 
     // data about the number of SPBs which were recorded
     const SPBData = [attributes.Number_SPB1, 
@@ -26,6 +31,7 @@ app.post('/new', (req, res) => {
                     attributes.Number_SPB4, 
                     attributes.Number_SPB5, 
                     attributes.Number_SPB6];
+    const SPBAverage = SPBData.reduce(add, 0);
 
     // data about the number of SPBs in conjunction with the number of clerids
     const hybridData = [attributes.SPB_Plus_Clerids1,
@@ -34,6 +40,8 @@ app.post('/new', (req, res) => {
                         attributes.SPB_Plus_Clerids4,
                         attributes.SPB_Plus_Clerids5,
                         attributes.SPB_Plus_Clerids6];
+    const hybridAverage = hybridData.reduce(add, 0);
+
 
     // information about the location of the collection point
     const county = attributes.County;
@@ -42,8 +50,8 @@ app.post('/new', (req, res) => {
 
     // meta-data around the trapping request
     const lure = attributes.Trap_Lure;
+    const collectorName = attributes.Cooperator;
 
-    console.log(hybridData);
 
     /*
 
@@ -74,6 +82,12 @@ app.post('/new', (req, res) => {
     console.log(featureData);
     console.log(coordinateData);
     console.log(cleridData);
+
+    console.log("*** calculation data ***");
+
+    console.log("avg. clerid: " + cleridAverage);
+    console.log("avg. spb: " + SPBAverage);
+    console.log("avg. hybrid: " + hybridAverage);
 
     res.sendStatus(200);
 });

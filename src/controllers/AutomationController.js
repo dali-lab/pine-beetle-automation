@@ -19,4 +19,6 @@ const uploadSurvey = async (information) => {
     });
 }
 
-module.exports = { uploadSurvey }
+module.exports = {
+    uploadSurvey: uploadSurvey
+}

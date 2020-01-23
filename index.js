@@ -1,9 +1,9 @@
-import { process } from './src/controllers/AutomationController';
-
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const port = process.env.PORT || 3000;
+
+const uploadSurvey = require('./src/controllers/AutomationController');
 
 function add(dx, element) {
     return dx + element;

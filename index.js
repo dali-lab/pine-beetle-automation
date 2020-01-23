@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 
 const port = process.env.PORT || 3000;
 
-app.use(app.use(express.json()));
+app.use(express.json());
 
 app.post('/new', (req, res) => {
     console.log('Got body:', req.body);

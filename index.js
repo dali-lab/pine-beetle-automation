@@ -3,8 +3,9 @@ const app = express();
 
 const port = process.env.PORT || 3000;
 
-app.get('/test', (req, res) => {
-    res.send('Hello Earth!');
+app.post('/new', (req, res) => {
+    console.log(res);
+    res.send('Success!');
 });
 
 app.listen(port, () => {

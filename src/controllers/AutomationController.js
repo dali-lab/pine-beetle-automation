@@ -1,5 +1,5 @@
 const uploadSurvey = async (information) => {
-    const url = 'mongodb://heroku_cdlx19v1:72dnr3u2vdaju3r3irnvtci3ge@ds023485.mlab.com:23485/heroku_cdlx19v1'//process.env.MONGODB_URI;
+    const url = process.env.MONGODB_URI;
     const MongoClient = require('mongodb').MongoClient;
 
     console.log(process.env.MONGODB_URI);
@@ -7,7 +7,7 @@ const uploadSurvey = async (information) => {
     MongoClient.connect(url, (error, db) => {
         if(error) throw error;
         
-        const databaseObject = db.db("heroku_cdlx19v1");
+        const databaseObject = db.db(process.env.DATABASE_NAME);
 
         // todo:
         // 1. using the information sent from webhook, create information JSON

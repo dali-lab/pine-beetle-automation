@@ -1,4 +1,4 @@
-import { uploadSurvey } from './src/controllers/AutomationController';
+import { process } from './src/controllers/AutomationController';
 
 const express = require('express');
 const app = express();

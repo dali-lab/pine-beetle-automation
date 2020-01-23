@@ -19,6 +19,4 @@ const uploadSurvey = async (information) => {
     });
 }
 
-const Process = { uploadSurvey }
-
-export default Process;
+module.exports = { uploadSurvey }

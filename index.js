@@ -8,14 +8,15 @@ app.use(express.json());
 
 app.post('/new', (req, res) => {
     const featureData = req.body.feature;
-    const coordinateData = req.body.geometry;
+    const attributes = featureData.attributes;
+    const coordinateData = featureData.geometry;
 
-    const cleridData = [featureData.Clerids_PerDay1, 
-                        featureData.Clerids_PerDay2, 
-                        featureData.Clerids_PerDay3, 
-                        featureData.Clerids_PerDay4, 
-                        featureData.Clerids_PerDay5, 
-                        featureData.Clerids_PerDay6];
+    const cleridData = [attributes.Clerids_PerDay1, 
+                        attributes.Clerids_PerDay2, 
+                        attributes.Clerids_PerDay3, 
+                        attributes.Clerids_PerDay4, 
+                        attributes.Clerids_PerDay5, 
+                        attributes.Clerids_PerDay6];
 
     console.log(featureData);
     console.log(coordinateData);

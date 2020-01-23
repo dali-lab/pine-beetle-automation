@@ -1,5 +1,5 @@
 const uploadSurvey = async (information) => {
-    const url = process.env.MONGODB_URI;
+    const url = 'mongodb://heroku_cdlx19v1:72dnr3u2vdaju3r3irnvtci3ge@ds023485.mlab.com:23485/heroku_cdlx19v1'//process.env.MONGODB_URI;
     const MongoClient = require('mongodb').MongoClient;
 
     MongoClient.connect(url, (error, db) => {

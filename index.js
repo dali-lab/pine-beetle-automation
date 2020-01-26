@@ -1,7 +1,12 @@
 const express = require('express');
 const app = express();
+
+const dotenv = require('dotenv');
+dotenv.config();
+
 const bodyParser = require('body-parser');
 const port = process.env.PORT || 3000;
+
 
 const uploadSurvey = require('./src/controllers/AutomationController');
 
@@ -102,5 +107,6 @@ app.post('/new', (req, res) => {
 });
 
 app.listen(port, () => {
+    console.log(process.env);
     console.log('Server has started...');
 });

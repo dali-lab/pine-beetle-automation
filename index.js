@@ -19,7 +19,7 @@ app.use(express.json());
 // mongoose.connect(mongoConnection, { useNewUrlParser: true });
 
 app.post('/edit', (req, res) => {
-    /*const featureData = req.body.feature;
+    const featureData = req.body.feature;
     const attributes = featureData.attributes;
     const coordinateData = featureData.geometry;
 
@@ -35,6 +35,7 @@ app.post('/edit', (req, res) => {
     const SPBPerDay = attributes.Overall_SPB_PerDay;
 
     information = {
+        'reference_id': attributes.globalid,
         'x': coordinateData.x,
         'y': coordinateData.y,
         'state': state,
@@ -50,7 +51,7 @@ app.post('/edit', (req, res) => {
         "cleridsPerDay": cleridsPerDay,
     }
 
-    surveyController.updateSurvey(information);*/
+    surveyController.updateSurvey(information);
 
     console.log(req.body);
 

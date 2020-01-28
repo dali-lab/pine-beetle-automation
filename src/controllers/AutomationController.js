@@ -17,7 +17,7 @@ const updateSurvey = async (information) => {
         // use the object associated with the survey
 
         filter = {
-
+            'reference_id': information.reference_id,
         }
 
         databaseObject.collection("trappings").updateOne(filter, information, function(err, res) {

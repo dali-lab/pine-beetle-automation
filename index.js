@@ -17,13 +17,12 @@ app.use(express.json());
 
 // const mongoConnection = process.env.MONGODB_URI;
 // mongoose.connect(mongoConnection, { useNewUrlParser: true });
+console.log(process.env.MONGODB_URI);
 
 app.post('/new', (req, res) => {
     const featureData = req.body.feature;
     const attributes = featureData.attributes;
     const coordinateData = featureData.geometry;
-
-    console.log(req.body);
 
     // data about the number of clerids which were recorded
     const cleridData = [attributes.Number_Clerids1, 
@@ -112,6 +111,10 @@ app.post('/new', (req, res) => {
     uploadSurvey.uploadSurvey(information);
 
     res.sendStatus(200);
+});
+
+app.post('/edit', (req, res) => {
+    console.log(req.body);
 });
 
 app.listen(port, () => {

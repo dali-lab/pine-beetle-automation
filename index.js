@@ -147,6 +147,8 @@ app.post('/new', (req, res) => {
         "cleridsPerDay": cleridsPerDay,
     }
 
+    console.log(req.body);
+
     surveyController.uploadSurvey(information);
 
     res.sendStatus(200);

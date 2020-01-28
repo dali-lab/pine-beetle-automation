@@ -1,3 +1,4 @@
+require('dotenv').config()
 const uploadSurvey = async (information) => {
     const url = process.env.MONGODB_URI;
     const MongoClient = require('mongodb').MongoClient;

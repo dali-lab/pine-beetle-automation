@@ -1,7 +1,11 @@
 const express = require('express');
 const app = express();
+
+require('dotenv').config()
+
 const bodyParser = require('body-parser');
 const port = process.env.PORT || 3000;
+
 
 const uploadSurvey = require('./src/controllers/AutomationController');
 

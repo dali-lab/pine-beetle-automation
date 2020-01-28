@@ -59,7 +59,7 @@ app.post('/new', (req, res) => {
     const lure = attributes.Trap_Lure;
     const collectorName = attributes.Cooperator;
 
-    const cleridPerDay = attributes.Overall_Clerids_PerDay;
+    const cleridsPerDay = attributes.Overall_Clerids_PerDay;
     const SPBPerDay = attributes.Overall_SPB_PerDay;
     /*
 

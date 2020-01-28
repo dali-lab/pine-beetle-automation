@@ -132,6 +132,7 @@ app.post('/new', (req, res) => {
     */
 
     information = {
+        'reference_id': attributes.globalid,
         'x': coordinateData.x,
         'y': coordinateData.y,
         'state': state,

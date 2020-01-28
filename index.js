@@ -17,7 +17,6 @@ app.use(express.json());
 
 // const mongoConnection = process.env.MONGODB_URI;
 // mongoose.connect(mongoConnection, { useNewUrlParser: true });
-console.log(process.env.MONGODB_URI);
 
 app.post('/edit', (req, res) => {
     console.log(req.body);

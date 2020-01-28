@@ -7,7 +7,7 @@ const bodyParser = require('body-parser');
 const port = process.env.PORT || 3000;
 
 
-const uploadSurvey = require('./src/controllers/AutomationController');
+const surveyController = require('./src/controllers/AutomationController');
 
 function add(dx, element) {
     return dx + element;
@@ -19,7 +19,40 @@ app.use(express.json());
 // mongoose.connect(mongoConnection, { useNewUrlParser: true });
 
 app.post('/edit', (req, res) => {
-    console.log(req.body);
+    const featureData = req.body.feature;
+    const attributes = featureData.attributes;
+    const coordinateData = featureData.geometry;
+
+    const county = attributes.County;
+    const state = attributes.USA_State;
+    const year = attributes.Year;
+    const trapName = attributes.Trap_name;
+
+    const lure = attributes.Trap_Lure;
+    const collectorName = attributes.Cooperator;
+
+    const cleridsPerDay = attributes.Overall_Clerids_PerDay;
+    const SPBPerDay = attributes.Overall_SPB_PerDay;
+
+    information = {
+        'x': coordinateData.x,
+        'y': coordinateData.y,
+        'state': state,
+        'year': year,
+        'lure': lure,
+        'county': county,
+        'dateTrapSet': new Date(attributes.TrapSetDate),
+        'trapName': trapName,
+        'collectorName': collectorName,
+        'bloomDate': new Date(attributes.Initial_Bloom),
+        'spb': SPBPerDay,
+        'totalBeetles': attributes.Sum_SPB_Plus_Clerids,
+        "cleridsPerDay": cleridsPerDay,
+    }
+
+    surveyController.updateSurvey(information);
+
+    res.sendStatus(200);
     res.sendStatus(200);
 });
 
@@ -113,7 +146,7 @@ app.post('/new', (req, res) => {
         "cleridsPerDay": cleridsPerDay,
     }
 
-    uploadSurvey.uploadSurvey(information);
+    surveyController.uploadSurvey(information);
 
     res.sendStatus(200);
 });

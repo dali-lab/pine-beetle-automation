@@ -19,6 +19,8 @@ app.post('/new', (req, res) => {
     const attributes = featureData.attributes;
     const coordinateData = featureData.geometry;
 
+    console.log(req.body);
+
     // data about the number of clerids which were recorded
     const cleridData = [attributes.Number_Clerids1, 
                         attributes.Number_Clerids2, 

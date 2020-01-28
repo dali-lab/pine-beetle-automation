@@ -11,7 +11,16 @@ const updateSurvey = async (information) => {
         
         const databaseObject = db.db(process.env.DATABASE_NAME);
 
-        databaseObject.collection("trappings").updateOne(information, function(err, res) {
+        // todo:
+        // store user data alongside survey data
+        // store object associated with survey also
+        // use the object associated with the survey
+
+        filter = {
+
+        }
+
+        databaseObject.collection("trappings").updateOne(filter, information, function(err, res) {
             if (err) throw err;
             console.log("Trapping successfully updated.");
             db.close();

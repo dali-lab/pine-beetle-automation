@@ -20,7 +20,7 @@ const updateSurvey = async (information) => {
             'reference_id': information.reference_id,
         }
 
-        databaseObject.collection("trappings").updateOne(filter, information, function(err, res) {
+        databaseObject.collection("trappings").updateOne(filter, {$set: information}, function(err, res) {
             if (err) throw err;
             console.log("Trapping successfully updated.");
             db.close();

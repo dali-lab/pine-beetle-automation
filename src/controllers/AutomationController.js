@@ -14,11 +14,11 @@ const uploadSurvey = async (information) => {
         // 2. verify upload has taken place
         // 3. correctly calculate specific fields
 
-        /*databaseObject.collection("trappings").insertOne(information, function(err, res) {
+        databaseObject.collection("trappings").insertOne(information, function(err, res) {
             if (err) throw err;
             console.log("Trapping successfully inserted.");
             db.close();
-          });*/
+          });
 
     });
 }

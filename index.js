@@ -19,6 +19,12 @@ app.use(express.json());
 // mongoose.connect(mongoConnection, { useNewUrlParser: true });
 console.log(process.env.MONGODB_URI);
 
+app.post('/edit', (req, res) => {
+    console.log(req.body);
+    res.sendStatus(200);
+});
+
+
 app.post('/new', (req, res) => {
     const featureData = req.body.feature;
     const attributes = featureData.attributes;
@@ -111,10 +117,6 @@ app.post('/new', (req, res) => {
     uploadSurvey.uploadSurvey(information);
 
     res.sendStatus(200);
-});
-
-app.post('/edit', (req, res) => {
-    console.log(req.body);
 });
 
 app.listen(port, () => {

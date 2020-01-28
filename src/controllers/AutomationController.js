@@ -40,5 +40,6 @@ const updateSurvey = async (information) => {
 }
 
 module.exports = {
-    uploadSurvey: uploadSurvey
+    uploadSurvey: uploadSurvey,
+    updateSurvey: updateSurvey
 }

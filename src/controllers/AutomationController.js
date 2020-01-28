@@ -12,7 +12,7 @@ const uploadSurvey = async (information) => {
 
         databaseObject.collection("trappings").updateOne(information, function(err, res) {
             if (err) throw err;
-            console.log("Trapping successfully inserted.");
+            console.log("Trapping successfully updated.");
             db.close();
           });
 

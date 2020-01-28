@@ -53,7 +53,6 @@ app.post('/edit', (req, res) => {
     surveyController.updateSurvey(information);
 
     res.sendStatus(200);
-    res.sendStatus(200);
 });
 
 

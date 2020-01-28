@@ -53,6 +53,7 @@ app.post('/new', (req, res) => {
     const county = attributes.County;
     const state = attributes.USA_State;
     const year = attributes.Year;
+    const trapName = attributes.Trap_name;
 
     // meta-data around the trapping request
     const lure = attributes.Trap_Lure;
@@ -88,17 +89,23 @@ app.post('/new', (req, res) => {
 
     */
 
-    console.log(featureData);
-    console.log(coordinateData);
-    console.log(cleridData);
+    information = {
+        'x': coordinateData.x,
+        'y': coordinateData.y,
+        'state': state,
+        'year': year,
+        'lure': lure,
+        'county': county,
+        'dateTrapSet': new Date(attributes.TrapSetDate),
+        'trapName': trapName,
+        'collectorName': collectorName,
+        'bloomDate': new Date(attributes.Initial_Bloom),
+        'spb': SPBPerDay,
+        'totalBeetles': attributes.Sum_SPB_Plus_Clerids,
+        "cleridsPerDay": cleridsPerDay,
+    }
 
-    console.log("*** calculation data ***");
-
-    console.log("avg. clerid: " + cleridAverage);
-    console.log("avg. spb: " + SPBAverage);
-    console.log("avg. hybrid: " + hybridAverage);
-
-    uploadSurvey.uploadSurvey(cleridData);
+    uploadSurvey.uploadSurvey(information);
 
     res.sendStatus(200);
 });

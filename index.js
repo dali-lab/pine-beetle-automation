@@ -150,8 +150,10 @@ app.post('/new', (req, res) => {
     }
 
     console.log(req.body);
-
-    surveyController.uploadSurvey(information);
+    MongoClient.connect(url, (error, db) => {
+        const databaseObject = db.db(process.env.DATABASE_NAME);
+        surveyController.uploadSurvey(information,databaseObject);
+    })
 
     res.sendStatus(200);
 });

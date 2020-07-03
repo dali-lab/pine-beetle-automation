@@ -49,97 +49,107 @@ const updateSurvey = async (information) => {
     });
 }
 
-const uploadSurvey = async (information) => {
-    const url = process.env.MONGODB_URI;
-    const MongoClient = require('mongodb').MongoClient;
 
-    console.log(process.env.MONGODB_URI);
+async function uploadSurvey(information, dbo){
+    console.log("-------------")
+    filter = information
+    console.log("Information: ",information)
+    historical =  await confirmHistorical(information,dbo)
+    count = await countTrappings(information,dbo)
 
-    MongoClient.connect(url, (error, db) => {
-        if(error) throw error;
-        
-        const databaseObject = db.db(process.env.DATABASE_NAME);
+    console.log("HISTORICAL: ",historical)
+    clerids = information.cleridsPerDay * 14
+    spb = information.spb * 14
 
-        databaseObject.collection("trappings").insertOne(information, function(err, res) {
-            if (err) throw err;
-            console.log("Trapping successfully inserted.");
-            db.close();
-          });
+    if (count ==1){
+        avgClerids = clerids
+        avgSpb = spb
+    }
+    else{
+        avgClerids = ((historical.cleridsPerTwoWeeks*(count-1)) + clerids) / count
+        avgSpb =     ((historical.spbPerTwoWeeks    *(count-1)) + spb) / count
+    }
+    // console.log(historical.spbPerTwoWeeks    *(count-1))
+    // console.log((historical.spbPerTwoWeeks    *(count-1)) + spb)
+    // console.log("NUMS",avgClerids,avgSpb,count)
 
-    });
-    insertHistorical(information)
+    filter = {
+        state: historical.state,
+        forest: historical.forest,
+        year: historical.year,
+    }
+    newHistorical = { 
+        $set: {
+            state: historical.state,
+            forest: historical.forest,
+            year: historical.year,
+            spbPerTwoWeeks: parseInt(avgSpb),
+            cleridsPerTwoWeeks: parseInt(avgClerids)
+        }
+    }
+    console.log("Filter",newHistorical)
+    dbo.collection("historicals").updateMany(filter, newHistorical, function(err, res) {
+        if(err) throw err;
+        console.log("Modified: ",res.result.nModified)
+	});
 }
 
-async function insertHistorical(information){
+async function countTrappings(information,dbo){
     return new Promise((resolve,reject)=>{
-        checkExisting(information).then((message) =>{
-            const url = process.env.MONGODB_URI;
-            const MongoClient = require('mongodb').MongoClient;    
-            console.log(message)
-            console.log("intserting historical")
-            MongoClient.connect(url, (error, db) => {
-                if(error) throw error;
-                const databaseObject = db.db(process.env.DATABASE_NAME);
-                console.log(information)
-                const filter = { 
-                    "state" :stateNameToStateAbbrev[information.state],
-                    "forest": information.county.toUpperCase() +" "+ stateNameToStateAbbrev[information.state],
-                    "year": information.year 
-                }
-                databaseObject.collection("historicals").findOneAndUpdate(
-                filter,
-                { $inc: { "spbPerTwoWeeks" : Math.floor(information.spb*14),"cleridsPerTwoWeeks":Math.floor(information.cleridsPerDay*14)} },
-                function(err, res) {
-                    if (err) throw err;
-                    console.log("Historical successfully updated.");
-                    db.close();
-                    resolve("Added")
-                });
-
-            })
+        filter = {
+            state : information.state,
+            year: information.year,
+            county: information.county
+        }
+        var count = 0
+    
+        dbo.collection("trappings").find(filter).toArray(function(err, result) {
+            if (err) reject(err);
+            if (result){
+                console.log("Found: ",result.length);
+                count = result.length
+            }
+            else{
+                count = 0 
+            }            
+            newObj = information
+            dbo.collection("trappings").insertOne(newObj, function(err, res) {
+                if (err) reject(err);
+                console.log("Trapping inserted");
+                resolve(count + 1)
+            });
         })
     })
 }
-async function checkExisting(information){
-    return new Promise((resolve,reject) =>{
-        const url = process.env.MONGODB_URI;
-        const MongoClient = require('mongodb').MongoClient;
-        console.log("Checking Existing")
-        MongoClient.connect(url, (error, db) => {
-            if(error) throw error;
-            
-            const databaseObject = db.db(process.env.DATABASE_NAME);
-    
-            const filter = { 
-                "state" :stateNameToStateAbbrev[information.state],
-                "forest": information.county.toUpperCase() +" "+ stateNameToStateAbbrev[information.state],
-                "year": information.year 
+
+async function confirmHistorical(information,dbo){
+    return new Promise((resolve,reject)=>{
+        filter = {
+            state : stateNameToStateAbbrev[information.state],
+            forest : information.county.toUpperCase() + " " + stateNameToStateAbbrev[information.state],
+            year: information.year
+        }
+        dbo.collection("historicals").findOne(filter, function(err, result) {
+            if (err) reject(err);
+            if (result){
+                console.log("FOUND")
+                resolve(result)
             }
-            console.log(filter)
-            databaseObject.collection("historicals").findOne(filter, function(err, result) {
-                if (err) throw err;
-                if (!result){
-                    const new_result = {
-                        "state" :stateNameToStateAbbrev[information.state],
-                        "forest": information.county.toUpperCase() +" "+ stateNameToStateAbbrev[information.state],
-                        "year": information.year,
-                        "spbPerTwoWeeks" :0,
-                        "cleridsPerTwoWeeks":0
-                    }
-                    databaseObject.collection("historicals").insertOne(new_result, function(err, res) {
-                        if (err) throw err;
-                        resolve("Historical Created")
-                      });
-                }
-                resolve("Not Created")
-              });
-        })     
+            else{
+                newObj = filter
+                dbo.collection("historicals").insertOne(newObj, function(err, res) {
+                    if (err) reject(err);
+                    console.log("1 document inserted");
+                    resolve(newObj)
+                });
+            }
+          })
     })
 }
 
+
+
 module.exports = {
     uploadSurvey: uploadSurvey,
-    updateSurvey: updateSurvey,
-    insertHistorical:insertHistorical,
-    checkExisting:checkExisting
+    updateSurvey: updateSurvey
 }

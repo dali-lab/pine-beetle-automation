@@ -24,6 +24,7 @@ const updateSurvey = async (information) => {
     const url = process.env.MONGODB_URI;
     const MongoClient = require('mongodb').MongoClient;
 
+    console.log(process.env.MONGODB_URI);
 
     MongoClient.connect(url, (error, db) => {
         if(error) throw error;

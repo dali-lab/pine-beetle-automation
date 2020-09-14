@@ -1,11 +1,10 @@
 const express = require('express');
 const app = express();
 
-require('dotenv').config()
+require('dotenv').config();
 
 const bodyParser = require('body-parser');
 const port = process.env.PORT || 3000;
-
 
 const surveyController = require('./src/controllers/AutomationController');
 

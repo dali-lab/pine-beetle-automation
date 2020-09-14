@@ -152,4 +152,4 @@ async function confirmHistorical(information,dbo){
 module.exports = {
     uploadSurvey: uploadSurvey,
     updateSurvey: updateSurvey
-}
+};

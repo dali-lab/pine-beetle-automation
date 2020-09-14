@@ -19,6 +19,47 @@ app.use(express.json());
 // const mongoConnection = process.env.MONGODB_URI;
 // mongoose.connect(mongoConnection, { useNewUrlParser: true });
 
+app.post('/edit', (req, res) => {
+    const featureData = req.body.feature;
+    const attributes = featureData.attributes;
+    const coordinateData = featureData.geometry;
+
+    const county = attributes.County;
+    const state = attributes.USA_State;
+    const year = attributes.Year;
+    const trapName = attributes.Trap_name;
+
+    const lure = attributes.Trap_Lure;
+    const collectorName = attributes.Cooperator;
+
+    const cleridsPerDay = attributes.Overall_Clerids_PerDay;
+    const SPBPerDay = attributes.Overall_SPB_PerDay;
+
+    information = {
+        'reference_id': attributes.globalid,
+        'x': coordinateData.x,
+        'y': coordinateData.y,
+        'state': state,
+        'year': year,
+        'lure': lure,
+        'county': county,
+        'dateTrapSet': new Date(attributes.TrapSetDate),
+        'trapName': trapName,
+        'collectorName': collectorName,
+        'bloomDate': new Date(attributes.Initial_Bloom),
+        'spb': SPBPerDay,
+        'totalBeetles': attributes.Sum_SPB_Plus_Clerids,
+        "cleridsPerDay": cleridsPerDay,
+    }
+
+    surveyController.updateSurvey(information);
+
+    console.log(req.body);
+
+    res.sendStatus(200);
+});
+
+
 app.post('/new', (req, res) => {
     const featureData = req.body.feature;
     const attributes = featureData.attributes;
@@ -56,12 +97,13 @@ app.post('/new', (req, res) => {
     const county = attributes.County;
     const state = attributes.USA_State;
     const year = attributes.Year;
+    const trapName = attributes.Trap_name;
 
     // meta-data around the trapping request
     const lure = attributes.Trap_Lure;
     const collectorName = attributes.Cooperator;
 
-    const cleridPerDay = attributes.Overall_Clerids_PerDay;
+    const cleridsPerDay = attributes.Overall_Clerids_PerDay;
     const SPBPerDay = attributes.Overall_SPB_PerDay;
     /*
 
@@ -91,17 +133,28 @@ app.post('/new', (req, res) => {
 
     */
 
-    console.log(featureData);
-    console.log(coordinateData);
-    console.log(cleridData);
+    information = {
+        'reference_id': attributes.globalid,
+        'x': coordinateData.x,
+        'y': coordinateData.y,
+        'state': state,
+        'year': year,
+        'lure': lure,
+        'county': county,
+        'dateTrapSet': new Date(attributes.TrapSetDate),
+        'trapName': trapName,
+        'collectorName': collectorName,
+        'bloomDate': new Date(attributes.Initial_Bloom),
+        'spb': SPBPerDay,
+        'totalBeetles': attributes.Sum_SPB_Plus_Clerids,
+        "cleridsPerDay": cleridsPerDay,
+    }
 
-    console.log("*** calculation data ***");
-
-    console.log("avg. clerid: " + cleridAverage);
-    console.log("avg. spb: " + SPBAverage);
-    console.log("avg. hybrid: " + hybridAverage);
-
-    uploadSurvey.uploadSurvey(cleridData);
+    console.log(req.body);
+    MongoClient.connect(url, (error, db) => {
+        const databaseObject = db.db(process.env.DATABASE_NAME);
+        surveyController.uploadSurvey(information,databaseObject);
+    })
 
     res.sendStatus(200);
 });
@@ -109,4 +162,3 @@ app.post('/new', (req, res) => {
 app.listen(port, () => {
     console.log(process.env);
     console.log('Server has started...');
-});

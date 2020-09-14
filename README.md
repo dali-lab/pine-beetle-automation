@@ -4,10 +4,10 @@ Automation server for creating pipeline between ArcGIS and MongoDB with human in
 
 # Installation
 
-Download the repo and run `npm install` in the main directory.
+Download the repo and run `yarn install` in the main directory.
 Then, depending on your choice, run `node` or `nodemon` (if you want live changes) with `index.js`.
 
-Note: make sure to implement the correct .env file located in the DALI Pine-Beetle slack.
+Note: make sure to implement the correct `.env` file located in the DALI Pine-Beetle slack.
 
 # Server Capabilities
 
@@ -19,5 +19,3 @@ Verifying connection with MongoDB by uploading test information.
 # Credits
 
 John McCambridge - '22
-
-

@@ -8,7 +8,7 @@ const bodyParser = require('body-parser');
 const port = process.env.PORT || 3000;
 
 
-const uploadSurvey = require('./src/controllers/AutomationController');
+const surveyController = require('./src/controllers/AutomationController');
 
 function add(dx, element) {
     return dx + element;
@@ -162,3 +162,4 @@ app.post('/new', (req, res) => {
 app.listen(port, () => {
     console.log(process.env);
     console.log('Server has started...');
+});

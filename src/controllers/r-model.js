@@ -1,7 +1,6 @@
 /* eslint-disable new-cap */
 import path from 'path';
-
-const R = require('r-script');
+import R from 'r-script';
 
 const rpath = path.resolve(__dirname, '../r-scripts/SPB-Predictions.v02.R');
 

@@ -20,7 +20,7 @@ rModelRouter.route('/')
     } = req.query;
 
     try {
-      const result = await rModel.default(SPB, cleridst1, spotst1, spotst2, endobrev);
+      const result = await rModel.runModel(SPB, cleridst1, spotst1, spotst2, endobrev);
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
       console.log(error);

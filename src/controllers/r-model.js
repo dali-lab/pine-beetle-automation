@@ -1,10 +1,11 @@
+/* eslint-disable import/prefer-default-export */
 /* eslint-disable new-cap */
 import path from 'path';
 import R from 'r-script';
 
 const rpath = path.resolve(__dirname, '../r-scripts/SPB-Predictions.v02.R');
 
-export default (SPB, cleridst1, spotst1, spotst2, endobrev) => {
+export const runModel = (SPB, cleridst1, spotst1, spotst2, endobrev) => {
   return new Promise((resolve, reject) => {
     R(rpath)
       .data({

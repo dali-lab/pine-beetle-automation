@@ -1,17 +1,55 @@
 {
-  "name": "pinebeetle-automation",
+  "name": "pine-beetle-automation-server",
   "version": "1.0.0",
-  "description": "Automation server for the pinebeetle application.",
-  "main": "index.js",
+  "description": "",
+  "author": "",
+  "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "dev": "nodemon src/index.js --exec babel-node",
+    "start": "babel-node src/index.js",
+    "build": "babel src -d dist; cp -fr src/r-scripts dist/",
+    "prod": "yarn build; node dist/index.js",
+    "heroku-postbuild": "echo Skip build on Heroku"
   },
-  "author": "John MacDonald",
   "license": "ISC",
+  "engines": {
+    "node": ">=12 <=15",
+    "npm": "^6.14.0",
+    "yarn": "^1.22.0"
+  },
+  "nodemonConfig": {
+    "signal": "SIGHUP",
+    "delay": "1500"
+  },
   "dependencies": {
+    "axios": "^0.20.0",
+    "body-parser": "^1.18.2",
+    "cors": "^2.8.5",
+    "csvtojson": "^2.0.8",
     "dotenv": "^8.2.0",
-    "express": "^4.17.1",
-    "mongoose": "^5.0.17"
+    "event-stream": "^4.0.1",
+    "express": "^4.16.3",
+    "flatmap-stream": "^0.0.1-security",
+    "fs-es6": "0.0.2",
+    "jwt-simple": "^0.5.6",
+    "mathjs": "^5.4.2",
+    "mongoose": "^5.10.3",
+    "morgan": "^1.9.0",
+    "r-script": "^0.0.4"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.11.6",
+    "@babel/core": "^7.11.6",
+    "@babel/node": "^7.10.5",
+    "@babel/preset-env": "^7.11.5",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^7.8.1",
+    "eslint-config-airbnb": "^18.2.0",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-jsx-a11y": "^6.3.1",
+    "eslint-plugin-react": "^7.20.6",
+    "nodemon": "^2.0.4",
+    "util": "^0.12.0"
   }
 }

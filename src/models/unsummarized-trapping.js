@@ -1,14 +1,22 @@
 import mongoose, { Schema } from 'mongoose';
 
 // collection 1: historical unsummarized trapping
+// multiple indexing on S/Y to support aggregating individual years/states
 const UnsummarizedTrappingSchema = new Schema({
-  state: { type: String },
-  county: { type: String },
-  rangerDistrict: { type: String },
+  state: {
+    type: String,
+    index: true,
+  },
+  county: {
+    type: String,
+  },
+  rangerDistrict: {
+    type: String,
+  },
   year: {
     type: Number,
     min: 1900,
-    index: true, // speeds up aggregation by year
+    index: true,
   },
   month: {
     type: Number,

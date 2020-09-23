@@ -1,8 +1,7 @@
 import mongoose, { Schema } from 'mongoose';
 
 // collection 1: historical unsummarized trapping
-// multiple indexing on S/C/RD/Y to support aggregating individual years/states
-// consider removing C/RD indexes later because we probably don't need them
+// multiple indexing on S/Y to support aggregating individual years/states
 const UnsummarizedTrappingSchema = new Schema({
   state: {
     type: String,
@@ -10,11 +9,9 @@ const UnsummarizedTrappingSchema = new Schema({
   },
   county: {
     type: String,
-    index: true,
   },
   rangerDistrict: {
     type: String,
-    index: true,
   },
   year: {
     type: Number,

@@ -19,6 +19,6 @@ const SummarizedRangerDistrictTrappingSchema = new Schema({
   },
 });
 
-const SummarizedRangerDistrictTrappingModel = mongoose.model('SummarizedCountyTrapping', SummarizedRangerDistrictTrappingSchema);
+const SummarizedRangerDistrictTrappingModel = mongoose.model('SummarizedRangerDistrictTrapping', SummarizedRangerDistrictTrappingSchema);
 
 export default SummarizedRangerDistrictTrappingModel;

@@ -1,9 +1,9 @@
-import UnsummTrap from './unsummarized-trapping';
-import SummCountyTrap from './summarized-county-trapping';
-import SummRDTrap from './summarized-rangerdistrict-trapping';
+import UnsummarizedTrappingModel from './unsummarized-trapping';
+import SummarizedCountyTrappingModel from './summarized-county-trapping';
+import SummarizedRangerDistrictTrappingModel from './summarized-rangerdistrict-trapping';
 
 export {
-  UnsummTrap,
-  SummCountyTrap,
-  SummRDTrap,
+  UnsummarizedTrappingModel,
+  SummarizedCountyTrappingModel,
+  SummarizedRangerDistrictTrappingModel,
 };

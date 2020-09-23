@@ -7,7 +7,6 @@ const SummarizedRangerDistrictTrappingSchema = new Schema({
   year: {
     type: Number,
     min: 1900,
-    max: 2022,
     index: true, // speeds up join w/ spots by year
   },
   spbCount: {

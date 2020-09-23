@@ -8,7 +8,6 @@ const UnsummarizedTrappingSchema = new Schema({
   year: {
     type: Number,
     min: 1900,
-    max: 2022,
     index: true, // speeds up aggregation by year
   },
   month: {

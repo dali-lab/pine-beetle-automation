@@ -48,6 +48,25 @@ summarizedCountyTrappingRouter.route('/')
     }
   });
 
+summarizedCountyTrappingRouter.route('/filter')
+  .get(async (req, res) => {
+    const {
+      startYear,
+      endYear,
+      state,
+      county,
+    } = req.query;
+
+    try {
+      const result = await SummarizedCountyTrapping.getByFilter(startYear, endYear, state, county);
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+    } catch (error) {
+      console.log(error);
+      res.status(RESPONSE_CODES.INTERNAL_ERROR.status)
+        .send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
+    }
+  });
+
 summarizedCountyTrappingRouter.route('/:id')
   .get(async (req, res) => {
     const { id } = req.params;
@@ -80,7 +99,10 @@ summarizedCountyTrappingRouter.route('/:id')
         spbCount,
         cleridCount,
       });
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+      res.send(generateResponse(
+        result ? RESPONSE_TYPES.SUCCESS : RESPONSE_TYPES.NO_CONTENT,
+        result,
+      ));
     } catch (error) {
       console.log(error);
       res.status(RESPONSE_CODES.INTERNAL_ERROR.status)
@@ -93,26 +115,10 @@ summarizedCountyTrappingRouter.route('/:id')
 
     try {
       const result = await SummarizedCountyTrapping.deleteById(id);
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
-    } catch (error) {
-      console.log(error);
-      res.status(RESPONSE_CODES.INTERNAL_ERROR.status)
-        .send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
-    }
-  });
-
-summarizedCountyTrappingRouter.route('/filter')
-  .get(async (req, res) => {
-    // const {
-    //   startYear,
-    //   endYear,
-    //   state,
-    //   county,
-    // } = req.query;
-
-    try {
-      // to be added
-      // const result = await
+      res.send(generateResponse(
+        result ? RESPONSE_TYPES.SUCCESS : RESPONSE_TYPES.NO_CONTENT,
+        result,
+      ));
     } catch (error) {
       console.log(error);
       res.status(RESPONSE_CODES.INTERNAL_ERROR.status)

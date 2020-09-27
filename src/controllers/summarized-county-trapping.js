@@ -33,7 +33,7 @@ export const insertOne = async (doc) => {
  * @returns {Promise<SummarizedCountyTrappingModel>}
  */
 export const updateById = async (id, doc) => {
-  return SummarizedCountyTrappingModel.findByIdAndUpdate(id, doc, { new: true });
+  return SummarizedCountyTrappingModel.findByIdAndUpdate(id, doc, { new: true, omitUndefined: true });
 };
 
 /**
@@ -61,6 +61,20 @@ export const summarizeStateYear = async (state, year) => {
   // return 'hello this is TBD';
 };
 
+/**
+ * Fetches summarized county trapping data depending on a filter.
+ * @param {Number} startYear the earliest year to return, inclusive
+ * @param {Number} endYear the latest year to return, inclusive
+ * @param {String} state the state to return
+ * @param {String} county the county to return
+ */
 export const getByFilter = async (startYear, endYear, state, county) => {
-  // tbd
+  const query = SummarizedCountyTrappingModel.find();
+
+  if (startYear) query.find({ year: { $gte: startYear } });
+  if (endYear) query.find({ year: { $lte: endYear } });
+  if (state) query.find({ state });
+  if (county) query.find({ county });
+
+  return query.exec();
 };

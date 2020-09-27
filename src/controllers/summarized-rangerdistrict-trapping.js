@@ -33,7 +33,7 @@ export const insertOne = async (doc) => {
  * @returns {Promise<SummarizedRangerDistrictTrappingModel>}
  */
 export const updateById = async (id, doc) => {
-  return SummarizedRangerDistrictTrappingModel.findByIdAndUpdate(id, doc, { new: true });
+  return SummarizedRangerDistrictTrappingModel.findByIdAndUpdate(id, doc, { new: true, omitUndefined: true });
 };
 
 /**

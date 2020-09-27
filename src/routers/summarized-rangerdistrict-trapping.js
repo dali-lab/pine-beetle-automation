@@ -80,7 +80,10 @@ summarizedRangerDistrictTrappingRouter.route('/:id')
         spbCount,
         cleridCount,
       });
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+      res.send(generateResponse(
+        result ? RESPONSE_TYPES.SUCCESS : RESPONSE_TYPES.NO_CONTENT,
+        result,
+      ));
     } catch (error) {
       console.log(error);
       res.status(RESPONSE_CODES.INTERNAL_ERROR.status)
@@ -93,7 +96,10 @@ summarizedRangerDistrictTrappingRouter.route('/:id')
 
     try {
       const result = await SummarizedRangerDistrictTrapping.deleteById(id);
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+      res.send(generateResponse(
+        result ? RESPONSE_TYPES.SUCCESS : RESPONSE_TYPES.NO_CONTENT,
+        result,
+      ));
     } catch (error) {
       console.log(error);
       res.status(RESPONSE_CODES.INTERNAL_ERROR.status)

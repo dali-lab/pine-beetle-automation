@@ -33,7 +33,7 @@ export const insertOne = async (doc) => {
  * @returns {Promise<UnsummarizedTrappingModel>}
  */
 export const updateById = async (id, doc) => {
-  return UnsummarizedTrappingModel.findByIdAndUpdate(id, doc, { new: true });
+  return UnsummarizedTrappingModel.findByIdAndUpdate(id, doc, { new: true, omitUndefined: true });
 };
 
 /**

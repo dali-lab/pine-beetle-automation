@@ -48,6 +48,25 @@ summarizedRangerDistrictTrappingRouter.route('/')
     }
   });
 
+summarizedRangerDistrictTrappingRouter.route('/filter')
+  .get(async (req, res) => {
+    const {
+      startYear,
+      endYear,
+      state,
+      rangerDistrict,
+    } = req.query;
+
+    try {
+      const result = await SummarizedRangerDistrictTrapping.getByFilter(startYear, endYear, state, rangerDistrict);
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+    } catch (error) {
+      console.log(error);
+      res.status(RESPONSE_CODES.INTERNAL_ERROR.status)
+        .send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
+    }
+  });
+
 summarizedRangerDistrictTrappingRouter.route('/:id')
   .get(async (req, res) => {
     const { id } = req.params;
@@ -100,25 +119,6 @@ summarizedRangerDistrictTrappingRouter.route('/:id')
         result ? RESPONSE_TYPES.SUCCESS : RESPONSE_TYPES.NO_CONTENT,
         result,
       ));
-    } catch (error) {
-      console.log(error);
-      res.status(RESPONSE_CODES.INTERNAL_ERROR.status)
-        .send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
-    }
-  });
-
-summarizedRangerDistrictTrappingRouter.route('/filter')
-  .get(async (req, res) => {
-    // const {
-    //   startYear,
-    //   endYear,
-    //   state,
-    //   rangerDistrict,
-    // } = req.query;
-
-    try {
-      // to be added
-      // const result = await
     } catch (error) {
       console.log(error);
       res.status(RESPONSE_CODES.INTERNAL_ERROR.status)

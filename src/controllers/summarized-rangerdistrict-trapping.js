@@ -61,6 +61,20 @@ export const summarizeStateYear = async (state, year) => {
   // return 'hello this is TBD';
 };
 
-export const getByFilter = async (startYear, endYear, state, county) => {
-  // tbd
+/**
+ * Fetches summarized county trapping data depending on a filter.
+ * @param {Number} startYear the earliest year to return, inclusive
+ * @param {Number} endYear the latest year to return, inclusive
+ * @param {String} state the state to return
+ * @param {String} county the county to return
+ */
+export const getByFilter = async (startYear, endYear, state, rangerDistrict) => {
+  const query = SummarizedRangerDistrictTrappingModel.find();
+
+  if (startYear) query.find({ year: { $gte: startYear } });
+  if (endYear) query.find({ year: { $lte: endYear } });
+  if (state) query.find({ state });
+  if (rangerDistrict) query.find({ rangerDistrict });
+
+  return query.exec();
 };

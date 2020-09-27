@@ -6,12 +6,7 @@ import { SummarizedRangerDistrictTrappingModel } from '../models';
  * @returns {Promise<SummarizedRangerDistrictTrappingModel>} the document in question
  */
 export const getById = async (id) => {
-  try {
-    return SummarizedRangerDistrictTrappingModel.findById(id);
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  return SummarizedRangerDistrictTrappingModel.findById(id);
 };
 
 /**
@@ -19,12 +14,7 @@ export const getById = async (id) => {
  * @returns {Promise<[SummarizedRangerDistrictTrappingModel]>} all docs
  */
 export const getAll = async () => {
-  try {
-    return SummarizedRangerDistrictTrappingModel.find();
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  return SummarizedRangerDistrictTrappingModel.find();
 };
 
 /**
@@ -32,13 +22,8 @@ export const getAll = async () => {
  * @param doc SummarizedRangerDistrictTrappingModel document
  */
 export const insertOne = async (doc) => {
-  try {
-    const newDoc = new SummarizedRangerDistrictTrappingModel(doc);
-    return newDoc.save();
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  const newDoc = new SummarizedRangerDistrictTrappingModel(doc);
+  return newDoc.save();
 };
 
 /**
@@ -48,12 +33,7 @@ export const insertOne = async (doc) => {
  * @returns {Promise<SummarizedRangerDistrictTrappingModel>}
  */
 export const updateOne = async (id, doc) => {
-  try {
-    return SummarizedRangerDistrictTrappingModel.findByIdAndUpdate(id, doc, { new: true });
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  return SummarizedRangerDistrictTrappingModel.findByIdAndUpdate(id, doc, { new: true });
 };
 
 /**
@@ -61,24 +41,14 @@ export const updateOne = async (id, doc) => {
  * @param {String} id ID of the document to delete
  */
 export const deleteOne = async (id) => {
-  try {
-    return SummarizedRangerDistrictTrappingModel.findByIdAndDelete(id);
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  return SummarizedRangerDistrictTrappingModel.findByIdAndDelete(id);
 };
 
 /**
  * @description Summarizes all trapping data at the ranger district level. Will overwrite all entries in this collection.
  */
 export const summarizeAll = async () => {
-  // try {
-  //   return 'hello this is TBD';
-  // } catch (error) {
-  //   console.log(error);
-  //   throw error;
-  // }
+  // return 'hello this is TBD';
 };
 
 /**
@@ -88,10 +58,9 @@ export const summarizeAll = async () => {
  * @param {Number} year the year to summarize
  */
 export const summarizeStateYear = async (state, year) => {
-  // try {
-  //   return 'hello this is TBD';
-  // } catch (error) {
-  //   console.log(error);
-  //   throw error;
-  // }
+  // return 'hello this is TBD';
+};
+
+export const getByFilter = async (startYear, endYear, state, county) => {
+  // tbd
 };

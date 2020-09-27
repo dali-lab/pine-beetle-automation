@@ -17,7 +17,6 @@ export const runModel = (SPB, cleridst1, spotst1, spotst2, endobrev) => {
       })
       .call((error, d) => {
         if (error) {
-          console.log(error);
           reject(error);
         } else {
           resolve(d);

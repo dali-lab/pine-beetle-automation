@@ -6,12 +6,7 @@ import { UnsummarizedTrappingModel } from '../models';
  * @returns {Promise<UnsummarizedTrappingModel>} the document in question
  */
 export const getById = async (id) => {
-  try {
-    return UnsummarizedTrappingModel.findById(id);
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  return UnsummarizedTrappingModel.findById(id);
 };
 
 /**
@@ -19,12 +14,7 @@ export const getById = async (id) => {
  * @returns {Promise<[UnsummarizedTrappingModel]>} all docs
  */
 export const getAll = async () => {
-  try {
-    return UnsummarizedTrappingModel.find();
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  return UnsummarizedTrappingModel.find();
 };
 
 /**
@@ -32,13 +22,8 @@ export const getAll = async () => {
  * @param doc UnsummarizedTrappingModel document
  */
 export const insertOne = async (doc) => {
-  try {
-    const newDoc = new UnsummarizedTrappingModel(doc);
-    return newDoc.save();
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  const newDoc = new UnsummarizedTrappingModel(doc);
+  return newDoc.save();
 };
 
 /**
@@ -48,12 +33,7 @@ export const insertOne = async (doc) => {
  * @returns {Promise<UnsummarizedTrappingModel>}
  */
 export const updateOne = async (id, doc) => {
-  try {
-    return UnsummarizedTrappingModel.findByIdAndUpdate(id, doc, { new: true });
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  return UnsummarizedTrappingModel.findByIdAndUpdate(id, doc, { new: true });
 };
 
 /**
@@ -61,10 +41,5 @@ export const updateOne = async (id, doc) => {
  * @param {String} id ID of the document to delete
  */
 export const deleteOne = async (id) => {
-  try {
-    return UnsummarizedTrappingModel.findByIdAndDelete(id);
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  return UnsummarizedTrappingModel.findByIdAndDelete(id);
 };

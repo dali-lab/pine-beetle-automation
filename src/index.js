@@ -6,7 +6,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import routers from './routers';
 
-import { generateResponse, RESPONSE_TYPES } from './constants';
+import { generateResponse, RESPONSE_CODES, RESPONSE_TYPES } from './constants';
 
 dotenv.config({ silent: true });
 
@@ -54,7 +54,7 @@ Object.entries(routers).forEach(([prefix, router]) => {
 
 // custom 404 middleware
 app.use((_req, res) => {
-  res.status(404).send(generateResponse(
+  res.status(RESPONSE_CODES.NOT_FOUND.status).send(generateResponse(
     RESPONSE_TYPES.NOT_FOUND,
     'The requested route does not exist',
   ));

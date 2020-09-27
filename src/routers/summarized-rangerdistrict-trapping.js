@@ -18,7 +18,8 @@ summarizedRangerDistrictTrappingRouter.route('/')
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
       console.log(error);
-      res.status(RESPONSE_CODES.INTERNAL_ERROR).send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
+      res.status(RESPONSE_CODES.INTERNAL_ERROR.status)
+        .send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
     }
   })
 
@@ -42,7 +43,8 @@ summarizedRangerDistrictTrappingRouter.route('/')
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
       console.log(error);
-      res.status(RESPONSE_CODES.INTERNAL_ERROR).send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
+      res.status(RESPONSE_CODES.INTERNAL_ERROR.status)
+        .send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
     }
   });
 
@@ -55,7 +57,8 @@ summarizedRangerDistrictTrappingRouter.route('/:id')
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
       console.log(error);
-      res.status(RESPONSE_CODES.INTERNAL_ERROR).send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
+      res.status(RESPONSE_CODES.INTERNAL_ERROR.status)
+        .send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
     }
   })
 
@@ -80,7 +83,8 @@ summarizedRangerDistrictTrappingRouter.route('/:id')
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
       console.log(error);
-      res.status(RESPONSE_CODES.INTERNAL_ERROR).send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
+      res.status(RESPONSE_CODES.INTERNAL_ERROR.status)
+        .send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
     }
   })
 
@@ -92,7 +96,8 @@ summarizedRangerDistrictTrappingRouter.route('/:id')
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
       console.log(error);
-      res.status(RESPONSE_CODES.INTERNAL_ERROR).send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
+      res.status(RESPONSE_CODES.INTERNAL_ERROR.status)
+        .send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
     }
   });
 
@@ -110,7 +115,8 @@ summarizedRangerDistrictTrappingRouter.route('/filter')
       // const result = await
     } catch (error) {
       console.log(error);
-      res.status(RESPONSE_CODES.INTERNAL_ERROR).send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
+      res.status(RESPONSE_CODES.INTERNAL_ERROR.status)
+        .send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
     }
   });
 

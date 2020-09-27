@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import {
   generateResponse,
+  RESPONSE_CODES,
   RESPONSE_TYPES,
 } from '../constants';
 
@@ -17,7 +18,7 @@ summarizedCountyTrappingRouter.route('/')
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
       console.log(error);
-      res.send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
+      res.status(RESPONSE_CODES.INTERNAL_ERROR).send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
     }
   })
 
@@ -41,7 +42,7 @@ summarizedCountyTrappingRouter.route('/')
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
       console.log(error);
-      res.send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
+      res.status(RESPONSE_CODES.INTERNAL_ERROR).send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
     }
   });
 
@@ -54,7 +55,7 @@ summarizedCountyTrappingRouter.route('/:id')
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
       console.log(error);
-      res.send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
+      res.status(RESPONSE_CODES.INTERNAL_ERROR).send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
     }
   })
 
@@ -79,7 +80,7 @@ summarizedCountyTrappingRouter.route('/:id')
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
       console.log(error);
-      res.send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
+      res.status(RESPONSE_CODES.INTERNAL_ERROR).send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
     }
   })
 
@@ -91,7 +92,25 @@ summarizedCountyTrappingRouter.route('/:id')
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
       console.log(error);
-      res.send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
+      res.status(RESPONSE_CODES.INTERNAL_ERROR).send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
+    }
+  });
+
+summarizedCountyTrappingRouter.route('/filter')
+  .get(async (req, res) => {
+    // const {
+    //   startYear,
+    //   endYear,
+    //   state,
+    //   county,
+    // } = req.query;
+
+    try {
+      // to be added
+      // const result = await
+    } catch (error) {
+      console.log(error);
+      res.status(RESPONSE_CODES.INTERNAL_ERROR).send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
     }
   });
 

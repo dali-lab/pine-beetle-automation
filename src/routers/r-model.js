@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import {
   generateResponse,
+  RESPONSE_CODES,
   RESPONSE_TYPES,
 } from '../constants';
 
@@ -24,7 +25,7 @@ rModelRouter.route('/')
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
       console.log(error);
-      res.send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
+      res.status(RESPONSE_CODES.INTERNAL_ERROR).send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
     }
   });
 

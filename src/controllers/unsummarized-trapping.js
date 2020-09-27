@@ -32,7 +32,7 @@ export const insertOne = async (doc) => {
  * @param doc UnsummarizedTrappingModel document
  * @returns {Promise<UnsummarizedTrappingModel>}
  */
-export const updateOne = async (id, doc) => {
+export const updateById = async (id, doc) => {
   return UnsummarizedTrappingModel.findByIdAndUpdate(id, doc, { new: true });
 };
 
@@ -40,6 +40,6 @@ export const updateOne = async (id, doc) => {
  * @description Deletes one week's data in the unsummarized collection.
  * @param {String} id ID of the document to delete
  */
-export const deleteOne = async (id) => {
+export const deleteById = async (id) => {
   return UnsummarizedTrappingModel.findByIdAndDelete(id);
 };

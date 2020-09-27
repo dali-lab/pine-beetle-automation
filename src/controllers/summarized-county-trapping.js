@@ -32,7 +32,7 @@ export const insertOne = async (doc) => {
  * @param doc SummarizedCountyTrappingModel document
  * @returns {Promise<SummarizedCountyTrappingModel>}
  */
-export const updateOne = async (id, doc) => {
+export const updateById = async (id, doc) => {
   return SummarizedCountyTrappingModel.findByIdAndUpdate(id, doc, { new: true });
 };
 
@@ -40,7 +40,7 @@ export const updateOne = async (id, doc) => {
  * @description Deletes one week's data in the summarized county collection.
  * @param {String} id ID of the document to delete
  */
-export const deleteOne = async (id) => {
+export const deleteById = async (id) => {
   return SummarizedCountyTrappingModel.findByIdAndDelete(id);
 };
 

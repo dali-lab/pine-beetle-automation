@@ -73,7 +73,7 @@ summarizedRangerDistrictTrappingRouter.route('/:id')
     } = req.body;
 
     try {
-      const result = await SummarizedRangerDistrictTrapping.updateOne(id, {
+      const result = await SummarizedRangerDistrictTrapping.updateById(id, {
         state,
         rangerDistrict,
         year,
@@ -92,7 +92,7 @@ summarizedRangerDistrictTrappingRouter.route('/:id')
     const { id } = req.params;
 
     try {
-      const result = await SummarizedRangerDistrictTrapping.deleteOne(id);
+      const result = await SummarizedRangerDistrictTrapping.deleteById(id);
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
       console.log(error);

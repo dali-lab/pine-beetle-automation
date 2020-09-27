@@ -32,7 +32,7 @@ export const insertOne = async (doc) => {
  * @param doc SummarizedRangerDistrictTrappingModel document
  * @returns {Promise<SummarizedRangerDistrictTrappingModel>}
  */
-export const updateOne = async (id, doc) => {
+export const updateById = async (id, doc) => {
   return SummarizedRangerDistrictTrappingModel.findByIdAndUpdate(id, doc, { new: true });
 };
 
@@ -40,7 +40,7 @@ export const updateOne = async (id, doc) => {
  * @description Deletes one week's data in the summarized ranger district collection.
  * @param {String} id ID of the document to delete
  */
-export const deleteOne = async (id) => {
+export const deleteById = async (id) => {
   return SummarizedRangerDistrictTrappingModel.findByIdAndDelete(id);
 };
 

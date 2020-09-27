@@ -73,7 +73,7 @@ summarizedCountyTrappingRouter.route('/:id')
     } = req.body;
 
     try {
-      const result = await SummarizedCountyTrapping.updateOne(id, {
+      const result = await SummarizedCountyTrapping.updateById(id, {
         state,
         county,
         year,
@@ -92,7 +92,7 @@ summarizedCountyTrappingRouter.route('/:id')
     const { id } = req.params;
 
     try {
-      const result = await SummarizedCountyTrapping.deleteOne(id);
+      const result = await SummarizedCountyTrapping.deleteById(id);
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
       console.log(error);

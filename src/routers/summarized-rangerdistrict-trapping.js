@@ -24,6 +24,10 @@ summarizedRangerDistrictTrappingRouter.route('/')
   })
 
   .post(requireAuth, async (req, res) => {
+    if (!req.body) {
+      res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'empty body'));
+      return;
+    }
     const {
       state,
       rangerDistrict,
@@ -73,7 +77,13 @@ summarizedRangerDistrictTrappingRouter.route('/:id')
 
     try {
       const result = await SummarizedRangerDistrictTrapping.getById(id);
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+
+      if (result) {
+        res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+      } else {
+        res.status(RESPONSE_CODES.NOT_FOUND.status)
+          .send(generateResponse(RESPONSE_TYPES.NOT_FOUND, 'ID not found'));
+      }
     } catch (error) {
       console.log(error);
       res.status(RESPONSE_CODES.INTERNAL_ERROR.status)
@@ -83,6 +93,11 @@ summarizedRangerDistrictTrappingRouter.route('/:id')
 
   .put(requireAuth, async (req, res) => {
     const { id } = req.params;
+
+    if (!req.body) {
+      res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'empty body'));
+      return;
+    }
     const {
       state,
       rangerDistrict,
@@ -99,10 +114,13 @@ summarizedRangerDistrictTrappingRouter.route('/:id')
         spbCount,
         cleridCount,
       });
-      res.send(generateResponse(
-        result ? RESPONSE_TYPES.SUCCESS : RESPONSE_TYPES.NO_CONTENT,
-        result,
-      ));
+
+      if (result) {
+        res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+      } else {
+        res.status(RESPONSE_CODES.NOT_FOUND.status)
+          .send(generateResponse(RESPONSE_TYPES.NOT_FOUND, 'ID not found'));
+      }
     } catch (error) {
       console.log(error);
       res.status(RESPONSE_CODES.INTERNAL_ERROR.status)
@@ -115,10 +133,13 @@ summarizedRangerDistrictTrappingRouter.route('/:id')
 
     try {
       const result = await SummarizedRangerDistrictTrapping.deleteById(id);
-      res.send(generateResponse(
-        result ? RESPONSE_TYPES.SUCCESS : RESPONSE_TYPES.NO_CONTENT,
-        result,
-      ));
+
+      if (result) {
+        res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+      } else {
+        res.status(RESPONSE_CODES.NOT_FOUND.status)
+          .send(generateResponse(RESPONSE_TYPES.NOT_FOUND, 'ID not found'));
+      }
     } catch (error) {
       console.log(error);
       res.status(RESPONSE_CODES.INTERNAL_ERROR.status)

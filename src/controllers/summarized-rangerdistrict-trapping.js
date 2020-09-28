@@ -66,7 +66,7 @@ export const summarizeStateYear = async (state, year) => {
  * @param {Number} startYear the earliest year to return, inclusive
  * @param {Number} endYear the latest year to return, inclusive
  * @param {String} state the state to return
- * @param {String} county the county to return
+ * @param {String} rangerDistrict the ranger district to return
  */
 export const getByFilter = async (startYear, endYear, state, rangerDistrict) => {
   const query = SummarizedRangerDistrictTrappingModel.find();

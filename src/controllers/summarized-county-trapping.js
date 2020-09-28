@@ -6,12 +6,7 @@ import { SummarizedCountyTrappingModel } from '../models';
  * @returns {Promise<SummarizedCountyTrappingModel>} the document in question
  */
 export const getById = async (id) => {
-  try {
-    return SummarizedCountyTrappingModel.findById(id);
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  return SummarizedCountyTrappingModel.findById(id);
 };
 
 /**
@@ -19,12 +14,7 @@ export const getById = async (id) => {
  * @returns {Promise<[SummarizedCountyTrappingModel]>} all docs
  */
 export const getAll = async () => {
-  try {
-    return SummarizedCountyTrappingModel.find();
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  return SummarizedCountyTrappingModel.find();
 };
 
 /**
@@ -32,13 +22,8 @@ export const getAll = async () => {
  * @param doc SummarizedCountyTrappingModel document
  */
 export const insertOne = async (doc) => {
-  try {
-    const newDoc = new SummarizedCountyTrappingModel(doc);
-    return newDoc.save();
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  const newDoc = new SummarizedCountyTrappingModel(doc);
+  return newDoc.save();
 };
 
 /**
@@ -47,38 +32,23 @@ export const insertOne = async (doc) => {
  * @param doc SummarizedCountyTrappingModel document
  * @returns {Promise<SummarizedCountyTrappingModel>}
  */
-export const updateOne = async (id, doc) => {
-  try {
-    return SummarizedCountyTrappingModel.findByIdAndUpdate(id, doc, { new: true });
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+export const updateById = async (id, doc) => {
+  return SummarizedCountyTrappingModel.findByIdAndUpdate(id, doc, { new: true, omitUndefined: true });
 };
 
 /**
  * @description Deletes one week's data in the summarized county collection.
  * @param {String} id ID of the document to delete
  */
-export const deleteOne = async (id) => {
-  try {
-    return SummarizedCountyTrappingModel.findByIdAndDelete(id);
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+export const deleteById = async (id) => {
+  return SummarizedCountyTrappingModel.findByIdAndDelete(id);
 };
 
 /**
  * @description Summarizes all trapping data at the county level. Will overwrite all entries in this collection.
  */
 export const summarizeAll = async () => {
-  // try {
-  //   return 'hello this is TBD';
-  // } catch (error) {
-  //   console.log(error);
-  //   throw error;
-  // }
+  // return 'hello this is TBD';
 };
 
 /**
@@ -88,10 +58,23 @@ export const summarizeAll = async () => {
  * @param {Number} year the year to summarize
  */
 export const summarizeStateYear = async (state, year) => {
-  // try {
-  //   return 'hello this is TBD';
-  // } catch (error) {
-  //   console.log(error);
-  //   throw error;
-  // }
+  // return 'hello this is TBD';
+};
+
+/**
+ * Fetches summarized county trapping data depending on a filter.
+ * @param {Number} startYear the earliest year to return, inclusive
+ * @param {Number} endYear the latest year to return, inclusive
+ * @param {String} state the state to return
+ * @param {String} county the county to return
+ */
+export const getByFilter = async (startYear, endYear, state, county) => {
+  const query = SummarizedCountyTrappingModel.find();
+
+  if (startYear) query.find({ year: { $gte: startYear } });
+  if (endYear) query.find({ year: { $lte: endYear } });
+  if (state) query.find({ state });
+  if (county) query.find({ county });
+
+  return query.exec();
 };

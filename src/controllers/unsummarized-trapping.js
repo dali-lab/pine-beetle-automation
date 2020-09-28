@@ -6,12 +6,7 @@ import { UnsummarizedTrappingModel } from '../models';
  * @returns {Promise<UnsummarizedTrappingModel>} the document in question
  */
 export const getById = async (id) => {
-  try {
-    return UnsummarizedTrappingModel.findById(id);
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  return UnsummarizedTrappingModel.findById(id);
 };
 
 /**
@@ -19,12 +14,7 @@ export const getById = async (id) => {
  * @returns {Promise<[UnsummarizedTrappingModel]>} all docs
  */
 export const getAll = async () => {
-  try {
-    return UnsummarizedTrappingModel.find();
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  return UnsummarizedTrappingModel.find();
 };
 
 /**
@@ -32,13 +22,8 @@ export const getAll = async () => {
  * @param doc UnsummarizedTrappingModel document
  */
 export const insertOne = async (doc) => {
-  try {
-    const newDoc = new UnsummarizedTrappingModel(doc);
-    return newDoc.save();
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  const newDoc = new UnsummarizedTrappingModel(doc);
+  return newDoc.save();
 };
 
 /**
@@ -47,24 +32,14 @@ export const insertOne = async (doc) => {
  * @param doc UnsummarizedTrappingModel document
  * @returns {Promise<UnsummarizedTrappingModel>}
  */
-export const updateOne = async (id, doc) => {
-  try {
-    return UnsummarizedTrappingModel.findByIdAndUpdate(id, doc, { new: true });
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+export const updateById = async (id, doc) => {
+  return UnsummarizedTrappingModel.findByIdAndUpdate(id, doc, { new: true, omitUndefined: true });
 };
 
 /**
  * @description Deletes one week's data in the unsummarized collection.
  * @param {String} id ID of the document to delete
  */
-export const deleteOne = async (id) => {
-  try {
-    return UnsummarizedTrappingModel.findByIdAndDelete(id);
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+export const deleteById = async (id) => {
+  return UnsummarizedTrappingModel.findByIdAndDelete(id);
 };

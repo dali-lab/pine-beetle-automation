@@ -29,20 +29,20 @@ summarizedRangerDistrictTrappingRouter.route('/')
       return;
     }
     const {
-      state,
-      rangerDistrict,
-      year,
-      spbCount,
       cleridCount,
+      rangerDistrict,
+      spbCount,
+      state,
+      year,
     } = req.body;
 
     try {
       const result = await SummarizedRangerDistrictTrapping.insertOne({
-        state,
-        rangerDistrict,
-        year,
-        spbCount,
         cleridCount,
+        rangerDistrict,
+        spbCount,
+        state,
+        year,
       });
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
@@ -55,10 +55,10 @@ summarizedRangerDistrictTrappingRouter.route('/')
 summarizedRangerDistrictTrappingRouter.route('/filter')
   .get(async (req, res) => {
     const {
-      startYear,
       endYear,
-      state,
       rangerDistrict,
+      startYear,
+      state,
     } = req.query;
 
     try {
@@ -99,20 +99,20 @@ summarizedRangerDistrictTrappingRouter.route('/:id')
       return;
     }
     const {
-      state,
-      rangerDistrict,
-      year,
-      spbCount,
       cleridCount,
+      rangerDistrict,
+      spbCount,
+      state,
+      year,
     } = req.body;
 
     try {
       const result = await SummarizedRangerDistrictTrapping.updateById(id, {
-        state,
-        rangerDistrict,
-        year,
-        spbCount,
         cleridCount,
+        rangerDistrict,
+        spbCount,
+        state,
+        year,
       });
 
       if (result) {

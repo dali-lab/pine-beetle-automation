@@ -29,20 +29,20 @@ summarizedCountyTrappingRouter.route('/')
       return;
     }
     const {
-      state,
-      county,
-      year,
-      spbCount,
       cleridCount,
+      county,
+      spbCount,
+      state,
+      year,
     } = req.body;
 
     try {
       const result = await SummarizedCountyTrapping.insertOne({
-        state,
-        county,
-        year,
-        spbCount,
         cleridCount,
+        county,
+        spbCount,
+        state,
+        year,
       });
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
@@ -55,10 +55,10 @@ summarizedCountyTrappingRouter.route('/')
 summarizedCountyTrappingRouter.route('/filter')
   .get(async (req, res) => {
     const {
-      startYear,
-      endYear,
-      state,
       county,
+      endYear,
+      startYear,
+      state,
     } = req.query;
 
     try {
@@ -99,20 +99,20 @@ summarizedCountyTrappingRouter.route('/:id')
       return;
     }
     const {
-      state,
-      county,
-      year,
-      spbCount,
       cleridCount,
+      county,
+      spbCount,
+      state,
+      year,
     } = req.body;
 
     try {
       const result = await SummarizedCountyTrapping.updateById(id, {
-        state,
-        county,
-        year,
-        spbCount,
         cleridCount,
+        county,
+        spbCount,
+        state,
+        year,
       });
 
       if (result) {

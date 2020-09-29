@@ -14,11 +14,11 @@ dotenv.config({ silent: true });
 const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost/pb-dev';
 
 const mongooseOptions = {
+  loggerLevel: 'error',
+  useCreateIndex: true,
+  useFindAndModify: false,
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  useCreateIndex: true,
-  loggerLevel: 'error',
-  useFindAndModify: false,
 };
 
 mongoose.connect(mongoURI, mongooseOptions).then(() => {
@@ -44,8 +44,8 @@ app.use((_req, res, next) => {
 app.use(morgan('dev'));
 
 // enable json message body for posting data to API, extend default size limit
-app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
-app.use(bodyParser.json({ limit: '50mb', extended: true }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
+app.use(bodyParser.json({ extended: true, limit: '50mb' }));
 
 // ROUTES
 Object.entries(routers).forEach(([prefix, router]) => {

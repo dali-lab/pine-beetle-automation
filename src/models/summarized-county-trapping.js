@@ -4,26 +4,26 @@ import mongoose, { Schema } from 'mongoose';
 // multiple indexing on state/county/year for index intersection
 // speeds up merging w/ spot data, also speeds up client-side reading
 const SummarizedCountyTrappingSchema = new Schema({
-  state: {
-    type: String,
-    index: true,
+  cleridCount: {
+    min: 0,
+    type: Number,
   },
   county: {
+    index: true,
     type: String,
-    index: true,
-  },
-  year: {
-    type: Number,
-    min: 1900,
-    index: true,
   },
   spbCount: {
-    type: Number,
     min: 0,
+    type: Number,
   },
-  cleridCount: {
+  state: {
+    index: true,
+    type: String,
+  },
+  year: {
+    index: true,
+    min: 1900,
     type: Number,
-    min: 0,
   },
 });
 

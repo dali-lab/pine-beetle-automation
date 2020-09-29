@@ -3,48 +3,48 @@ import mongoose, { Schema } from 'mongoose';
 // collection 1: historical unsummarized trapping
 // multiple indexing on S/Y to support aggregating individual years/states
 const UnsummarizedTrappingSchema = new Schema({
-  state: {
-    type: String,
-    index: true,
+  cleridCount: {
+    min: 0,
+    type: Number,
   },
   county: {
     type: String,
   },
+  latitude: {
+    max: 90,
+    min: -90,
+    type: Number,
+  },
+  longitude: {
+    max: 180,
+    min: -180,
+    type: Number,
+  },
+  month: {
+    max: 12,
+    min: 1,
+    type: Number,
+  },
   rangerDistrict: {
     type: String,
   },
-  year: {
+  spbCount: {
+    min: 0,
     type: Number,
-    min: 1900,
-    index: true,
   },
-  month: {
-    type: Number,
-    min: 1,
-    max: 12,
+  state: {
+    index: true,
+    type: String,
   },
   week: {
-    type: Number,
-    min: 1,
     max: 52,
-  },
-  spbCount: {
+    min: 1,
     type: Number,
-    min: 0,
   },
-  cleridCount: {
+  year: {
+    index: true,
+    min: 1900,
     type: Number,
-    min: 0,
-  },
-  latitude: {
-    type: Number,
-    min: -90,
-    max: 90,
-  },
-  longitude: {
-    type: Number,
-    min: -180,
-    max: 180,
   },
 });
 

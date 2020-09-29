@@ -13,11 +13,11 @@ const rModelRouter = Router();
 rModelRouter.route('/')
   .get(async (req, res) => {
     const {
-      SPB = 0,
       cleridst1 = 0,
+      endobrev = 0,
+      SPB = 0,
       spotst1 = 0,
       spotst2 = 0,
-      endobrev = 0,
     } = req.query;
 
     try {

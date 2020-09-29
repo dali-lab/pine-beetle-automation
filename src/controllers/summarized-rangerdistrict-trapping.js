@@ -23,7 +23,7 @@ const checkBody = (reqbody) => {
 };
 
 /**
- * @description Fetches one week's data from the summarized ranger district collection.
+ * @description Fetches one year's data from the summarized ranger district collection.
  * @param {String} id ID of the document wanted
  * @returns {Promise<SummarizedRangerDistrictTrappingModel>} the document in question
  * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
@@ -43,9 +43,10 @@ export const getAll = async () => {
 };
 
 /**
- * @description Inserts one week's data into the summarized ranger district collection.
+ * @description Inserts one year's data into the summarized ranger district collection.
  * @param doc SummarizedRangerDistrictTrappingModel document
  * @returns {Promise<SummarizedRangerDistrictTrappingModel>}
+ * @throws RESPONSE_TYPES.BAD_REQUEST if missing input
  */
 export const insertOne = async (doc) => {
   if (!checkBody(doc)) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
@@ -68,10 +69,11 @@ export const insertOne = async (doc) => {
 };
 
 /**
- * @description Updates one week's data in the summarized ranger district collection.
+ * @description Updates one year's data in the summarized ranger district collection.
  * @param {String} id ID of the document to update
  * @param doc SummarizedRangerDistrictTrappingModel document
  * @returns {Promise<SummarizedRangerDistrictTrappingModel>} updated doc
+ * @throws RESPONSE_TYPES.BAD_REQUEST if missing input
  * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
  */
 export const updateById = async (id, doc) => {
@@ -99,7 +101,7 @@ export const updateById = async (id, doc) => {
 };
 
 /**
- * @description Deletes one week's data in the summarized ranger district collection.
+ * @description Deletes one year's data in the summarized ranger district collection.
  * @param {String} id ID of the document to delete
  * @returns {Promise<SummarizedRangerDistrictTrappingModel>} deleted doc
  * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id

@@ -5,6 +5,10 @@ import {
   newError,
 } from '../constants';
 
+/**
+ * @param {Object} reqbody the proposed document to check from req.body
+ * @returns true if body is valid, false otherwise
+ */
 const checkBody = (reqbody) => {
   const params = [
     'cleridCount',

@@ -1,12 +1,37 @@
 import { SummarizedRangerDistrictTrappingModel } from '../models';
 
+import {
+  RESPONSE_TYPES,
+  newError,
+} from '../constants';
+
+/**
+ * @param {Object} reqbody the proposed document to check from req.body
+ * @returns true if body is valid, false otherwise
+ */
+const checkBody = (reqbody) => {
+  const params = [
+    'cleridCount',
+    'rangerDistrict',
+    'spbCount',
+    'state',
+    'year',
+  ];
+  return params.reduce((hasAllKeys, key) => {
+    return hasAllKeys && Object.keys(reqbody).includes(key);
+  }, true);
+};
+
 /**
  * @description Fetches one week's data from the summarized ranger district collection.
  * @param {String} id ID of the document wanted
  * @returns {Promise<SummarizedRangerDistrictTrappingModel>} the document in question
+ * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
  */
 export const getById = async (id) => {
-  return SummarizedRangerDistrictTrappingModel.findById(id);
+  const doc = await SummarizedRangerDistrictTrappingModel.findById(id);
+  if (!doc) throw newError(RESPONSE_TYPES.NOT_FOUND, 'ID not found');
+  return doc;
 };
 
 /**
@@ -20,9 +45,25 @@ export const getAll = async () => {
 /**
  * @description Inserts one week's data into the summarized ranger district collection.
  * @param doc SummarizedRangerDistrictTrappingModel document
+ * @returns {Promise<SummarizedRangerDistrictTrappingModel>}
  */
 export const insertOne = async (doc) => {
-  const newDoc = new SummarizedRangerDistrictTrappingModel(doc);
+  if (!checkBody(doc)) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
+
+  const {
+    cleridCount,
+    rangerDistrict,
+    spbCount,
+    state,
+    year,
+  } = doc;
+  const newDoc = new SummarizedRangerDistrictTrappingModel({
+    cleridCount,
+    rangerDistrict,
+    spbCount,
+    state,
+    year,
+  });
   return newDoc.save();
 };
 
@@ -30,18 +71,43 @@ export const insertOne = async (doc) => {
  * @description Updates one week's data in the summarized ranger district collection.
  * @param {String} id ID of the document to update
  * @param doc SummarizedRangerDistrictTrappingModel document
- * @returns {Promise<SummarizedRangerDistrictTrappingModel>}
+ * @returns {Promise<SummarizedRangerDistrictTrappingModel>} updated doc
+ * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
  */
 export const updateById = async (id, doc) => {
-  return SummarizedRangerDistrictTrappingModel.findByIdAndUpdate(id, doc, { new: true, omitUndefined: true });
+  if (!checkBody(doc)) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
+
+  const {
+    cleridCount,
+    rangerDistrict,
+    spbCount,
+    state,
+    year,
+  } = doc;
+  const updatedDoc = await SummarizedRangerDistrictTrappingModel.findByIdAndUpdate(id, {
+    cleridCount,
+    rangerDistrict,
+    spbCount,
+    state,
+    year,
+  }, {
+    new: true,
+    omitUndefined: true,
+  });
+  if (!updatedDoc) throw newError(RESPONSE_TYPES.NOT_FOUND, 'ID not found');
+  return updatedDoc;
 };
 
 /**
  * @description Deletes one week's data in the summarized ranger district collection.
  * @param {String} id ID of the document to delete
+ * @returns {Promise<SummarizedRangerDistrictTrappingModel>} deleted doc
+ * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
  */
 export const deleteById = async (id) => {
-  return SummarizedRangerDistrictTrappingModel.findByIdAndDelete(id);
+  const deletedDoc = await SummarizedRangerDistrictTrappingModel.findByIdAndDelete(id);
+  if (!deletedDoc) throw newError(RESPONSE_TYPES.NOT_FOUND, 'ID not found');
+  return deletedDoc;
 };
 
 /**
@@ -62,11 +128,11 @@ export const summarizeStateYear = async (state, year) => {
 };
 
 /**
- * Fetches summarized county trapping data depending on a filter.
+ * Fetches summarized ranger district trapping data depending on a filter.
  * @param {Number} startYear the earliest year to return, inclusive
  * @param {Number} endYear the latest year to return, inclusive
  * @param {String} state the state to return
- * @param {String} rangerDistrict the ranger district to return
+ * @param {String} ranger district the rangerDistrict to return
  */
 export const getByFilter = async (startYear, endYear, state, rangerDistrict) => {
   const query = SummarizedRangerDistrictTrappingModel.find();

@@ -1,12 +1,33 @@
 import { SummarizedCountyTrappingModel } from '../models';
 
+import {
+  RESPONSE_TYPES,
+  newError,
+} from '../constants';
+
+const checkBody = (reqbody) => {
+  const params = [
+    'cleridCount',
+    'county',
+    'spbCount',
+    'state',
+    'year',
+  ];
+  return params.reduce((hasAllKeys, key) => {
+    return hasAllKeys && Object.keys(reqbody).includes(key);
+  }, true);
+};
+
 /**
  * @description Fetches one week's data from the summarized county collection.
  * @param {String} id ID of the document wanted
  * @returns {Promise<SummarizedCountyTrappingModel>} the document in question
+ * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
  */
 export const getById = async (id) => {
-  return SummarizedCountyTrappingModel.findById(id);
+  const doc = await SummarizedCountyTrappingModel.findById(id);
+  if (!doc) throw newError(RESPONSE_TYPES.NOT_FOUND, 'ID not found');
+  return doc;
 };
 
 /**
@@ -20,9 +41,25 @@ export const getAll = async () => {
 /**
  * @description Inserts one week's data into the summarized county collection.
  * @param doc SummarizedCountyTrappingModel document
+ * @returns {Promise<SummarizedCountyTrappingModel>}
  */
 export const insertOne = async (doc) => {
-  const newDoc = new SummarizedCountyTrappingModel(doc);
+  if (!checkBody(doc)) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
+
+  const {
+    cleridCount,
+    county,
+    spbCount,
+    state,
+    year,
+  } = doc;
+  const newDoc = new SummarizedCountyTrappingModel({
+    cleridCount,
+    county,
+    spbCount,
+    state,
+    year,
+  });
   return newDoc.save();
 };
 
@@ -30,18 +67,43 @@ export const insertOne = async (doc) => {
  * @description Updates one week's data in the summarized county collection.
  * @param {String} id ID of the document to update
  * @param doc SummarizedCountyTrappingModel document
- * @returns {Promise<SummarizedCountyTrappingModel>}
+ * @returns {Promise<SummarizedCountyTrappingModel>} updated doc
+ * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
  */
 export const updateById = async (id, doc) => {
-  return SummarizedCountyTrappingModel.findByIdAndUpdate(id, doc, { new: true, omitUndefined: true });
+  if (!checkBody(doc)) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
+
+  const {
+    cleridCount,
+    county,
+    spbCount,
+    state,
+    year,
+  } = doc;
+  const updatedDoc = await SummarizedCountyTrappingModel.findByIdAndUpdate(id, {
+    cleridCount,
+    county,
+    spbCount,
+    state,
+    year,
+  }, {
+    new: true,
+    omitUndefined: true,
+  });
+  if (!updatedDoc) throw newError(RESPONSE_TYPES.NOT_FOUND, 'ID not found');
+  return updatedDoc;
 };
 
 /**
  * @description Deletes one week's data in the summarized county collection.
  * @param {String} id ID of the document to delete
+ * @returns {Promise<SummarizedCountyTrappingModel>} deleted doc
+ * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
  */
 export const deleteById = async (id) => {
-  return SummarizedCountyTrappingModel.findByIdAndDelete(id);
+  const deletedDoc = await SummarizedCountyTrappingModel.findByIdAndDelete(id);
+  if (!deletedDoc) throw newError(RESPONSE_TYPES.NOT_FOUND, 'ID not found');
+  return deletedDoc;
 };
 
 /**

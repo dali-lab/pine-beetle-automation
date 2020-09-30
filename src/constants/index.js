@@ -1,4 +1,3 @@
-/* eslint-disable arrow-body-style */
 import RESPONSE_CODES from './response-codes.json';
 import RESPONSE_TYPES from './response-types.json';
 
@@ -42,12 +41,10 @@ export const generateErrorResponse = (error) => {
  * @param {String} message error message
  * @returns {Object} standardized error format
  */
-export const newError = (type, message) => {
-  return {
-    message,
-    type,
-  };
-};
+export const newError = (type, message) => ({
+  message,
+  type,
+});
 
 /**
  * higher-order function to construct each controller's body-cleaner through dependency injection

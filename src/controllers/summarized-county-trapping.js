@@ -1,26 +1,21 @@
 import { SummarizedCountyTrappingModel } from '../models';
 
 import {
+  cleanBodyCreator,
   RESPONSE_TYPES,
   newError,
 } from '../constants';
 
-/**
- * @param {Object} reqbody the proposed document to check from req.body
- * @returns true if body is valid, false otherwise
- */
-const checkBody = (reqbody) => {
-  const params = [
-    'cleridCount',
-    'county',
-    'spbCount',
-    'state',
-    'year',
-  ];
-  return params.reduce((hasAllKeys, key) => {
-    return hasAllKeys && Object.keys(reqbody).includes(key);
-  }, true);
-};
+const modelAttributes = [
+  'cleridCount',
+  'county',
+  'spbCount',
+  'state',
+  'year',
+];
+
+// this is a function to clean req.body
+const cleanBody = cleanBodyCreator(modelAttributes);
 
 /**
  * @description Fetches one year's data from the summarized county collection.
@@ -44,55 +39,31 @@ export const getAll = async () => {
 
 /**
  * @description Inserts one year's data into the summarized county collection.
- * @param doc SummarizedCountyTrappingModel document
+ * @param {Object} body request body to be cleaned and added
  * @returns {Promise<SummarizedCountyTrappingModel>}
  * @throws RESPONSE_TYPES.BAD_REQUEST if missing input
  */
-export const insertOne = async (doc) => {
-  if (!checkBody(doc)) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
+export const insertOne = async (body) => {
+  const cleanedBody = cleanBody(body);
+  if (!cleanedBody) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
 
-  const {
-    cleridCount,
-    county,
-    spbCount,
-    state,
-    year,
-  } = doc;
-  const newDoc = new SummarizedCountyTrappingModel({
-    cleridCount,
-    county,
-    spbCount,
-    state,
-    year,
-  });
+  const newDoc = new SummarizedCountyTrappingModel(cleanedBody);
   return newDoc.save();
 };
 
 /**
  * @description Updates one year's data in the summarized county collection.
  * @param {String} id ID of the document to update
- * @param doc SummarizedCountyTrappingModel document
+ * @param {Object} body request body to be cleaned and added
  * @returns {Promise<SummarizedCountyTrappingModel>} updated doc
  * @throws RESPONSE_TYPES.BAD_REQUEST if missing input
  * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
  */
-export const updateById = async (id, doc) => {
-  if (!checkBody(doc)) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
+export const updateById = async (id, body) => {
+  const cleanedBody = cleanBody(body);
+  if (!cleanedBody) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
 
-  const {
-    cleridCount,
-    county,
-    spbCount,
-    state,
-    year,
-  } = doc;
-  const updatedDoc = await SummarizedCountyTrappingModel.findByIdAndUpdate(id, {
-    cleridCount,
-    county,
-    spbCount,
-    state,
-    year,
-  }, {
+  const updatedDoc = await SummarizedCountyTrappingModel.findByIdAndUpdate(id, cleanBody, {
     new: true,
     omitUndefined: true,
   });

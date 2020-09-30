@@ -1,26 +1,21 @@
 import { SummarizedRangerDistrictTrappingModel } from '../models';
 
 import {
+  cleanBodyCreator,
   RESPONSE_TYPES,
   newError,
 } from '../constants';
 
-/**
- * @param {Object} reqbody the proposed document to check from req.body
- * @returns true if body is valid, false otherwise
- */
-const checkBody = (reqbody) => {
-  const params = [
-    'cleridCount',
-    'rangerDistrict',
-    'spbCount',
-    'state',
-    'year',
-  ];
-  return params.reduce((hasAllKeys, key) => {
-    return hasAllKeys && Object.keys(reqbody).includes(key);
-  }, true);
-};
+const modelAttributes = [
+  'cleridCount',
+  'rangerDistrict',
+  'spbCount',
+  'state',
+  'year',
+];
+
+// this is a function to clean req.body
+const cleanBody = cleanBodyCreator(modelAttributes);
 
 /**
  * @description Fetches one year's data from the summarized ranger district collection.
@@ -44,55 +39,31 @@ export const getAll = async () => {
 
 /**
  * @description Inserts one year's data into the summarized ranger district collection.
- * @param doc SummarizedRangerDistrictTrappingModel document
+ * @param {Object} body request body to be cleaned and added
  * @returns {Promise<SummarizedRangerDistrictTrappingModel>}
  * @throws RESPONSE_TYPES.BAD_REQUEST if missing input
  */
-export const insertOne = async (doc) => {
-  if (!checkBody(doc)) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
+export const insertOne = async (body) => {
+  const cleanedBody = cleanBody(body);
+  if (!cleanedBody) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
 
-  const {
-    cleridCount,
-    rangerDistrict,
-    spbCount,
-    state,
-    year,
-  } = doc;
-  const newDoc = new SummarizedRangerDistrictTrappingModel({
-    cleridCount,
-    rangerDistrict,
-    spbCount,
-    state,
-    year,
-  });
+  const newDoc = new SummarizedRangerDistrictTrappingModel(cleanedBody);
   return newDoc.save();
 };
 
 /**
  * @description Updates one year's data in the summarized ranger district collection.
  * @param {String} id ID of the document to update
- * @param doc SummarizedRangerDistrictTrappingModel document
+ * @param {Object} body request body to be cleaned and added
  * @returns {Promise<SummarizedRangerDistrictTrappingModel>} updated doc
  * @throws RESPONSE_TYPES.BAD_REQUEST if missing input
  * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
  */
-export const updateById = async (id, doc) => {
-  if (!checkBody(doc)) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
+export const updateById = async (id, body) => {
+  const cleanedBody = cleanBody(body);
+  if (!cleanedBody) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
 
-  const {
-    cleridCount,
-    rangerDistrict,
-    spbCount,
-    state,
-    year,
-  } = doc;
-  const updatedDoc = await SummarizedRangerDistrictTrappingModel.findByIdAndUpdate(id, {
-    cleridCount,
-    rangerDistrict,
-    spbCount,
-    state,
-    year,
-  }, {
+  const updatedDoc = await SummarizedRangerDistrictTrappingModel.findByIdAndUpdate(id, cleanBody, {
     new: true,
     omitUndefined: true,
   });
@@ -134,7 +105,7 @@ export const summarizeStateYear = async (state, year) => {
  * @param {Number} startYear the earliest year to return, inclusive
  * @param {Number} endYear the latest year to return, inclusive
  * @param {String} state the state to return
- * @param {String} ranger district the rangerDistrict to return
+ * @param {String} ranger district the county to return
  */
 export const getByFilter = async (startYear, endYear, state, rangerDistrict) => {
   const query = SummarizedRangerDistrictTrappingModel.find();

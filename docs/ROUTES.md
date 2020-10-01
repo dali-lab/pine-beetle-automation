@@ -113,3 +113,51 @@ Missing values will be ignored.
 ## `DELETE /summarized-rangerdistrict-trapping/:id`
 
 Deletes a row of summarized trapping data by its unique id.
+
+## `GET /unsummarized-trapping/`
+
+Returns all unsummarized trapping data.
+
+## `POST /unsummarized-trapping/`
+
+Creates new entry for unsummarized trapping data. Requires auth.
+
+Expects the following in the body:
+
+- `cleridCount` (type: Number, min: 0)
+- `county` (type: String)
+- `latitude` (type: Number, min: -90, max: 90)
+- `longitude` (type: Number, min: -180, max: 180)
+- `month` (type: Number, min: 1, max: 12)
+- `rangerDistrict` (type: String)
+- `spbCount` (type: Number, min: 0)
+- `state` (type: String)
+- `week` (type: Number, min: 1, max: 52)
+- `year` (type: Number, min: 1900)
+
+## `GET /unsummarized-trapping/:id`
+
+Gets a row of unsummarized trapping data by its unique id.
+
+## `PUT /unsummarized-trapping/:id`
+
+Updates a row of unsummarized trapping data by its unique id. Requires auth.
+
+Expects the following in the body:
+
+- `cleridCount` (type: Number, min: 0)
+- `county` (type: String)
+- `latitude` (type: Number, min: -90, max: 90)
+- `longitude` (type: Number, min: -180, max: 180)
+- `month` (type: Number, min: 1, max: 12)
+- `rangerDistrict` (type: String)
+- `spbCount` (type: Number, min: 0)
+- `state` (type: String)
+- `week` (type: Number, min: 1, max: 52)
+- `year` (type: Number, min: 1900)
+
+Missing values will be ignored.
+
+## `DELETE /unsummarized-trapping/:id`
+
+Deletes a row of unsummarized trapping data by its unique id. Requires auth.

@@ -7,6 +7,7 @@ import {
 } from '../constants';
 
 import { UnsummarizedTrapping } from '../controllers';
+import { requireAuth } from '../middleware';
 
 const unsummarizedTrappingRouter = Router();
 
@@ -22,7 +23,7 @@ unsummarizedTrappingRouter.route('/')
     }
   })
 
-  .post(async (req, res) => { // add a new document to collection
+  .post(requireAuth, async (req, res) => { // add a new document to collection
     try {
       const documents = await UnsummarizedTrapping.insertOne(req.body);
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, documents));
@@ -44,7 +45,7 @@ unsummarizedTrappingRouter.route('/:id')
     }
   })
 
-  .put(async (req, res) => { // modify a document by its unique id
+  .put(requireAuth, async (req, res) => { // modify a document by its unique id
     try {
       const documents = await UnsummarizedTrapping.updateById(req.params.id, req.body);
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, documents));
@@ -54,7 +55,7 @@ unsummarizedTrappingRouter.route('/:id')
     }
   })
 
-  .delete((async (req, res) => { // delete a document by its unique id
+  .delete(requireAuth, (async (req, res) => { // delete a document by its unique id
     try {
       const documents = await UnsummarizedTrapping.deleteById(req.params.id);
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, documents));

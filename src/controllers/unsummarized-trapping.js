@@ -1,12 +1,37 @@
 import { UnsummarizedTrappingModel } from '../models';
 
+import {
+  cleanBodyCreator,
+  RESPONSE_TYPES,
+  newError,
+} from '../constants';
+
+const modelAttributes = [
+  'cleridCount',
+  'county',
+  'latitude',
+  'longitude',
+  'month',
+  'rangerDistrict',
+  'spbCount',
+  'state',
+  'week',
+  'year',
+];
+
+// this is a function to clean req.body
+const cleanBody = cleanBodyCreator(modelAttributes);
+
 /**
  * @description Fetches one week's data from the unsummarized collection.
  * @param {String} id ID of the document wanted
  * @returns {Promise<UnsummarizedTrappingModel>} the document in question
+ * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
  */
 export const getById = async (id) => {
-  return UnsummarizedTrappingModel.findById(id);
+  const doc = await UnsummarizedTrappingModel.findById(id);
+  if (!doc) throw newError(RESPONSE_TYPES.NOT_FOUND, 'ID not found');
+  return doc;
 };
 
 /**
@@ -19,27 +44,46 @@ export const getAll = async () => {
 
 /**
  * @description Inserts one week's data into the unsummarized collection.
- * @param doc UnsummarizedTrappingModel document
+ * @param {Object} body request body to be cleaned and added
+ * @returns {Promise<UnsummarizedTrappingModel>}
+ * @throws RESPONSE_TYPES.BAD_REQUEST if missing input
  */
-export const insertOne = async (doc) => {
-  const newDoc = new UnsummarizedTrappingModel(doc);
+export const insertOne = async (body) => {
+  const cleanedBody = cleanBody(body);
+  if (!cleanedBody) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
+
+  const newDoc = new UnsummarizedTrappingModel(body);
   return newDoc.save();
 };
 
 /**
  * @description Updates one week's data in the unsummarized collection.
  * @param {String} id ID of the document to update
- * @param doc UnsummarizedTrappingModel document
+ * @param {Object} body request body to be cleaned and added
  * @returns {Promise<UnsummarizedTrappingModel>}
+ * @throws RESPONSE_TYPES.BAD_REQUEST if missing input
+ * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
  */
-export const updateById = async (id, doc) => {
-  return UnsummarizedTrappingModel.findByIdAndUpdate(id, doc, { new: true, omitUndefined: true });
+export const updateById = async (id, body) => {
+  const cleanedBody = cleanBody(body);
+  if (!cleanedBody) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
+
+  const updatedDoc = await UnsummarizedTrappingModel.findByIdAndUpdate(id, body, {
+    new: true,
+    omitUndefined: true,
+  });
+  if (!updatedDoc) throw newError(RESPONSE_TYPES.NOT_FOUND, 'ID not found');
+  return updatedDoc;
 };
 
 /**
  * @description Deletes one week's data in the unsummarized collection.
  * @param {String} id ID of the document to delete
+ * @returns {Promise<UnsummarizedTrappingModel>}
+ * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
  */
 export const deleteById = async (id) => {
-  return UnsummarizedTrappingModel.findByIdAndDelete(id);
+  const deletedDoc = await UnsummarizedTrappingModel.findByIdAndDelete(id);
+  if (!deletedDoc) throw newError(RESPONSE_TYPES.NOT_FOUND, 'ID not found');
+  return deletedDoc;
 };

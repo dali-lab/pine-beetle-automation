@@ -1,8 +1,8 @@
 import { Router } from 'express';
 
 import {
+  generateErrorResponse,
   generateResponse,
-  RESPONSE_CODES,
   RESPONSE_TYPES,
 } from '../constants';
 
@@ -15,40 +15,31 @@ summarizedRangerDistrictTrappingRouter.route('/')
   .get(async (_req, res) => {
     try {
       const result = await SummarizedRangerDistrictTrapping.getAll();
+
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
-      console.log(error);
-      res.status(RESPONSE_CODES.INTERNAL_ERROR.status)
-        .send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
     }
   })
 
   .post(requireAuth, async (req, res) => {
-    if (!req.body) {
-      res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'empty body'));
-      return;
-    }
-    const {
-      cleridCount,
-      rangerDistrict,
-      spbCount,
-      state,
-      year,
-    } = req.body;
-
     try {
-      const result = await SummarizedRangerDistrictTrapping.insertOne({
-        cleridCount,
-        rangerDistrict,
-        spbCount,
-        state,
-        year,
-      });
+      if (!Object.keys(req.body).length) {
+        res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'empty body'));
+        return;
+      }
+
+      const result = await SummarizedRangerDistrictTrapping.insertOne(req.body);
+
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
-      console.log(error);
-      res.status(RESPONSE_CODES.INTERNAL_ERROR.status)
-        .send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
     }
   });
 
@@ -63,87 +54,62 @@ summarizedRangerDistrictTrappingRouter.route('/filter')
 
     try {
       const result = await SummarizedRangerDistrictTrapping.getByFilter(startYear, endYear, state, rangerDistrict);
+
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
-      console.log(error);
-      res.status(RESPONSE_CODES.INTERNAL_ERROR.status)
-        .send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
     }
   });
 
 summarizedRangerDistrictTrappingRouter.route('/:id')
   .get(async (req, res) => {
-    const { id } = req.params;
-
     try {
+      const { id } = req.params;
       const result = await SummarizedRangerDistrictTrapping.getById(id);
 
-      if (result) {
-        res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
-      } else {
-        res.status(RESPONSE_CODES.NOT_FOUND.status)
-          .send(generateResponse(RESPONSE_TYPES.NOT_FOUND, 'ID not found'));
-      }
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
-      console.log(error);
-      res.status(RESPONSE_CODES.INTERNAL_ERROR.status)
-        .send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
     }
   })
 
   .put(requireAuth, async (req, res) => {
-    const { id } = req.params;
-
-    if (!req.body) {
-      res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'empty body'));
-      return;
-    }
-    const {
-      cleridCount,
-      rangerDistrict,
-      spbCount,
-      state,
-      year,
-    } = req.body;
-
     try {
-      const result = await SummarizedRangerDistrictTrapping.updateById(id, {
-        cleridCount,
-        rangerDistrict,
-        spbCount,
-        state,
-        year,
-      });
+      const { id } = req.params;
 
-      if (result) {
-        res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
-      } else {
-        res.status(RESPONSE_CODES.NOT_FOUND.status)
-          .send(generateResponse(RESPONSE_TYPES.NOT_FOUND, 'ID not found'));
+      if (!Object.keys(req.body).length) {
+        res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'empty body'));
+        return;
       }
+
+      const result = await SummarizedRangerDistrictTrapping.updateById(id, req.body);
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
-      console.log(error);
-      res.status(RESPONSE_CODES.INTERNAL_ERROR.status)
-        .send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
     }
   })
 
   .delete(requireAuth, async (req, res) => {
-    const { id } = req.params;
-
     try {
+      const { id } = req.params;
       const result = await SummarizedRangerDistrictTrapping.deleteById(id);
 
-      if (result) {
-        res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
-      } else {
-        res.status(RESPONSE_CODES.NOT_FOUND.status)
-          .send(generateResponse(RESPONSE_TYPES.NOT_FOUND, 'ID not found'));
-      }
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
-      console.log(error);
-      res.status(RESPONSE_CODES.INTERNAL_ERROR.status)
-        .send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
     }
   });
 

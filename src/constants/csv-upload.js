@@ -1,5 +1,3 @@
-/* eslint-disable import/prefer-default-export */
-// import mongoose from 'mongoose';
 import path from 'path';
 import fs from 'fs';
 import { parseFile } from 'fast-csv';

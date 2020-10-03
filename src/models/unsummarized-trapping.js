@@ -1,8 +1,16 @@
 import mongoose, { Schema } from 'mongoose';
 import numeral from 'numeral';
 
-mongoose.Number.cast((v) => {
+// use custom casting to better read unclean data
+mongoose.SchemaTypes.Number.cast((v) => {
   return numeral(v).value();
+});
+
+// custom cast to turn empty strings into null
+const stringcast = mongoose.SchemaTypes.String.cast();
+mongoose.SchemaTypes.String.cast((v) => {
+  if (!v) return null;
+  return stringcast(v);
 });
 
 // collection 1: historical unsummarized trapping
@@ -25,7 +33,7 @@ const UnsummarizedTrappingSchema = new Schema({
     type: String,
   },
   daysActive: {
-    type: String,
+    type: Number,
   },
   endobrev: {
     type: Number, // unsure of this

@@ -69,34 +69,4 @@ export const csvUploadCreator = (ModelName, cleanCsv, cleanBody) => async (filen
           });
       });
   });
-  // const session = await mongoose.startSession();
-  //
-  // // begin mongoose transaction to roll-back if error
-  // await session.withTransaction(async () => {
-  //   return new Promise((resolve, reject) => {
-  //     const promises = [];
-  //
-  //     // parse the file as a stream from disk
-  //     parseFile(filepath, { headers: true })
-  //       .on('data', (data) => {
-  //       // cast the csv fields to our schema
-  //         const cleanedData = cleanBody(cleanCsv(data));
-  //         if (!cleanedData) reject(newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in csv'));
-  //
-  //         const newDoc = new ModelName(cleanedData);
-  //         promises.push(newDoc.save({ session }));
-  //       })
-  //       .on('error', (err) => reject(err))
-  //       .on('end', (rowCount) => {
-  //         Promise.all(promises)
-  //           .then(() => {
-  //             console.log(`successfully parsed ${rowCount} rows from csv upload`);
-  //             resolve();
-  //           })
-  //           .catch((err) => reject(err));
-  //       });
-  //   });
-  // });
-  //
-  // session.endSession();
 };

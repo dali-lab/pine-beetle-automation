@@ -1,3 +1,4 @@
+import CSV_TO_MODEL from './csv-to-model.json';
 import RESPONSE_CODES from './response-codes.json';
 import RESPONSE_TYPES from './response-types.json';
 
@@ -59,6 +60,7 @@ export const cleanBodyCreator = (paramsToExtract) => (reqbody) => (
 );
 
 export {
+  CSV_TO_MODEL,
   RESPONSE_CODES,
   RESPONSE_TYPES,
 };

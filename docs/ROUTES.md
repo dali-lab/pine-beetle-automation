@@ -41,7 +41,7 @@ Returns a filtered slice of the summarized county trapping data. Expects the fol
 - `state`
 - `county`
 
-Missing parameters is ok; the filter will simply ignore them.
+Null parameters are ok; the filter will simply ignore them.
 
 ## `GET /summarized-county-trapping/:id`
 
@@ -124,16 +124,26 @@ Creates new entry for unsummarized trapping data. Requires auth.
 
 Expects the following in the body:
 
-- `cleridCount` (type: Number, min: 0)
-- `county` (type: String)
-- `latitude` (type: Number, min: -90, max: 90)
-- `longitude` (type: Number, min: -180, max: 180)
-- `month` (type: Number, min: 1, max: 12)
-- `rangerDistrict` (type: String)
-- `spbCount` (type: Number, min: 0)
-- `state` (type: String)
-- `week` (type: Number, min: 1, max: 52)
-- `year` (type: Number, min: 1900)
+- `bloom` String
+- `bloomDate` Date
+- `cleridCount` Number
+- `collectionDate` Date
+- `county` String
+- `daysActive` String
+- `endobrev` Number
+- `fips` Number
+- `latitude` Number
+- `longitude` Number
+- `lure` String
+- `rangerDistrict` String
+- `season` String
+- `sirexLure` String
+- `spbCount` Number
+- `startDate` Date
+- `state` String
+- `trap` String
+- `week` Number
+- `year` Number
 
 ## `GET /unsummarized-trapping/:id`
 
@@ -145,18 +155,28 @@ Updates a row of unsummarized trapping data by its unique id. Requires auth.
 
 Expects the following in the body:
 
-- `cleridCount` (type: Number, min: 0)
-- `county` (type: String)
-- `latitude` (type: Number, min: -90, max: 90)
-- `longitude` (type: Number, min: -180, max: 180)
-- `month` (type: Number, min: 1, max: 12)
-- `rangerDistrict` (type: String)
-- `spbCount` (type: Number, min: 0)
-- `state` (type: String)
-- `week` (type: Number, min: 1, max: 52)
-- `year` (type: Number, min: 1900)
+- `bloom` String
+- `bloomDate` Date
+- `cleridCount` Number
+- `collectionDate` Date
+- `county` String
+- `daysActive` String
+- `endobrev` Number
+- `fips` Number
+- `latitude` Number
+- `longitude` Number
+- `lure` String
+- `rangerDistrict` String
+- `season` String
+- `sirexLure` String
+- `spbCount` Number
+- `startDate` Date
+- `state` String
+- `trap` String
+- `week` Number
+- `year` Number
 
-Missing values will be ignored.
+Null values will be ignored.
 
 ## `DELETE /unsummarized-trapping/:id`
 

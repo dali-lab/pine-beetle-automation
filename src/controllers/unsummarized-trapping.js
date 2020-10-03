@@ -2,22 +2,13 @@ import { UnsummarizedTrappingModel } from '../models';
 
 import {
   cleanBodyCreator,
+  // CSV_TO_MODEL, // to be used later for data cleaning
   RESPONSE_TYPES,
   newError,
 } from '../constants';
 
-const modelAttributes = [
-  'cleridCount',
-  'county',
-  'latitude',
-  'longitude',
-  'month',
-  'rangerDistrict',
-  'spbCount',
-  'state',
-  'week',
-  'year',
-];
+const modelAttributes = Object.keys(UnsummarizedTrappingModel.schema.paths)
+  .filter((attr) => attr !== '_id' && attr !== '__v');
 
 // this is a function to clean req.body
 const cleanBody = cleanBodyCreator(modelAttributes);

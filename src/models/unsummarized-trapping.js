@@ -1,4 +1,9 @@
 import mongoose, { Schema } from 'mongoose';
+import numeral from 'numeral';
+
+mongoose.Number.cast((v) => {
+  return numeral(v).value();
+});
 
 // collection 1: historical unsummarized trapping
 // multiple indexing on S/Y to support aggregating individual years/states

@@ -1,6 +1,8 @@
 import { Router } from 'express';
+import multer from 'multer';
 
 import {
+  deleteFile,
   generateErrorResponse,
   generateResponse,
   RESPONSE_TYPES,
@@ -10,6 +12,8 @@ import { UnsummarizedTrapping } from '../controllers';
 import { requireAuth } from '../middleware';
 
 const unsummarizedTrappingRouter = Router();
+
+const upload = multer({ dest: './uploads' });
 
 unsummarizedTrappingRouter.route('/')
   .get(async (_req, res) => { // get all unsummarized data
@@ -40,6 +44,27 @@ unsummarizedTrappingRouter.route('/')
       const { error: errorMessage, status } = errorResponse;
       console.log(errorMessage);
       res.status(status).send(errorResponse);
+    }
+  });
+
+unsummarizedTrappingRouter.route('/upload')
+  .post(upload.single('csv'), async (req, res) => {
+    if (!req.file) {
+      res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'missing file'));
+      return;
+    }
+
+    try {
+      await UnsummarizedTrapping.uploadCsv(req.file.path);
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, 'file uploaded successfully'));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    } finally {
+      await deleteFile(req.file.path);
     }
   });
 

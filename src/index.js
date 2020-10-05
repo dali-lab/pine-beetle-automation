@@ -6,7 +6,8 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import routers from './routers';
 
-import { generateResponse, RESPONSE_CODES, RESPONSE_TYPES } from './constants';
+import { RESPONSE_CODES, RESPONSE_TYPES } from './constants';
+import { generateResponse } from './utils';
 
 dotenv.config({ silent: true });
 

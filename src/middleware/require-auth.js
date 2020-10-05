@@ -1,10 +1,11 @@
 import axios from 'axios';
 
 import {
-  generateResponse,
   RESPONSE_CODES,
   RESPONSE_TYPES,
 } from '../constants';
+
+import { generateResponse } from '../utils';
 
 /**
  * @description custom middleware for requiring user auth

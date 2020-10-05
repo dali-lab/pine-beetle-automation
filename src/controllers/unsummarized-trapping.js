@@ -1,13 +1,16 @@
 import { UnsummarizedTrappingModel } from '../models';
 
 import {
+  RESPONSE_TYPES,
+  CSV_TO_UNSUMMARIZED,
+} from '../constants';
+
+import {
   cleanCsvCreator,
   csvUploadCreator,
-  CSV_TO_UNSUMMARIZED,
   cleanBodyCreator,
-  RESPONSE_TYPES,
   newError,
-} from '../constants';
+} from '../utils';
 
 const modelAttributes = Object.keys(UnsummarizedTrappingModel.schema.paths)
   .filter((attr) => attr !== '_id' && attr !== '__v');

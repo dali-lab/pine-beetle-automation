@@ -1,11 +1,11 @@
 import { Router } from 'express';
 
 import {
-  generateResponse,
   RESPONSE_CODES,
   RESPONSE_TYPES,
 } from '../constants';
 
+import { generateResponse } from '../utils';
 import { rModel } from '../controllers';
 
 const rModelRouter = Router();

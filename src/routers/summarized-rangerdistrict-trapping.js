@@ -3,9 +3,9 @@ import { Router } from 'express';
 import {
   generateErrorResponse,
   generateResponse,
-  RESPONSE_TYPES,
-} from '../constants';
+} from '../utils';
 
+import { RESPONSE_TYPES } from '../constants';
 import { requireAuth } from '../middleware';
 import { SummarizedRangerDistrictTrapping } from '../controllers';
 
@@ -35,6 +35,29 @@ summarizedRangerDistrictTrappingRouter.route('/')
       const result = await SummarizedRangerDistrictTrapping.insertOne(req.body);
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    }
+  });
+
+summarizedRangerDistrictTrappingRouter.route('/aggregate')
+  .get(async (req, res) => {
+    try {
+      const { state, year } = req.query;
+      if (state && year) {
+        await SummarizedRangerDistrictTrapping.summarizeStateYear(state, parseInt(year, 10));
+      } else {
+        await SummarizedRangerDistrictTrapping.summarizeAll();
+      }
+
+      const message = state && year
+        ? `summarized by ranger district on ${state} for ${year}`
+        : 'summarized all by ranger district';
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, message));
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;

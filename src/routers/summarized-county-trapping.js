@@ -3,9 +3,9 @@ import { Router } from 'express';
 import {
   generateErrorResponse,
   generateResponse,
-  RESPONSE_TYPES,
-} from '../constants';
+} from '../utils';
 
+import { RESPONSE_TYPES } from '../constants';
 import { requireAuth } from '../middleware';
 import { SummarizedCountyTrapping } from '../controllers';
 
@@ -56,6 +56,29 @@ summarizedCountyTrappingRouter.route('/filter')
       const result = await SummarizedCountyTrapping.getByFilter(startYear, endYear, state, county);
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    }
+  });
+
+summarizedCountyTrappingRouter.route('/aggregate')
+  .get(async (req, res) => {
+    try {
+      const { state, year } = req.query;
+      if (state && year) {
+        await SummarizedCountyTrapping.summarizeStateYear(state, parseInt(year, 10));
+      } else {
+        await SummarizedCountyTrapping.summarizeAll();
+      }
+
+      const message = state && year
+        ? `summarized by county on ${state} for ${year}`
+        : 'summarized all by county';
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, message));
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;

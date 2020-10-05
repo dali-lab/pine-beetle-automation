@@ -8,6 +8,7 @@ import { RESPONSE_TYPES } from '../constants';
 import {
   aggregationPipelineCreator,
   cleanBodyCreator,
+  csvDownloadCreator,
   matchStateYear,
   newError,
 } from '../utils';
@@ -17,6 +18,13 @@ const modelAttributes = Object.keys(SummarizedCountyTrappingModel.schema.paths)
 
 // this is a function to clean req.body
 const cleanBody = cleanBodyCreator(modelAttributes);
+
+/**
+ * @description downloads a csv of the entire collection
+ * @throws RESPONSE_TYPES.INTERNAL_ERROR for problem parsing CSV
+ * @returns {Function} which when envoked, returns a filepath to a CSV of the collection contents
+ */
+export const downloadCsv = csvDownloadCreator(SummarizedCountyTrappingModel, modelAttributes);
 
 /**
  * @description Fetches one year's data from the summarized county collection.

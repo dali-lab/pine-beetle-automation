@@ -1,5 +1,6 @@
 import {
   cleanCsvCreator,
+  csvDownloadCreator,
   csvUploadCreator,
   deleteFile,
 } from './csv-upload';
@@ -21,6 +22,7 @@ export {
   aggregationPipelineCreator,
   cleanBodyCreator,
   cleanCsvCreator,
+  csvDownloadCreator,
   csvUploadCreator,
   deleteFile,
   generateErrorResponse,

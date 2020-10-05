@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs';
+import { parse } from 'json2csv';
 import { parseFile } from 'fast-csv';
 
 import { newError } from './responses';
@@ -21,10 +22,11 @@ export const cleanCsvCreator = (map) => (row) => {
 /**
  * @description deletes a file WARNING VERY SPOOKY
  * @param {Object} filename multer file to delete
+ * @param {Boolean} [isAbsolutePath] optional param for if user supplied absolute path
  * @returns {Promise}
  */
-export const deleteFile = async (filename) => {
-  const filepath = path.resolve(__dirname, `../../${filename}`);
+export const deleteFile = async (filename, isAbsolutePath) => {
+  const filepath = isAbsolutePath ? filename : path.resolve(__dirname, `../../${filename}`);
 
   return new Promise((resolve) => {
     fs.unlink(filepath, (err) => {
@@ -67,4 +69,20 @@ export const csvUploadCreator = (ModelName, cleanCsv, cleanBody) => async (filen
           });
       });
   });
+};
+
+export const csvDownloadCreator = (ModelName, fields) => async () => {
+  const data = await ModelName.find({});
+
+  try {
+    const csv = parse(data, { fields });
+    const filepath = path.resolve(__dirname, `../../uploads/${Math.random().toString(36).substring(7)}.csv`);
+
+    fs.writeFileSync(filepath, csv);
+
+    return filepath;
+  } catch (err) {
+    console.error(err);
+    throw newError(RESPONSE_TYPES.INTERNAL_ERROR, err.toString());
+  }
 };

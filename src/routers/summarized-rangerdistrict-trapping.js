@@ -43,6 +43,20 @@ summarizedRangerDistrictTrappingRouter.route('/')
     }
   });
 
+summarizedRangerDistrictTrappingRouter.route('/aggregate')
+  .get(async (_req, res) => {
+    try {
+      const result = await SummarizedRangerDistrictTrapping.summarizeAll();
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    }
+  });
+
 summarizedRangerDistrictTrappingRouter.route('/filter')
   .get(async (req, res) => {
     const {

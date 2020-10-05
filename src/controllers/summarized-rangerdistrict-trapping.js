@@ -1,8 +1,12 @@
-import { SummarizedRangerDistrictTrappingModel } from '../models';
+import {
+  SummarizedRangerDistrictTrappingModel,
+  UnsummarizedTrappingModel,
+} from '../models';
 
 import { RESPONSE_TYPES } from '../constants';
 
 import {
+  aggregationPipelineCreator,
   cleanBodyCreator,
   newError,
 } from '../utils';
@@ -83,7 +87,9 @@ export const deleteById = async (id) => {
  * @description Summarizes all trapping data at the ranger district level. Will overwrite all entries in this collection.
  */
 export const summarizeAll = async () => {
-  // return 'hello this is TBD';
+  return UnsummarizedTrappingModel.aggregate([
+    ...aggregationPipelineCreator('rangerDistrict', 'summarizedrangerdistricttrappings'),
+  ]).exec();
 };
 
 /**

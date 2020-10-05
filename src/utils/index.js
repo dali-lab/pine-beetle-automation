@@ -12,7 +12,10 @@ import {
 
 import { cleanBodyCreator } from './requests';
 
+import { aggregationPipelineCreator } from './mongo';
+
 export {
+  aggregationPipelineCreator,
   cleanBodyCreator,
   cleanCsvCreator,
   csvUploadCreator,

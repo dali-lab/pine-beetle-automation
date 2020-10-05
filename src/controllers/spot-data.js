@@ -1,10 +1,11 @@
 import { SpotDataModel } from '../models';
 
+import { RESPONSE_TYPES } from '../constants';
+
 import {
   cleanBodyCreator,
-  RESPONSE_TYPES,
   newError,
-} from '../constants';
+} from '../utils';
 
 const modelAttributes = Object.keys(SpotDataModel.schema.paths)
   .filter((attr) => attr !== '_id' && attr !== '__v');

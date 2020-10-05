@@ -3,7 +3,7 @@ import fs from 'fs';
 import { parseFile } from 'fast-csv';
 
 import { newError } from './responses';
-import RESPONSE_TYPES from './response-types.json';
+import { RESPONSE_TYPES } from '../constants';
 
 /**
  * @description higher-order function that creates a csv caster function

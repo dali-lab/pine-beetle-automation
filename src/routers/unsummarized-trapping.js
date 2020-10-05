@@ -5,11 +5,11 @@ import {
   deleteFile,
   generateErrorResponse,
   generateResponse,
-  RESPONSE_TYPES,
-} from '../constants';
+} from '../utils';
 
-import { UnsummarizedTrapping } from '../controllers';
+import { RESPONSE_TYPES } from '../constants';
 import { requireAuth } from '../middleware';
+import { UnsummarizedTrapping } from '../controllers';
 
 const unsummarizedTrappingRouter = Router();
 

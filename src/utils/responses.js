@@ -1,5 +1,7 @@
-import RESPONSE_CODES from './response-codes.json';
-import RESPONSE_TYPES from './response-types.json';
+import {
+  RESPONSE_CODES,
+  RESPONSE_TYPES,
+} from '../constants';
 
 /**
  * @param {String} responseType type of response to send

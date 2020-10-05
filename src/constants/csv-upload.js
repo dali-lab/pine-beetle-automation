@@ -14,7 +14,7 @@ import RESPONSE_TYPES from './response-types.json';
 export const cleanCsvCreator = (map) => (row) => {
   const cleanedArray = Object.entries(row)
     .map(([csvKey, value]) => [map[csvKey], value])
-    .filter(([newKey]) => newKey !== undefined);
+    .filter(([newKey]) => !!newKey);
   return Object.fromEntries(cleanedArray);
 };
 

@@ -32,7 +32,7 @@ export const uploadCsv = csvUploadCreator(UnsummarizedTrappingModel, cleanCsv, c
 /**
  * @description downloads a csv of the entire collection
  * @throws RESPONSE_TYPES.INTERNAL_ERROR for problem parsing CSV
- * @returns {Function} which when envoked, returns a filepath to a CSV of the collection contents
+ * @returns {String} path to CSV file
  */
 export const downloadCsv = csvDownloadCreator(UnsummarizedTrappingModel, modelAttributes);
 

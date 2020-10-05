@@ -71,6 +71,13 @@ export const csvUploadCreator = (ModelName, cleanCsv, cleanBody) => async (filen
   });
 };
 
+/**
+ * @description higher-order function that creates a csv downloader function
+ * @param {mongoose.Model} ModelName destination Model of download
+ * @param {Array<String>} fields model attributes in array (used for fields of the csv file)
+ * @returns {Function} which when envoked, returns a filepath to a CSV of the collection contents
+ * @throws RESPONSE_TYPES.INTERNAL_ERROR for trouble parsing
+ */
 export const csvDownloadCreator = (ModelName, fields) => async () => {
   const data = await ModelName.find({});
 

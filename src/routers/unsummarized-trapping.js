@@ -64,7 +64,10 @@ unsummarizedTrappingRouter.route('/upload')
       console.log(errorMessage);
       res.status(status).send(errorResponse);
     } finally {
-      await deleteFile(req.file.path);
+      // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
+      setTimeout(() => {
+        deleteFile(req.file.path);
+      }, 0);
     }
   });
 

@@ -145,6 +145,12 @@ Expects the following in the body:
 - `week` Number
 - `year` Number
 
+## `POST /unsummarized-trapping/upload`
+
+Uploads a CSV file to the unsummarized dataset.
+
+Expects `form-data` body with key `csv` and value of the uploaded file.
+
 ## `GET /unsummarized-trapping/:id`
 
 Gets a row of unsummarized trapping data by its unique id.

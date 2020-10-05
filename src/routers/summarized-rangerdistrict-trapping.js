@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import {
+  deleteFile,
   generateErrorResponse,
   generateResponse,
 } from '../utils';
@@ -84,6 +85,26 @@ summarizedRangerDistrictTrappingRouter.route('/filter')
       const { error: errorMessage, status } = errorResponse;
       console.log(errorMessage);
       res.status(status).send(errorResponse);
+    }
+  });
+
+summarizedRangerDistrictTrappingRouter.route('/download')
+  .get(async (_req, res) => {
+    let filepath;
+
+    try {
+      filepath = await SummarizedRangerDistrictTrapping.downloadCsv();
+      res.sendFile(filepath);
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    } finally {
+      // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
+      setTimeout(() => {
+        deleteFile(filepath, true);
+      }, 0);
     }
   });
 

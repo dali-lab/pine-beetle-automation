@@ -7,6 +7,7 @@ import {
 
 import {
   cleanCsvCreator,
+  csvDownloadCreator,
   csvUploadCreator,
   cleanBodyCreator,
   newError,
@@ -27,6 +28,13 @@ const cleanCsv = cleanCsvCreator(CSV_TO_UNSUMMARIZED);
  * @throws other errors depending on what went wrong
  */
 export const uploadCsv = csvUploadCreator(UnsummarizedTrappingModel, cleanCsv, cleanBody);
+
+/**
+ * @description downloads a csv of the entire collection
+ * @throws RESPONSE_TYPES.INTERNAL_ERROR for problem parsing CSV
+ * @returns {String} path to CSV file
+ */
+export const downloadCsv = csvDownloadCreator(UnsummarizedTrappingModel, modelAttributes);
 
 /**
  * @description Fetches one week's data from the unsummarized collection.

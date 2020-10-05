@@ -52,6 +52,10 @@ Runs the county aggregation pipeline and returns a success message. Expects the 
 
 If either parameter is missing, then the pipeline will run for all unsummarized data. Otherwise, it will run for an individual state and year.
 
+## `GET /summarized-county-trapping/download`
+
+Sends CSV of entire summarized county trapping collection
+
 ## `GET /summarized-county-trapping/:id`
 
 Gets a row of summarized county trapping data by its unique id.
@@ -109,6 +113,10 @@ Runs the ranger district aggregation pipeline and returns a success message. Exp
 - `year`
 
 If either parameter is missing, then the pipeline will run for all unsummarized data. Otherwise, it will run for an individual state and year.
+
+## `GET /summarized-rangerdistrict-trapping/download`
+
+Sends CSV of entire summarized ranger district trapping collection
 
 ## `GET /summarized-rangerdistrict-trapping/:id`
 
@@ -168,6 +176,10 @@ Expects the following in the body:
 Uploads a CSV file to the unsummarized dataset.
 
 Expects `form-data` body with key `csv` and value of the uploaded file.
+
+## `GET /unsummarized-trapping/download`
+
+Sends CSV of entire unsummarized trapping collection
 
 ## `GET /unsummarized-trapping/:id`
 

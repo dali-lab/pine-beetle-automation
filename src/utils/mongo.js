@@ -1,9 +1,10 @@
-/* eslint-disable import/prefer-default-export */
-
 export const aggregationPipelineCreator = (location, collection) => [
+  // filter out docs that are recorded on the other geographical organization
+  // (RD for county, county for RD)
   {
     $match: { [location]: { $ne: null } },
   },
+  // select sums, group by county/RD, state, year
   {
     $group: {
       _id: {
@@ -15,6 +16,7 @@ export const aggregationPipelineCreator = (location, collection) => [
       spbCount: { $sum: '$spbCount' },
     },
   },
+  // reformat the data, remove messy _id and allow mongo to regenerate it
   {
     $project: {
       _id: 0,
@@ -25,11 +27,18 @@ export const aggregationPipelineCreator = (location, collection) => [
       year: '$_id.year',
     },
   },
+  // output and join on collection
   {
     $merge: {
       into: collection,
       on: [location, 'state', 'year'],
       whenMatched: 'keepExisting',
     },
+  },
+];
+
+export const matchStateYear = (state, year) => [
+  {
+    $match: { state, year },
   },
 ];

@@ -12,7 +12,10 @@ import {
 
 import { cleanBodyCreator } from './requests';
 
-import { aggregationPipelineCreator } from './mongo';
+import {
+  aggregationPipelineCreator,
+  matchStateYear,
+} from './mongo';
 
 export {
   aggregationPipelineCreator,
@@ -22,5 +25,6 @@ export {
   deleteFile,
   generateErrorResponse,
   generateResponse,
+  matchStateYear,
   newError,
 };

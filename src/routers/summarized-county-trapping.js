@@ -65,11 +65,20 @@ summarizedCountyTrappingRouter.route('/filter')
   });
 
 summarizedCountyTrappingRouter.route('/aggregate')
-  .get(async (_req, res) => {
+  .get(async (req, res) => {
     try {
-      const result = await SummarizedCountyTrapping.summarizeAll();
+      const { state, year } = req.query;
+      if (state && year) {
+        await SummarizedCountyTrapping.summarizeStateYear(state, parseInt(year, 10));
+      } else {
+        await SummarizedCountyTrapping.summarizeAll();
+      }
 
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+      const message = state && year
+        ? `summarized by county on ${state} for ${year}`
+        : 'summarized all by county';
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, message));
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;

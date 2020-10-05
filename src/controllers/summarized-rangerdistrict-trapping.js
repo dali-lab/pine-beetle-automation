@@ -8,6 +8,7 @@ import { RESPONSE_TYPES } from '../constants';
 import {
   aggregationPipelineCreator,
   cleanBodyCreator,
+  matchStateYear,
   newError,
 } from '../utils';
 
@@ -99,7 +100,10 @@ export const summarizeAll = async () => {
  * @param {Number} year the year to summarize
  */
 export const summarizeStateYear = async (state, year) => {
-  // return 'hello this is TBD';
+  return UnsummarizedTrappingModel.aggregate([
+    ...matchStateYear(state, year),
+    ...aggregationPipelineCreator('rangerDistrict', 'summarizedrangerdistricttrappings'),
+  ]).exec();
 };
 
 /**

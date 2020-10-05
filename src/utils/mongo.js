@@ -1,3 +1,9 @@
+/**
+ * @description creates a custom aggregation pipeline for either county or RD
+ * @param {String} location either 'county' or 'rangerDistrict'
+ * @param {String} collection either 'summarizedcountytrappings' or 'summarizedrangerdistricttrappings'
+ * @returns {Array<Object>} that should be used as ... to input into aggregate
+ */
 export const aggregationPipelineCreator = (location, collection) => [
   // filter out docs that are recorded on the other geographical organization
   // (RD for county, county for RD)
@@ -37,6 +43,11 @@ export const aggregationPipelineCreator = (location, collection) => [
   },
 ];
 
+/**
+ * @description helper function to encapsulate aggregation filtering by a state and year
+ * @param {String} state the state name
+ * @param {Number} year the year
+ */
 export const matchStateYear = (state, year) => [
   {
     $match: { state, year },

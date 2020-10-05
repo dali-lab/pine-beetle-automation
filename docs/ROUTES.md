@@ -43,6 +43,15 @@ Returns a filtered slice of the summarized county trapping data. Expects the fol
 
 Null parameters are ok; the filter will simply ignore them.
 
+## `GET /summarized-county-trapping/aggregate`
+
+Runs the county aggregation pipeline and returns a success message. Expects the following optional query parameters:
+
+- `state`
+- `year`
+
+If either parameter is missing, then the pipeline will run for all unsummarized data. Otherwise, it will run for an individual state and year.
+
 ## `GET /summarized-county-trapping/:id`
 
 Gets a row of summarized county trapping data by its unique id.
@@ -90,7 +99,16 @@ Returns a filtered slice of the summarized ranger district trapping data. Expect
 - `state`
 - `rangerDistrict`
 
-Missing parameters is ok; the filter will simply ignore them.
+Null parameters are ok; the filter will simply ignore them.
+
+## `GET /summarized-rangerdistrict-trapping/aggregate`
+
+Runs the ranger district aggregation pipeline and returns a success message. Expects the following optional query parameters:
+
+- `state`
+- `year`
+
+If either parameter is missing, then the pipeline will run for all unsummarized data. Otherwise, it will run for an individual state and year.
 
 ## `GET /summarized-rangerdistrict-trapping/:id`
 

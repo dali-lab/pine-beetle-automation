@@ -1,4 +1,7 @@
-import { SummarizedCountyTrappingModel } from '../models';
+import {
+  UnsummarizedTrappingModel,
+  SummarizedCountyTrappingModel,
+} from '../models';
 
 import {
   cleanBodyCreator,
@@ -78,11 +81,43 @@ export const deleteById = async (id) => {
   return deletedDoc;
 };
 
+const aggregationPipelineCreator = (location, collection) => [
+  {
+    $match: { [location]: { $ne: null } },
+  },
+  {
+    $group: {
+      _id: {
+        [location]: `$${location}`,
+        state: '$state',
+        year: '$year',
+      },
+      cleridCount: { $sum: '$cleridCount' },
+      spbCount: { $sum: '$spbCount' },
+    },
+  },
+  {
+    $project: {
+      _id: 0,
+      cleridCount: 1,
+      [location]: `$_id.${location}`,
+      spbCount: 1,
+      state: '$_id.state',
+      year: '$_id.year',
+    },
+  },
+  {
+    $merge: { into: collection },
+  },
+];
+
 /**
  * @description Summarizes all trapping data at the county level. Will overwrite all entries in this collection.
  */
 export const summarizeAll = async () => {
-  // return 'hello this is TBD';
+  return UnsummarizedTrappingModel.aggregate([
+    ...aggregationPipelineCreator('county', 'summarizedcountytrappings'),
+  ]).exec();
 };
 
 /**

@@ -64,6 +64,20 @@ summarizedCountyTrappingRouter.route('/filter')
     }
   });
 
+summarizedCountyTrappingRouter.route('/aggregate')
+  .get(async (_req, res) => {
+    try {
+      const result = await SummarizedCountyTrapping.summarizeAll();
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    }
+  });
+
 summarizedCountyTrappingRouter.route('/:id')
   .get(async (req, res) => {
     try {

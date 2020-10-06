@@ -8,11 +8,15 @@ Creates new entry for summarized ranger district trapping data. Requires auth.
 
 Expects the following in the body:
 
-- `state`
-- `rangerDistrict`
-- `year`
-- `spbCount`
 - `cleridCount`
+- `cleridPerDay` (Object)
+- `rangerDistrict`
+- `spbCount`
+- `spbPerDay` (Object)
+- `spots`
+- `state`
+- `trapCount`
+- `year`
 
 ## `GET /summarized-rangerdistrict-trapping/filter`
 
@@ -48,11 +52,15 @@ Updates a row of summarized ranger district trapping data by its unique id.
 
 Expects the following in the body:
 
-- `state`
-- `rangerDistrict`
-- `year`
-- `spbCount`
 - `cleridCount`
+- `cleridPerDay` (Object)
+- `rangerDistrict`
+- `spbCount`
+- `spbPerDay` (Object)
+- `spots`
+- `state`
+- `trapCount`
+- `year`
 
 Missing values will be ignored.
 

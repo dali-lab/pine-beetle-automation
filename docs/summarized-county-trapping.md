@@ -8,11 +8,15 @@ Creates new entry for summarized county trapping data. Requires auth.
 
 Expects the following in the body:
 
-- `state`
-- `county`
-- `year`
-- `spbCount`
 - `cleridCount`
+- `cleridPerDay` (Object)
+- `county`
+- `spbCount`
+- `spbPerDay` (Object)
+- `spots`
+- `state`
+- `trapCount`
+- `year`
 
 ## `GET /summarized-county-trapping/filter`
 
@@ -48,11 +52,15 @@ Updates a row of summarized county trapping data by its unique id.
 
 Expects the following in the body:
 
-- `state`
-- `county`
-- `year`
-- `spbCount`
 - `cleridCount`
+- `cleridPerDay` (Object)
+- `county`
+- `spbCount`
+- `spbPerDay` (Object)
+- `spots`
+- `state`
+- `trapCount`
+- `year`
 
 Missing values will be ignored.
 

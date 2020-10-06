@@ -13,8 +13,20 @@ const SummarizedCountyTrappingSchema = new Schema({
     min: 0,
     type: Number,
   },
+  spbPerDay: {
+    // { trapName: Number ...  }
+    type: Object,
+  },
+  spots: {
+    min: 0,
+    type: Number,
+  },
   state: {
     type: String,
+  },
+  trapCount: {
+    min: 1,
+    type: Number,
   },
   year: {
     min: 1900,

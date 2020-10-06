@@ -10,16 +10,37 @@ export const aggregationPipelineCreator = (location, collection) => [
   {
     $match: { [location]: { $ne: null } },
   },
-  // select sums, group by county/RD, state, year
+  // select total days, group by county/rd, trap name, state, year
   {
     $group: {
       _id: {
         [location]: `$${location}`,
         state: '$state',
+        trap: '$trap',
         year: '$year',
       },
       cleridCount: { $sum: '$cleridCount' },
       spbCount: { $sum: '$spbCount' },
+      totalDaysActive: { $sum: '$daysActive' },
+    },
+  },
+  // select beetle counts, trap count, beetles per day, group by county/RD, state, year
+  {
+    $group: {
+      _id: {
+        [location]: `$_id.${location}`,
+        state: '$_id.state',
+        year: '$_id.year',
+      },
+      cleridCount: { $sum: '$cleridCount' },
+      spbCount: { $sum: '$spbCount' },
+      spbPerDay: { // this creates an array, which is casted during project to object
+        $push: {
+          k: '$_id.trap',
+          v: { $divide: ['$spbCount', '$totalDaysActive'] },
+        },
+      },
+      trapCount: { $sum: 1 },
     },
   },
   // reformat the data, remove messy _id and allow mongo to regenerate it
@@ -29,7 +50,11 @@ export const aggregationPipelineCreator = (location, collection) => [
       cleridCount: 1,
       [location]: `$_id.${location}`,
       spbCount: 1,
+      spbPerDay: { // cast k,v array to object
+        $arrayToObject: '$spbPerDay',
+      },
       state: '$_id.state',
+      trapCount: 1,
       year: '$_id.year',
     },
   },
@@ -38,7 +63,7 @@ export const aggregationPipelineCreator = (location, collection) => [
     $merge: {
       into: collection,
       on: [location, 'state', 'year'],
-      whenMatched: 'keepExisting',
+      whenMatched: 'replace',
     },
   },
 ];

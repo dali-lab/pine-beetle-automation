@@ -10,7 +10,7 @@ export const aggregationPipelineCreator = (location, collection) => [
   {
     $match: { [location]: { $ne: null } },
   },
-  // select total days, group by county/rd, trap name, state, year
+  // select total days, and beetles per trap, group by county/rd, trap name, state, year
   {
     $group: {
       _id: {
@@ -24,7 +24,7 @@ export const aggregationPipelineCreator = (location, collection) => [
       totalDaysActive: { $sum: '$daysActive' },
     },
   },
-  // select beetle counts, trap count, beetles per day, group by county/RD, state, year
+  // select beetle counts, trap count, beetles per day per trap, group by county/RD, state, year
   {
     $group: {
       _id: {
@@ -33,6 +33,12 @@ export const aggregationPipelineCreator = (location, collection) => [
         year: '$_id.year',
       },
       cleridCount: { $sum: '$cleridCount' },
+      cleridPerDay: { // this creates an array, which is casted during project to object
+        $push: {
+          k: '$_id.trap',
+          v: { $divide: ['$cleridCount', '$totalDaysActive'] },
+        },
+      },
       spbCount: { $sum: '$spbCount' },
       spbPerDay: { // this creates an array, which is casted during project to object
         $push: {
@@ -43,11 +49,14 @@ export const aggregationPipelineCreator = (location, collection) => [
       trapCount: { $sum: 1 },
     },
   },
-  // reformat the data, remove messy _id and allow mongo to regenerate it
+  // reformat the data, remove messy _id and allow mongo to regenerate it, reduce arrays to objects
   {
     $project: {
       _id: 0,
       cleridCount: 1,
+      cleridPerDay: { // cast k,v array to object
+        $arrayToObject: '$cleridPerDay',
+      },
       [location]: `$_id.${location}`,
       spbCount: 1,
       spbPerDay: { // cast k,v array to object
@@ -58,7 +67,7 @@ export const aggregationPipelineCreator = (location, collection) => [
       year: '$_id.year',
     },
   },
-  // output and join on collection
+  // output and merge into collection
   {
     $merge: {
       into: collection,

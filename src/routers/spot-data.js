@@ -12,7 +12,7 @@ import { requireAuth } from '../middleware';
 const spotDataRouter = Router();
 
 spotDataRouter.route('/')
-  .get(async (_req, res) => { // get all unsummarized data
+  .get(async (_req, res) => { // get all spot data
     try {
       const documents = await SpotData.getAll();
 

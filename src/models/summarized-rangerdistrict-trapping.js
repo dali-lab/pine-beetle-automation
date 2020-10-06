@@ -6,6 +6,10 @@ const SummarizedRangerDistrictTrappingSchema = new Schema({
     min: 0,
     type: Number,
   },
+  cleridPerDay: {
+    // { trapName: Number ...  }
+    type: Object,
+  },
   rangerDistrict: {
     type: String,
   },

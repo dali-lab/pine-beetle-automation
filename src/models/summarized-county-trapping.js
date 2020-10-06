@@ -6,6 +6,10 @@ const SummarizedCountyTrappingSchema = new Schema({
     min: 0,
     type: Number,
   },
+  cleridPerDay: {
+    // { trapName: Number ...  }
+    type: Object,
+  },
   county: {
     type: String,
   },

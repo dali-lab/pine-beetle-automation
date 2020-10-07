@@ -71,6 +71,6 @@ const CountyPredictionSchema = new Schema({
 // eslint-disable-next-line sort-keys
 CountyPredictionSchema.index({ county: 1, state: 1, year: 1 }, { unique: true });
 
-const CountyPredictionModel = mongoose.model('CountyRDPrediction', CountyPredictionSchema);
+const CountyPredictionModel = mongoose.model('CountyPrediction', CountyPredictionSchema);
 
 export default CountyPredictionModel;

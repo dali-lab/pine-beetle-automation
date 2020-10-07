@@ -68,6 +68,6 @@ const RDPredictionSchema = new Schema({
 // eslint-disable-next-line sort-keys
 RDPredictionSchema.index({ county: 1, rangerDistrict: 1, state: 1 }, { unique: true });
 
-const RDPredictionModel = mongoose.model('CountyRDPrediction', RDPredictionSchema);
+const RDPredictionModel = mongoose.model('RDPrediction', RDPredictionSchema);
 
 export default RDPredictionModel;

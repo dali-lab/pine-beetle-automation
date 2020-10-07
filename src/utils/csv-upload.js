@@ -41,12 +41,14 @@ export const deleteFile = async (filename, isAbsolutePath) => {
  * @param {mongoose.Model} ModelName destination Model of upload
  * @param {function} cleanCsv function to cast csv to model schema
  * @param {function} cleanBody function to validate that all model schema parameters are present
+ * @param {function} filter optional parameter to conditionally accept documents
+ * @param {function} transform optional parameter to modify a document before insertion
  * @param {string} filename csv filename on disk
  * @returns {(filename: String) => Promise}
  * @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
  * @throws other errors depending on what went wrong
  */
-export const csvUploadCreator = (ModelName, cleanCsv, cleanBody, filter) => async (filename) => {
+export const csvUploadCreator = (ModelName, cleanCsv, cleanBody, filter, transform) => async (filename) => {
   const filepath = path.resolve(__dirname, `../../${filename}`);
 
   const docs = [];
@@ -57,8 +59,11 @@ export const csvUploadCreator = (ModelName, cleanCsv, cleanBody, filter) => asyn
         // cast the csv fields to our schema
         const cleanedData = cleanBody(cleanCsv(data));
         if (!cleanedData) reject(newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in csv'));
+
+        // apply filter if it exists
         if (!filter || (filter && filter(cleanedData))) {
-          docs.push(cleanedData);
+          // apply transformation if it exists
+          docs.push(transform ? transform(cleanedData) : cleanedData);
         }
       })
       .on('error', (err) => reject(err))

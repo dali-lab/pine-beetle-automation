@@ -1,4 +1,5 @@
 import numeral from 'numeral';
+
 import {
   SpotDataModel,
   SummarizedCountyTrappingModel,
@@ -107,7 +108,16 @@ export const deleteById = async (id) => {
 };
 
 export const mergeCounty = async () => {
-  return SummarizedCountyTrappingModel.aggregate([
+  const updatedData = await SummarizedCountyTrappingModel.aggregate([
     ...mergeSpotDataCreator('county', 'summarizedcountytrappings'),
   ]);
+
+  const writeOp = updatedData.map((data) => ({
+    updateOne: {
+      filter: { county: data.county, state: data.state, year: data.year },
+      update: data,
+    },
+  }));
+
+  return SummarizedCountyTrappingModel.bulkWrite(writeOp);
 };

@@ -1,8 +1,9 @@
 import { UnsummarizedTrappingModel } from '../models';
 
 import {
-  RESPONSE_TYPES,
   CSV_TO_UNSUMMARIZED,
+  STATE_TO_ABBREV,
+  RESPONSE_TYPES,
 } from '../constants';
 
 import {
@@ -21,13 +22,20 @@ const cleanBody = cleanBodyCreator(modelAttributes);
 
 const cleanCsv = cleanCsvCreator(CSV_TO_UNSUMMARIZED);
 
+const stateToAbbrevTransform = (document) => {
+  return {
+    ...document,
+    state: STATE_TO_ABBREV[document.state],
+  };
+};
+
 /**
  * @description uploads a csv to the unsummarized collection
  * @param {String} filename the csv filename on disk
  * @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
  * @throws other errors depending on what went wrong
  */
-export const uploadCsv = csvUploadCreator(UnsummarizedTrappingModel, cleanCsv, cleanBody);
+export const uploadCsv = csvUploadCreator(UnsummarizedTrappingModel, cleanCsv, cleanBody, null, stateToAbbrevTransform);
 
 /**
  * @description downloads a csv of the entire collection

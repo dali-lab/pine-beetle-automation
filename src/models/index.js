@@ -1,11 +1,15 @@
-import UnsummarizedTrappingModel from './unsummarized-trapping';
+import CountyRDPredictionModel from './county-prediction';
+import RDPredictionModel from './rd-prediction';
 import SpotDataModel from './spot-data';
 import SummarizedCountyTrappingModel from './summarized-county-trapping';
 import SummarizedRangerDistrictTrappingModel from './summarized-rangerdistrict-trapping';
+import UnsummarizedTrappingModel from './unsummarized-trapping';
 
 export {
-  UnsummarizedTrappingModel,
+  CountyRDPredictionModel,
+  RDPredictionModel,
   SpotDataModel,
   SummarizedCountyTrappingModel,
   SummarizedRangerDistrictTrappingModel,
+  UnsummarizedTrappingModel,
 };

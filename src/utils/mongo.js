@@ -89,7 +89,7 @@ export const matchStateYear = (state, year) => [
   },
 ];
 
-export const mergeSpotDataCreator = (location, collection) => [
+export const mergeSpotDataCreator = (location) => [
   // filter out docs that are recorded on the other geographical organization
   // (RD for county, county for RD)
   {
@@ -158,85 +158,6 @@ export const mergeSpotDataCreator = (location, collection) => [
   //   $limit: 10,
   // },
   // output and merge into collection
-  // {
-  //   $merge: {
-  //     into: collection,
-  //     on: [location, 'state', 'year'],
-  //     whenMatched: 'replace',
-  //   },
-  // },
-];
-
-export const amergeSpotDataCreator = (location, collection) => [
-  // filter out docs that are recorded on the other geographical organization
-  // (RD for county, county for RD)
-  {
-    $match: { [location]: { $ne: null } },
-  },
-  // join from spot data collection
-  {
-    $lookup: {
-      as: 'summarizedinfo',
-      from: collection,
-      let: { [location]: `$${location}`, state: '$state', year: '$year' },
-      pipeline: [
-        {
-          $match: {
-            $expr: {
-              $and: [
-                {
-                  $eq: [`$${location}`, `$$${location}`],
-                },
-                {
-                  $eq: ['$state', '$$state'],
-                },
-                {
-                  $eq: ['$year', '$$year'],
-                },
-              ],
-            },
-          },
-        },
-      ],
-    },
-  },
-  // extract the correct spot document out of an array
-  {
-    $replaceWith: {
-      $mergeObjects: [
-        '$$ROOT',
-        { summarizeddoc: { $arrayElemAt: ['$summarizedinfo', 0] } },
-      ],
-    },
-  },
-  // only modify those who have nonzero spots
-  {
-    $match: { summarizeddoc: { $ne: null } },
-  },
-  // remove the spotinfo array
-  {
-    $project: {
-      _id: 0,
-      summarizedinfo: 0,
-    },
-  },
-  {
-    $project: {
-      cleridCount: '$summarizeddoc.cleridCount',
-      cleridPerDay: '$summarizeddoc.cleridPerDay',
-      [location]: `$summarizeddoc.${location}`,
-      spbCount: '$summarizeddoc.spbCount',
-      spbPerDay: '$summarizeddoc.spbPerDay',
-      spots: 1,
-      state: '$summarizeddoc.state',
-      trapCount: '$summarizeddoc.trapCount',
-      year: '$summarizeddoc.year',
-    },
-  },
-  // output and merge into collection
-  // {
-  //   $limit: 10,
-  // },
   // {
   //   $merge: {
   //     into: collection,

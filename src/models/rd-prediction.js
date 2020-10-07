@@ -8,42 +8,9 @@ const RDPredictionSchema = new Schema({
   },
   prediction: [
     {
-      _row: 'pi',
+      _row: String,
       predictions: { min: 0, type: Number },
-    },
-    {
-      _row: 'mu',
-      predictions: { min: 0, type: Number },
-    },
-    {
-      _row: 'Exp spots if outbreak',
-      predictions: { min: 0, type: Number },
-    },
-    {
-      _row: 'prob.Spots>0',
-      predictions: { min: 0, type: Number },
-    },
-    {
-      _row: 'prob.Spots>19',
-      predictions: { min: 0, type: Number },
-    },
-    {
-      _row: 'prob.Spots>53',
-      predictions: { min: 0, type: Number },
-    },
-    {
-      _row: 'prob.Spots>147',
-      predictions: { min: 0, type: Number },
-    },
-    {
-      _row: 'prob.Spots>402',
-      predictions: { min: 0, type: Number },
-    },
-    {
-      _row: 'prob.Spots>1095',
-      predictions: { min: 0, type: Number },
-    },
-  ],
+    }],
   rangerDistrict: {
     type: String,
   },

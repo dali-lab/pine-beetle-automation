@@ -3,9 +3,9 @@ import { Router } from 'express';
 import {
   generateErrorResponse,
   generateResponse,
-  RESPONSE_TYPES,
-} from '../constants';
+} from '../utils';
 
+import { RESPONSE_TYPES } from '../constants';
 import { SpotData } from '../controllers';
 import { requireAuth } from '../middleware';
 

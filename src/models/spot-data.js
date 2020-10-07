@@ -15,7 +15,7 @@ const SpotDataSchema = new Schema({
   rangerDistrict: {
     type: String,
   },
-  spbCount: {
+  spots: {
     min: 0,
     type: Number,
   },

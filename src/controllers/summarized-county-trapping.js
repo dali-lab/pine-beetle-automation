@@ -1,16 +1,30 @@
-import { SummarizedCountyTrappingModel } from '../models';
+import {
+  SummarizedCountyTrappingModel,
+  UnsummarizedTrappingModel,
+} from '../models';
+
+import { RESPONSE_TYPES } from '../constants';
 
 import {
+  aggregationPipelineCreator,
   cleanBodyCreator,
-  RESPONSE_TYPES,
+  csvDownloadCreator,
+  matchStateYear,
   newError,
-} from '../constants';
+} from '../utils';
 
 const modelAttributes = Object.keys(SummarizedCountyTrappingModel.schema.paths)
   .filter((attr) => attr !== '_id' && attr !== '__v');
 
 // this is a function to clean req.body
 const cleanBody = cleanBodyCreator(modelAttributes);
+
+/**
+ * @description downloads a csv of the entire collection
+ * @throws RESPONSE_TYPES.INTERNAL_ERROR for problem parsing CSV
+ * @returns {String} path to CSV file
+ */
+export const downloadCsv = csvDownloadCreator(SummarizedCountyTrappingModel, modelAttributes);
 
 /**
  * @description Fetches one year's data from the summarized county collection.
@@ -82,7 +96,9 @@ export const deleteById = async (id) => {
  * @description Summarizes all trapping data at the county level. Will overwrite all entries in this collection.
  */
 export const summarizeAll = async () => {
-  // return 'hello this is TBD';
+  return UnsummarizedTrappingModel.aggregate([
+    ...aggregationPipelineCreator('county', 'summarizedcountytrappings'),
+  ]).exec();
 };
 
 /**
@@ -92,7 +108,10 @@ export const summarizeAll = async () => {
  * @param {Number} year the year to summarize
  */
 export const summarizeStateYear = async (state, year) => {
-  // return 'hello this is TBD';
+  return UnsummarizedTrappingModel.aggregate([
+    ...matchStateYear(state, year),
+    ...aggregationPipelineCreator('county', 'summarizedcountytrappings'),
+  ]).exec();
 };
 
 /**

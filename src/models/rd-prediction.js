@@ -1,17 +1,12 @@
 import mongoose, { Schema } from 'mongoose';
 
-// collection 5: county and ranger district prediction model
-// multiple indexing on state/county/rd/year for index intersection
-const CountyRDPredictionSchema = new Schema({
+// rd prediction model
+const RDPredictionSchema = new Schema({
   cleridPerDay: {
     min: 0,
     type: Number,
   },
-  county: {
-    index: true,
-    type: String,
-  },
-  data: [
+  prediction: [
     {
       _row: 'pi',
       predictions: { min: 0, type: Number },
@@ -50,7 +45,6 @@ const CountyRDPredictionSchema = new Schema({
     },
   ],
   rangerDistrict: {
-    index: true,
     type: String,
   },
   spbPerDay: {
@@ -58,7 +52,6 @@ const CountyRDPredictionSchema = new Schema({
     type: Number,
   },
   state: {
-    index: true,
     type: String,
   },
   trapCount: {
@@ -66,12 +59,15 @@ const CountyRDPredictionSchema = new Schema({
     type: Number,
   },
   year: {
-    index: true,
     min: 1900,
     type: Number,
   },
 });
 
-const CountyRDPredictionModel = mongoose.model('CountyRDPrediction', CountyRDPredictionSchema);
+// compound index of yr -> state -> rd
+// eslint-disable-next-line sort-keys
+RDPredictionSchema.index({ county: 1, rangerDistrict: 1, state: 1 }, { unique: true });
 
-export default CountyRDPredictionModel;
+const RDPredictionModel = mongoose.model('CountyRDPrediction', RDPredictionSchema);
+
+export default RDPredictionModel;

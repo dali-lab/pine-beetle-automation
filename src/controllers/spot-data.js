@@ -1,16 +1,25 @@
 import { SpotDataModel } from '../models';
 
+import { RESPONSE_TYPES } from '../constants';
+
 import {
   cleanBodyCreator,
-  RESPONSE_TYPES,
+  csvDownloadCreator,
   newError,
-} from '../constants';
+} from '../utils';
 
 const modelAttributes = Object.keys(SpotDataModel.schema.paths)
   .filter((attr) => attr !== '_id' && attr !== '__v');
 
 // this is a function to clean req.body
 const cleanBody = cleanBodyCreator(modelAttributes);
+
+/**
+ * @description downloads a csv of the entire collection
+ * @throws RESPONSE_TYPES.INTERNAL_ERROR for problem parsing CSV
+ * @returns {String} path to CSV file
+ */
+export const downloadCsv = csvDownloadCreator(SpotDataModel, modelAttributes);
 
 /**
  * @description Fetches one year's data from the spot data collection.

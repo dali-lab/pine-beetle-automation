@@ -1,9 +1,7 @@
 import { Router } from 'express';
 
-import {
-  generateResponse,
-  RESPONSE_TYPES,
-} from '../constants';
+import { RESPONSE_TYPES } from '../constants';
+import { generateResponse } from '../utils';
 
 const healthcheckRouter = Router();
 

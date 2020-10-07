@@ -1,4 +1,3 @@
-/* eslint-disable import/prefer-default-export */
 import * as rModel from './r-model';
 import * as UnsummarizedTrapping from './unsummarized-trapping';
 import * as SpotData from './spot-data';

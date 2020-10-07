@@ -1,15 +1,19 @@
 import { Router } from 'express';
+import multer from 'multer';
 
 import {
+  deleteFile,
   generateErrorResponse,
   generateResponse,
-  RESPONSE_TYPES,
-} from '../constants';
+} from '../utils';
 
-import { UnsummarizedTrapping } from '../controllers';
+import { RESPONSE_TYPES } from '../constants';
 import { requireAuth } from '../middleware';
+import { UnsummarizedTrapping } from '../controllers';
 
 const unsummarizedTrappingRouter = Router();
+
+const upload = multer({ dest: './uploads' });
 
 unsummarizedTrappingRouter.route('/')
   .get(async (_req, res) => { // get all unsummarized data
@@ -40,6 +44,50 @@ unsummarizedTrappingRouter.route('/')
       const { error: errorMessage, status } = errorResponse;
       console.log(errorMessage);
       res.status(status).send(errorResponse);
+    }
+  });
+
+unsummarizedTrappingRouter.route('/upload')
+  .post(upload.single('csv'), async (req, res) => {
+    if (!req.file) {
+      res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'missing file'));
+      return;
+    }
+
+    try {
+      await UnsummarizedTrapping.uploadCsv(req.file.path);
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, 'file uploaded successfully'));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    } finally {
+      // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
+      setTimeout(() => {
+        deleteFile(req.file.path);
+      }, 0);
+    }
+  });
+
+unsummarizedTrappingRouter.route('/download')
+  .get(async (_req, res) => {
+    let filepath;
+
+    try {
+      filepath = await UnsummarizedTrapping.downloadCsv();
+      res.sendFile(filepath);
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    } finally {
+      // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
+      setTimeout(() => {
+        deleteFile(filepath, true);
+      }, 0);
     }
   });
 

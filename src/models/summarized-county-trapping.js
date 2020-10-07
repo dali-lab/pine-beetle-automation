@@ -1,31 +1,46 @@
 import mongoose, { Schema } from 'mongoose';
 
 // collection 3: county-level trapping data aggregated by year
-// multiple indexing on state/county/year for index intersection
-// speeds up merging w/ spot data, also speeds up client-side reading
 const SummarizedCountyTrappingSchema = new Schema({
   cleridCount: {
     min: 0,
     type: Number,
   },
+  cleridPerDay: {
+    // { trapName: Number ...  }
+    type: Object,
+  },
   county: {
-    index: true,
     type: String,
   },
   spbCount: {
     min: 0,
     type: Number,
   },
+  spbPerDay: {
+    // { trapName: Number ...  }
+    type: Object,
+  },
+  spots: {
+    min: 0,
+    type: Number,
+  },
   state: {
-    index: true,
     type: String,
   },
+  trapCount: {
+    min: 1,
+    type: Number,
+  },
   year: {
-    index: true,
     min: 1900,
     type: Number,
   },
 });
+
+// compound index of yr -> state -> county
+// eslint-disable-next-line sort-keys
+SummarizedCountyTrappingSchema.index({ year: 1, state: 1, county: 1 }, { unique: true });
 
 const SummarizedCountyTrappingModel = mongoose.model('SummarizedCountyTrapping', SummarizedCountyTrappingSchema);
 

@@ -35,12 +35,16 @@
     "dotenv": "^8.2.0",
     "event-stream": "^4.0.1",
     "express": "^4.16.3",
+    "fast-csv": "^4.3.2",
     "flatmap-stream": "^0.0.1-security",
     "fs-es6": "0.0.2",
+    "json2csv": "^5.0.3",
     "jwt-simple": "^0.5.6",
     "mathjs": "^5.4.2",
     "mongoose": "^5.10.3",
     "morgan": "^1.9.0",
+    "multer": "^1.4.2",
+    "numeral": "^2.0.6",
     "r-script": "^0.0.4"
   },
   "devDependencies": {

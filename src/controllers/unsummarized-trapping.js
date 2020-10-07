@@ -1,17 +1,40 @@
 import { UnsummarizedTrappingModel } from '../models';
 
 import {
-  cleanBodyCreator,
-  // CSV_TO_MODEL, // to be used later for data cleaning
   RESPONSE_TYPES,
-  newError,
+  CSV_TO_UNSUMMARIZED,
 } from '../constants';
+
+import {
+  cleanCsvCreator,
+  csvDownloadCreator,
+  csvUploadCreator,
+  cleanBodyCreator,
+  newError,
+} from '../utils';
 
 const modelAttributes = Object.keys(UnsummarizedTrappingModel.schema.paths)
   .filter((attr) => attr !== '_id' && attr !== '__v');
 
 // this is a function to clean req.body
 const cleanBody = cleanBodyCreator(modelAttributes);
+
+const cleanCsv = cleanCsvCreator(CSV_TO_UNSUMMARIZED);
+
+/**
+ * @description uploads a csv to the unsummarized collection
+ * @param {String} filename the csv filename on disk
+ * @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
+ * @throws other errors depending on what went wrong
+ */
+export const uploadCsv = csvUploadCreator(UnsummarizedTrappingModel, cleanCsv, cleanBody);
+
+/**
+ * @description downloads a csv of the entire collection
+ * @throws RESPONSE_TYPES.INTERNAL_ERROR for problem parsing CSV
+ * @returns {String} path to CSV file
+ */
+export const downloadCsv = csvDownloadCreator(UnsummarizedTrappingModel, modelAttributes);
 
 /**
  * @description Fetches one week's data from the unsummarized collection.

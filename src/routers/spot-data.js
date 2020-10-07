@@ -91,6 +91,30 @@ spotDataRouter.route('/download')
     }
   });
 
+spotDataRouter.route('/merge')
+  .get(async (req, res) => {
+    try {
+      console.log(await SpotData.mergeCounty());
+      // const { state, year } = req.query;
+      // if (state && year) {
+      //   await SummarizedCountyTrapping.summarizeStateYear(state, parseInt(year, 10));
+      // } else {
+      //   await SummarizedCountyTrapping.summarizeAll();
+      // }
+
+      // const message = state && year
+      //   ? `summarized by county on ${state} for ${year}`
+      //   : 'summarized all by county';
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, 'yay'));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    }
+  });
+
 spotDataRouter.route('/:id')
   .get(async (req, res) => { // get a document by its unique id
     try {

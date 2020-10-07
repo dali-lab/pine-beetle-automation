@@ -62,6 +62,7 @@ export const aggregationPipelineCreator = (location, collection) => [
       spbPerDay: { // cast k,v array to object
         $arrayToObject: '$spbPerDay',
       },
+      spots: { $literal: 0 },
       state: '$_id.state',
       trapCount: 1,
       year: '$_id.year',
@@ -94,56 +95,71 @@ export const mergeSpotDataCreator = (location, collection) => [
   {
     $match: { [location]: { $ne: null } },
   },
+  // join from spot data collection
   {
     $lookup: {
       as: 'spotinfo',
       from: 'spotdatas',
+      let: { [location]: `$${location}`, state: '$state', year: '$year' },
       pipeline: [
         {
           $match: {
-            [location]: `$${location}`,
-            state: '$state',
-            year: '$year',
-          },
-        },
-        {
-          $project: {
-            _id: 0,
-            // state: 0,
-            // county: 0,
-            // rangerDistrict:0,
-            // fips: 0,
-            spots: 1,
+            $expr: {
+              $and: [
+                {
+                  $eq: [`$${location}`, `$$${location}`],
+                },
+                // {
+                //   $eq: ['$state', '$$state'],
+                // },
+                {
+                  $eq: ['$year', '$$year'],
+                },
+              ],
+            },
           },
         },
       ],
     },
   },
+  // extract the correct spot document out of an array
   {
     $replaceWith: {
       $mergeObjects: [
         '$$ROOT',
-        { spots: '$spotinfo.spots' },
+        { spotdoc: { $arrayElemAt: ['$spotinfo', 0] } },
       ],
+    },
+  },
+  // remove the spotinfo array
+  {
+    $project: {
+      spotinfo: 0,
     },
   },
   {
     $project: {
-      spotinfo: 0,
-      // _id: 0,
-      // county: 1,
-      // rangerDistrict: 1,
-      // state: 1,
-      // fips: 0,
-      // spots: 1,
+      cleridCount: 1,
+      cleridPerDay: 1,
+      [location]: 1,
+      spbCount: 1,
+      spbPerDay: 1,
+      spots: '$spotdoc.spots', // extract the number only from the doc
+      state: 1,
+      trapCount: 1,
+      year: 1,
     },
   },
+  // only modify those who have nonzero spots
+  {
+    $match: { spots: { $ne: null } },
+  },
   // output and merge into collection
-  // {
-  //   $merge: {
-  //     into: collection,
-  //     on: [location, 'state', 'year'],
-  //     whenMatched: 'replace',
-  //   },
-  // },
+  {
+    $merge: {
+      into: collection,
+      on: [location, 'state', 'year'],
+      whenMatched: 'replace',
+    },
+  },
 ];

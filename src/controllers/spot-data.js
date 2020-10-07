@@ -1,5 +1,8 @@
 import numeral from 'numeral';
-import { SpotDataModel } from '../models';
+import {
+  SpotDataModel,
+  SummarizedCountyTrappingModel,
+} from '../models';
 
 import {
   RESPONSE_TYPES,
@@ -104,7 +107,7 @@ export const deleteById = async (id) => {
 };
 
 export const mergeCounty = async () => {
-  return SpotDataModel.aggregate([
+  return SummarizedCountyTrappingModel.aggregate([
     ...mergeSpotDataCreator('county', 'summarizedcountytrappings'),
   ]);
 };

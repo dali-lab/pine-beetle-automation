@@ -1,10 +1,18 @@
+import numeral from 'numeral';
 import { SpotDataModel } from '../models';
 
-import { RESPONSE_TYPES } from '../constants';
+import {
+  RESPONSE_TYPES,
+  CSV_TO_SPOTS,
+} from '../constants';
 
 import {
   cleanBodyCreator,
+  cleanCsvCreator,
   csvDownloadCreator,
+  csvUploadCreator,
+  // matchStateYear,
+  mergeSpotDataCreator,
   newError,
 } from '../utils';
 
@@ -13,6 +21,18 @@ const modelAttributes = Object.keys(SpotDataModel.schema.paths)
 
 // this is a function to clean req.body
 const cleanBody = cleanBodyCreator(modelAttributes);
+
+const cleanCsv = cleanCsvCreator(CSV_TO_SPOTS);
+
+const csvFilter = (proposedDoc) => (proposedDoc.spots && numeral(proposedDoc.spots).value());
+
+/**
+ * @description uploads a csv to the unsummarized collection
+ * @param {String} filename the csv filename on disk
+ * @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
+ * @throws other errors depending on what went wrong
+ */
+export const uploadCsv = csvUploadCreator(SpotDataModel, cleanCsv, cleanBody, csvFilter);
 
 /**
  * @description downloads a csv of the entire collection
@@ -81,4 +101,10 @@ export const deleteById = async (id) => {
   const deletedDoc = await SpotDataModel.findByIdAndDelete(id);
   if (!deletedDoc) throw newError(RESPONSE_TYPES.NOT_FOUND, 'ID not found');
   return deletedDoc;
+};
+
+export const mergeCounty = async () => {
+  return SpotDataModel.aggregate([
+    ...mergeSpotDataCreator('county', 'summarizedcountytrappings'),
+  ]);
 };

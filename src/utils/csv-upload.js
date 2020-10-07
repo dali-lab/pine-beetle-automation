@@ -46,7 +46,7 @@ export const deleteFile = async (filename, isAbsolutePath) => {
  * @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
  * @throws other errors depending on what went wrong
  */
-export const csvUploadCreator = (ModelName, cleanCsv, cleanBody) => async (filename) => {
+export const csvUploadCreator = (ModelName, cleanCsv, cleanBody, filter) => async (filename) => {
   const filepath = path.resolve(__dirname, `../../${filename}`);
 
   const docs = [];
@@ -57,8 +57,9 @@ export const csvUploadCreator = (ModelName, cleanCsv, cleanBody) => async (filen
         // cast the csv fields to our schema
         const cleanedData = cleanBody(cleanCsv(data));
         if (!cleanedData) reject(newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in csv'));
-
-        docs.push(cleanedData);
+        if (!filter || (filter && filter(cleanedData))) {
+          docs.push(cleanedData);
+        }
       })
       .on('error', (err) => reject(err))
       .on('end', (rowCount) => {

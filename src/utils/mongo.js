@@ -87,3 +87,63 @@ export const matchStateYear = (state, year) => [
     $match: { state, year },
   },
 ];
+
+export const mergeSpotDataCreator = (location, collection) => [
+  // filter out docs that are recorded on the other geographical organization
+  // (RD for county, county for RD)
+  {
+    $match: { [location]: { $ne: null } },
+  },
+  {
+    $lookup: {
+      as: 'spotinfo',
+      from: 'spotdatas',
+      pipeline: [
+        {
+          $match: {
+            [location]: `$${location}`,
+            state: '$state',
+            year: '$year',
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            // state: 0,
+            // county: 0,
+            // rangerDistrict:0,
+            // fips: 0,
+            spots: 1,
+          },
+        },
+      ],
+    },
+  },
+  {
+    $replaceWith: {
+      $mergeObjects: [
+        '$$ROOT',
+        { spots: '$spotinfo.spots' },
+      ],
+    },
+  },
+  {
+    $project: {
+      spotinfo: 0,
+      // _id: 0,
+      // county: 1,
+      // rangerDistrict: 1,
+      // state: 1,
+      // fips: 0,
+      // spots: 1,
+    },
+  },
+  // output and merge into collection
+  // {
+  //   $merge: {
+  //     into: collection,
+  //     on: [location, 'state', 'year'],
+  //     whenMatched: 'replace',
+  //   },
+  // },
+];

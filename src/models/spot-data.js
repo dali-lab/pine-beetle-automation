@@ -1,7 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 
 // collection 2: data on damaged trees that are collected in the fall
-// multiple indexing on Y to support aggregating individual annual sp data
 const SpotDataSchema = new Schema({
   county: {
     type: String,
@@ -15,7 +14,7 @@ const SpotDataSchema = new Schema({
   rangerDistrict: {
     type: String,
   },
-  spbCount: {
+  spots: {
     min: 0,
     type: Number,
   },
@@ -23,11 +22,18 @@ const SpotDataSchema = new Schema({
     type: String,
   },
   year: {
-    index: true,
     min: 1900,
     type: Number,
   },
 });
+
+// compound index of yr -> state -> RD -> county
+// to search by county, set RD = null in query
+// to search by RD, ignore county
+SpotDataSchema.index({
+// eslint-disable-next-line sort-keys
+  year: 1, state: 1, rangerDistrict: 1, county: 1,
+}, { unique: true });
 
 const SpotDataModel = mongoose.model('SpotData', SpotDataSchema);
 

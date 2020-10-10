@@ -28,7 +28,12 @@ const cleanBody = cleanBodyCreator(modelAttributes);
 
 const cleanCsv = cleanCsvCreator(CSV_TO_SPOTS);
 
-const csvFilter = (proposedDoc) => (proposedDoc.spots && numeral(proposedDoc.spots).value());
+// const csvFilter = (proposedDoc) => (proposedDoc.spots && numeral(proposedDoc.spots).value());
+
+const csvTransform = (doc) => ({
+  ...doc,
+  spots: numeral(doc.spots).value() ?? 0,
+});
 
 /**
  * @description uploads a csv to the unsummarized collection
@@ -36,7 +41,7 @@ const csvFilter = (proposedDoc) => (proposedDoc.spots && numeral(proposedDoc.spo
  * @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
  * @throws other errors depending on what went wrong
  */
-export const uploadCsv = csvUploadCreator(SpotDataModel, cleanCsv, cleanBody, csvFilter);
+export const uploadCsv = csvUploadCreator(SpotDataModel, cleanCsv, cleanBody, null, null);
 
 /**
  * @description downloads a csv of the entire collection

@@ -62,7 +62,7 @@ export const aggregationPipelineCreator = (location, collection) => [
       spbPerDay: { // cast k,v array to object
         $arrayToObject: '$spbPerDay',
       },
-      spots: { $literal: 0 },
+      spots: { $literal: -1 },
       state: '$_id.state',
       trapCount: 1,
       year: '$_id.year',
@@ -89,6 +89,8 @@ export const matchStateYear = (state, year) => [
   },
 ];
 
+const getOtherLocation = (location) => (location === 'county' ? 'rangerDistrict' : 'county');
+
 export const mergeSpotDataCreator = (location) => [
   // filter out docs that are recorded on the other geographical organization
   // (RD for county, county for RD)
@@ -100,7 +102,12 @@ export const mergeSpotDataCreator = (location) => [
     $lookup: {
       as: 'spotinfo',
       from: 'spotdatas',
-      let: { [location]: `$${location}`, state: '$state', year: '$year' },
+      let: {
+        [getOtherLocation(location)]: `$${getOtherLocation(location)}`,
+        [location]: `$${location}`,
+        state: '$state',
+        year: '$year',
+      },
       pipeline: [
         {
           $match: {
@@ -108,6 +115,9 @@ export const mergeSpotDataCreator = (location) => [
               $and: [
                 {
                   $eq: [`$${location}`, `$$${location}`],
+                },
+                {
+                  $eq: [`$${getOtherLocation(location)}`, null],
                 },
                 {
                   $eq: ['$state', '$$state'],

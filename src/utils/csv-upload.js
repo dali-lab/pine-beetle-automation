@@ -68,11 +68,20 @@ export const csvUploadCreator = (ModelName, cleanCsv, cleanBody, filter, transfo
       })
       .on('error', (err) => reject(err))
       .on('end', (rowCount) => {
-        ModelName.insertMany(docs)
+        // const writeOp = docs.map((data) => ({
+        //   updateOne: {
+        //     filter: { county: data.county, state: data.state, year: data.year },
+        //     update: data,
+        //     upsert: true,
+        //   },
+        // }));
+
+        ModelName.bulkWrite(docs)
           .then((res) => {
             console.log(`successfully parsed ${rowCount} rows from csv upload`);
             resolve(res);
-          });
+          })
+          .catch((err) => reject(err));
       });
   });
 };

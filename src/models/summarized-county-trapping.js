@@ -22,8 +22,8 @@ const SummarizedCountyTrappingSchema = new Schema({
     type: Object,
   },
   spots: {
-    default: 0,
-    min: 0,
+    default: -1,
+    min: -1,
     type: Number,
   },
   state: {

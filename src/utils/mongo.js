@@ -99,7 +99,7 @@ export const matchYear = (year) => [
   },
 ];
 
-// internal helper functio to 'invert' the location
+// internal helper function to 'invert' the location
 const getOtherLocation = (location) => (location === 'county' ? 'rangerDistrict' : 'county');
 
 /**
@@ -175,7 +175,7 @@ export const mergeSpotDataCreator = (location) => [
       year: 1,
     },
   },
-  // only modify those who have nonzero spots
+  // only modify those who have non-null spots
   {
     $match: { spots: { $ne: null } },
   },

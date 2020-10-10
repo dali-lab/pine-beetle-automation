@@ -1,3 +1,4 @@
+/* eslint-disable sort-keys */
 import mongoose, { Schema } from 'mongoose';
 import numeral from 'numeral';
 
@@ -18,7 +19,6 @@ mongoose.SchemaTypes.String.cast((v) => {
 });
 
 // collection 1: historical unsummarized trapping
-// multiple indexing on S/Y to support aggregating individual years/states
 const UnsummarizedTrappingSchema = new Schema({
   bloom: {
     type: String,
@@ -75,7 +75,6 @@ const UnsummarizedTrappingSchema = new Schema({
     type: Date,
   },
   state: {
-    index: true,
     type: String,
   },
   trap: {
@@ -87,11 +86,21 @@ const UnsummarizedTrappingSchema = new Schema({
     type: Number,
   },
   year: {
-    index: true,
     min: 1900,
     type: Number,
   },
 });
+
+// compound index of yr -> state -> rangerDistrict -> county -> trap -> week -> collectionDate
+UnsummarizedTrappingSchema.index({
+  year: 1,
+  state: 1,
+  rangerDistrict: 1,
+  county: 1,
+  trap: 1,
+  week: 1,
+  collectionDate: 1,
+}, { unique: true });
 
 const UnsummarizedTrappingModel = mongoose.model('UnsummarizedTrapping', UnsummarizedTrappingSchema);
 

@@ -18,6 +18,7 @@ import { cleanBodyCreator } from './requests';
 import {
   aggregationPipelineCreator,
   matchStateYear,
+  matchYear,
   mergeSpotDataCreator,
 } from './mongo';
 
@@ -32,6 +33,7 @@ export {
   generateResponse,
   getIndexes,
   matchStateYear,
+  matchYear,
   mergeSpotDataCreator,
   newError,
   upsertOpCreator,

@@ -89,6 +89,16 @@ export const matchStateYear = (state, year) => [
   },
 ];
 
+/**
+ * @description helper function to encapsulate aggregation filtering by a year
+ * @param {Number} year the year
+ */
+export const matchYear = (year) => [
+  {
+    $match: { year },
+  },
+];
+
 // internal helper functio to 'invert' the location
 const getOtherLocation = (location) => (location === 'county' ? 'rangerDistrict' : 'county');
 

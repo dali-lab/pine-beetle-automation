@@ -95,21 +95,21 @@ spotDataRouter.route('/merge/:location')
   .get(async (req, res) => {
     try {
       const { location } = req.params;
-      const { state, year } = req.query;
+      const { year } = req.query;
 
       if (location === 'county') {
-        if (state && year) await SpotData.mergeCountyStateYear(state, parseInt(year, 10));
+        if (year) await SpotData.mergeCountyYear(parseInt(year, 10));
         else await SpotData.mergeCounty();
       } else if (location === 'rangerDistrict') {
-        if (state && year) await SpotData.mergeRangerDistrictStateYear(state, parseInt(year, 10));
+        if (year) await SpotData.mergeRangerDistrictYear(parseInt(year, 10));
         else await SpotData.mergeRangerDistrict();
       } else {
         res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'no location specified'));
         return;
       }
 
-      const message = state && year
-        ? `merged spots by county on ${state} for ${year}`
+      const message = year
+        ? `merged spots by county for ${year}`
         : 'merged all spots by county';
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, message));

@@ -15,8 +15,8 @@ import {
   csvDownloadCreator,
   csvUploadCreator,
   getIndexes,
-  matchStateYear,
   mergeSpotDataCreator,
+  matchYear,
   newError,
   upsertOpCreator,
 } from '../utils';
@@ -123,13 +123,12 @@ export const mergeCounty = async () => {
 };
 
 /**
- * @description merges all spot data by county into summarized collection by state and year
- * @param {String} state
+ * @description merges all spot data by county into summarized collection by year
  * @param {Number} year
  */
-export const mergeCountyStateYear = async (state, year) => {
+export const mergeCountyYear = async (year) => {
   const updatedData = await SummarizedCountyTrappingModel.aggregate([
-    ...matchStateYear(state, year),
+    ...matchYear(year),
     ...mergeSpotDataCreator('county', 'summarizedcountytrappings'),
   ]);
 
@@ -152,13 +151,12 @@ export const mergeRangerDistrict = async () => {
 };
 
 /**
- * @description merges all spot data by ranger district into summarized collection by state and year
- * @param {String} state
+ * @description merges all spot data by ranger district into summarized collection by year
  * @param {Number} year
  */
-export const mergeRangerDistrictStateYear = async (state, year) => {
+export const mergeRangerDistrictYear = async (year) => {
   const updatedData = await SummarizedRangerDistrictTrappingModel.aggregate([
-    ...matchStateYear(state, year),
+    ...matchYear(year),
     ...mergeSpotDataCreator('rangerDistrict', 'summarizedrangerdistricttrappings'),
   ]);
 

@@ -94,7 +94,7 @@ spotDataRouter.route('/download')
 spotDataRouter.route('/merge')
   .get(async (req, res) => {
     try {
-      console.log(await SpotData.mergeCounty());
+      await SpotData.mergeCounty();
       // const { state, year } = req.query;
       // if (state && year) {
       //   await SummarizedCountyTrapping.summarizeStateYear(state, parseInt(year, 10));

@@ -62,7 +62,7 @@ export const aggregationPipelineCreator = (location, collection) => [
       spbPerDay: { // cast k,v array to object
         $arrayToObject: '$spbPerDay',
       },
-      spots: { $literal: -1 },
+      spots: { $literal: null },
       state: '$_id.state',
       trapCount: 1,
       year: '$_id.year',
@@ -166,13 +166,5 @@ export const mergeSpotDataCreator = (location) => [
   },
   // {
   //   $limit: 10,
-  // },
-  // output and merge into collection
-  // {
-  //   $merge: {
-  //     into: collection,
-  //     on: [location, 'state', 'year'],
-  //     whenMatched: 'replace',
-  //   },
   // },
 ];

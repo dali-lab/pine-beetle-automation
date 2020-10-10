@@ -15,6 +15,7 @@ const SpotDataSchema = new Schema({
     type: String,
   },
   spots: {
+    default: null,
     min: 0,
     type: Number,
   },

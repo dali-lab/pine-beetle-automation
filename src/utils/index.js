@@ -3,6 +3,8 @@ import {
   csvDownloadCreator,
   csvUploadCreator,
   deleteFile,
+  getIndexes,
+  upsertOpCreator,
 } from './csv-upload';
 
 import {
@@ -28,7 +30,9 @@ export {
   deleteFile,
   generateErrorResponse,
   generateResponse,
+  getIndexes,
   matchStateYear,
   mergeSpotDataCreator,
   newError,
+  upsertOpCreator,
 };

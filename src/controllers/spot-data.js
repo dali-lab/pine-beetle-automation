@@ -15,9 +15,11 @@ import {
   cleanCsvCreator,
   csvDownloadCreator,
   csvUploadCreator,
+  getIndexes,
   // matchStateYear,
   mergeSpotDataCreator,
   newError,
+  upsertOpCreator,
 } from '../utils';
 
 const modelAttributes = Object.keys(SpotDataModel.schema.paths)
@@ -30,10 +32,15 @@ const cleanCsv = cleanCsvCreator(CSV_TO_SPOTS);
 
 // const csvFilter = (proposedDoc) => (proposedDoc.spots && numeral(proposedDoc.spots).value());
 
-const csvTransform = (doc) => ({
-  ...doc,
-  spots: numeral(doc.spots).value() ?? 0,
-});
+// const csvTransform = (doc) => ({
+//   ...doc,
+//   spots: numeral(doc.spots).value() ?? 0,
+// });
+
+// console.log(getIndexes(SpotDataModel));
+
+// provides the upsert operation for csv uploading
+const csvUpserter = upsertOpCreator(getIndexes(SpotDataModel));
 
 /**
  * @description uploads a csv to the unsummarized collection
@@ -41,7 +48,7 @@ const csvTransform = (doc) => ({
  * @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
  * @throws other errors depending on what went wrong
  */
-export const uploadCsv = csvUploadCreator(SpotDataModel, cleanCsv, cleanBody, null, null);
+export const uploadCsv = csvUploadCreator(SpotDataModel, cleanCsv, cleanBody, null, null, csvUpserter);
 
 /**
  * @description downloads a csv of the entire collection
@@ -117,12 +124,9 @@ export const mergeCounty = async () => {
     ...mergeSpotDataCreator('county', 'summarizedcountytrappings'),
   ]);
 
-  const writeOp = updatedData.map((data) => ({
-    updateOne: {
-      filter: { county: data.county, state: data.state, year: data.year },
-      update: data,
-    },
-  }));
+  const upsertOp = upsertOpCreator(getIndexes(SummarizedCountyTrappingModel));
+
+  const writeOp = updatedData.map(upsertOp);
 
   return SummarizedCountyTrappingModel.bulkWrite(writeOp);
 };

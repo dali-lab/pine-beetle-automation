@@ -3,7 +3,9 @@ import numeral from 'numeral';
 
 // use custom casting to better read unclean data
 mongoose.SchemaTypes.Number.cast((v) => {
-  const val = numeral(v).value();
+  if (v === null || v === '') return null; // explicitly allow null as a possible value
+
+  const val = numeral(v).value(); // otherwise enforce numeral's extended casting
   if (val === null) throw new Error();
   return val;
 });

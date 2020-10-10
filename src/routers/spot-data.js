@@ -91,22 +91,28 @@ spotDataRouter.route('/download')
     }
   });
 
-spotDataRouter.route('/merge')
+spotDataRouter.route('/merge/:location')
   .get(async (req, res) => {
     try {
-      await SpotData.mergeCounty();
-      // const { state, year } = req.query;
-      // if (state && year) {
-      //   await SummarizedCountyTrapping.summarizeStateYear(state, parseInt(year, 10));
-      // } else {
-      //   await SummarizedCountyTrapping.summarizeAll();
-      // }
+      const { location } = req.params;
+      const { state, year } = req.query;
 
-      // const message = state && year
-      //   ? `summarized by county on ${state} for ${year}`
-      //   : 'summarized all by county';
+      if (location === 'county') {
+        if (state && year) await SpotData.mergeCountyStateYear(state, parseInt(year, 10));
+        else await SpotData.mergeCounty();
+      } else if (location === 'rangerDistrict') {
+        if (state && year) await SpotData.mergeRangerDistrictStateYear(state, parseInt(year, 10));
+        else await SpotData.mergeRangerDistrict();
+      } else {
+        res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'no location specified'));
+        return;
+      }
 
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, 'yay'));
+      const message = state && year
+        ? `merged spots by county on ${state} for ${year}`
+        : 'merged all spots by county';
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, message));
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;

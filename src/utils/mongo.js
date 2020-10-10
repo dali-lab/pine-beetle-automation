@@ -89,8 +89,13 @@ export const matchStateYear = (state, year) => [
   },
 ];
 
+// internal helper functio to 'invert' the location
 const getOtherLocation = (location) => (location === 'county' ? 'rangerDistrict' : 'county');
 
+/**
+ * @description builds pipeline to do a join (mass populate) on a collection with spot data
+ * @param {String} location the geographic grouping county/rd to work on
+ */
 export const mergeSpotDataCreator = (location) => [
   // filter out docs that are recorded on the other geographical organization
   // (RD for county, county for RD)
@@ -164,7 +169,4 @@ export const mergeSpotDataCreator = (location) => [
   {
     $match: { spots: { $ne: null } },
   },
-  // {
-  //   $limit: 10,
-  // },
 ];

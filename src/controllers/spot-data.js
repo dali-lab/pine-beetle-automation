@@ -1,8 +1,7 @@
-import numeral from 'numeral';
-
 import {
   SpotDataModel,
   SummarizedCountyTrappingModel,
+  SummarizedRangerDistrictTrappingModel,
 } from '../models';
 
 import {
@@ -16,7 +15,7 @@ import {
   csvDownloadCreator,
   csvUploadCreator,
   getIndexes,
-  // matchStateYear,
+  matchStateYear,
   mergeSpotDataCreator,
   newError,
   upsertOpCreator,
@@ -29,15 +28,6 @@ const modelAttributes = Object.keys(SpotDataModel.schema.paths)
 const cleanBody = cleanBodyCreator(modelAttributes);
 
 const cleanCsv = cleanCsvCreator(CSV_TO_SPOTS);
-
-// const csvFilter = (proposedDoc) => (proposedDoc.spots && numeral(proposedDoc.spots).value());
-
-// const csvTransform = (doc) => ({
-//   ...doc,
-//   spots: numeral(doc.spots).value() ?? 0,
-// });
-
-// console.log(getIndexes(SpotDataModel));
 
 // provides the upsert operation for csv uploading
 const csvUpserter = upsertOpCreator(getIndexes(SpotDataModel));
@@ -119,14 +109,60 @@ export const deleteById = async (id) => {
   return deletedDoc;
 };
 
+/**
+ * @description merges all spot data by county into summarized collection
+ */
 export const mergeCounty = async () => {
   const updatedData = await SummarizedCountyTrappingModel.aggregate([
     ...mergeSpotDataCreator('county', 'summarizedcountytrappings'),
   ]);
 
   const upsertOp = upsertOpCreator(getIndexes(SummarizedCountyTrappingModel));
-
   const writeOp = updatedData.map(upsertOp);
-
   return SummarizedCountyTrappingModel.bulkWrite(writeOp);
+};
+
+/**
+ * @description merges all spot data by county into summarized collection by state and year
+ * @param {String} state
+ * @param {Number} year
+ */
+export const mergeCountyStateYear = async (state, year) => {
+  const updatedData = await SummarizedCountyTrappingModel.aggregate([
+    ...matchStateYear(state, year),
+    ...mergeSpotDataCreator('county', 'summarizedcountytrappings'),
+  ]);
+
+  const upsertOp = upsertOpCreator(getIndexes(SummarizedCountyTrappingModel));
+  const writeOp = updatedData.map(upsertOp);
+  return SummarizedCountyTrappingModel.bulkWrite(writeOp);
+};
+
+/**
+ * @description merges all spot data by ranger district into summarized collection
+ */
+export const mergeRangerDistrict = async () => {
+  const updatedData = await SummarizedRangerDistrictTrappingModel.aggregate([
+    ...mergeSpotDataCreator('rangerDistrict', 'summarizedrangerdistricttrappings'),
+  ]);
+
+  const upsertOp = upsertOpCreator(getIndexes(SummarizedRangerDistrictTrappingModel));
+  const writeOp = updatedData.map(upsertOp);
+  return SummarizedRangerDistrictTrappingModel.bulkWrite(writeOp);
+};
+
+/**
+ * @description merges all spot data by ranger district into summarized collection by state and year
+ * @param {String} state
+ * @param {Number} year
+ */
+export const mergeRangerDistrictStateYear = async (state, year) => {
+  const updatedData = await SummarizedRangerDistrictTrappingModel.aggregate([
+    ...matchStateYear(state, year),
+    ...mergeSpotDataCreator('rangerDistrict', 'summarizedrangerdistricttrappings'),
+  ]);
+
+  const upsertOp = upsertOpCreator(getIndexes(SummarizedRangerDistrictTrappingModel));
+  const writeOp = updatedData.map(upsertOp);
+  return SummarizedRangerDistrictTrappingModel.bulkWrite(writeOp);
 };

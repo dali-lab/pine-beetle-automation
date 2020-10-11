@@ -1,11 +1,24 @@
-import { SpotDataModel } from '../models';
+import {
+  SpotDataModel,
+  SummarizedCountyTrappingModel,
+  SummarizedRangerDistrictTrappingModel,
+} from '../models';
 
-import { RESPONSE_TYPES } from '../constants';
+import {
+  RESPONSE_TYPES,
+  CSV_TO_SPOTS,
+} from '../constants';
 
 import {
   cleanBodyCreator,
+  cleanCsvCreator,
   csvDownloadCreator,
+  csvUploadCreator,
+  getIndexes,
+  mergeSpotDataCreator,
+  matchYear,
   newError,
+  upsertOpCreator,
 } from '../utils';
 
 const modelAttributes = Object.keys(SpotDataModel.schema.paths)
@@ -13,6 +26,19 @@ const modelAttributes = Object.keys(SpotDataModel.schema.paths)
 
 // this is a function to clean req.body
 const cleanBody = cleanBodyCreator(modelAttributes);
+
+const cleanCsv = cleanCsvCreator(CSV_TO_SPOTS);
+
+// provides the upsert operation for csv uploading
+const csvUpserter = upsertOpCreator(getIndexes(SpotDataModel));
+
+/**
+ * @description uploads a csv to the unsummarized collection
+ * @param {String} filename the csv filename on disk
+ * @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
+ * @throws other errors depending on what went wrong
+ */
+export const uploadCsv = csvUploadCreator(SpotDataModel, cleanCsv, cleanBody, null, null, csvUpserter);
 
 /**
  * @description downloads a csv of the entire collection
@@ -81,4 +107,60 @@ export const deleteById = async (id) => {
   const deletedDoc = await SpotDataModel.findByIdAndDelete(id);
   if (!deletedDoc) throw newError(RESPONSE_TYPES.NOT_FOUND, 'ID not found');
   return deletedDoc;
+};
+
+/**
+ * @description merges all spot data by county into summarized collection
+ */
+export const mergeCounty = async () => {
+  const updatedData = await SummarizedCountyTrappingModel.aggregate([
+    ...mergeSpotDataCreator('county', 'summarizedcountytrappings'),
+  ]);
+
+  const upsertOp = upsertOpCreator(getIndexes(SummarizedCountyTrappingModel));
+  const writeOp = updatedData.map(upsertOp);
+  return SummarizedCountyTrappingModel.bulkWrite(writeOp);
+};
+
+/**
+ * @description merges all spot data by county into summarized collection by year
+ * @param {Number} year
+ */
+export const mergeCountyYear = async (year) => {
+  const updatedData = await SummarizedCountyTrappingModel.aggregate([
+    ...matchYear(year),
+    ...mergeSpotDataCreator('county', 'summarizedcountytrappings'),
+  ]);
+
+  const upsertOp = upsertOpCreator(getIndexes(SummarizedCountyTrappingModel));
+  const writeOp = updatedData.map(upsertOp);
+  return SummarizedCountyTrappingModel.bulkWrite(writeOp);
+};
+
+/**
+ * @description merges all spot data by ranger district into summarized collection
+ */
+export const mergeRangerDistrict = async () => {
+  const updatedData = await SummarizedRangerDistrictTrappingModel.aggregate([
+    ...mergeSpotDataCreator('rangerDistrict', 'summarizedrangerdistricttrappings'),
+  ]);
+
+  const upsertOp = upsertOpCreator(getIndexes(SummarizedRangerDistrictTrappingModel));
+  const writeOp = updatedData.map(upsertOp);
+  return SummarizedRangerDistrictTrappingModel.bulkWrite(writeOp);
+};
+
+/**
+ * @description merges all spot data by ranger district into summarized collection by year
+ * @param {Number} year
+ */
+export const mergeRangerDistrictYear = async (year) => {
+  const updatedData = await SummarizedRangerDistrictTrappingModel.aggregate([
+    ...matchYear(year),
+    ...mergeSpotDataCreator('rangerDistrict', 'summarizedrangerdistricttrappings'),
+  ]);
+
+  const upsertOp = upsertOpCreator(getIndexes(SummarizedRangerDistrictTrappingModel));
+  const writeOp = updatedData.map(upsertOp);
+  return SummarizedRangerDistrictTrappingModel.bulkWrite(writeOp);
 };

@@ -62,6 +62,7 @@ export const aggregationPipelineCreator = (location, collection) => [
       spbPerDay: { // cast k,v array to object
         $arrayToObject: '$spbPerDay',
       },
+      spots: { $literal: null },
       state: '$_id.state',
       trapCount: 1,
       year: '$_id.year',
@@ -85,5 +86,97 @@ export const aggregationPipelineCreator = (location, collection) => [
 export const matchStateYear = (state, year) => [
   {
     $match: { state, year },
+  },
+];
+
+/**
+ * @description helper function to encapsulate aggregation filtering by a year
+ * @param {Number} year the year
+ */
+export const matchYear = (year) => [
+  {
+    $match: { year },
+  },
+];
+
+// internal helper function to 'invert' the location
+const getOtherLocation = (location) => (location === 'county' ? 'rangerDistrict' : 'county');
+
+/**
+ * @description builds pipeline to do a join (mass populate) on a collection with spot data
+ * @param {String} location the geographic grouping county/rd to work on
+ */
+export const mergeSpotDataCreator = (location) => [
+  // filter out docs that are recorded on the other geographical organization
+  // (RD for county, county for RD)
+  {
+    $match: { [location]: { $ne: null } },
+  },
+  // join from spot data collection
+  {
+    $lookup: {
+      as: 'spotinfo',
+      from: 'spotdatas',
+      let: {
+        [getOtherLocation(location)]: `$${getOtherLocation(location)}`,
+        [location]: `$${location}`,
+        state: '$state',
+        year: '$year',
+      },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $and: [
+                {
+                  $eq: [`$${location}`, `$$${location}`],
+                },
+                {
+                  $eq: [`$${getOtherLocation(location)}`, null],
+                },
+                {
+                  $eq: ['$state', '$$state'],
+                },
+                {
+                  $eq: ['$year', '$$year'],
+                },
+              ],
+            },
+          },
+        },
+      ],
+    },
+  },
+  // extract the correct spot document out of an array
+  {
+    $replaceWith: {
+      $mergeObjects: [
+        '$$ROOT',
+        { spotdoc: { $arrayElemAt: ['$spotinfo', 0] } },
+      ],
+    },
+  },
+  // remove the spotinfo array
+  {
+    $project: {
+      spotinfo: 0,
+    },
+  },
+  {
+    $project: {
+      cleridCount: 1,
+      cleridPerDay: 1,
+      [location]: 1,
+      spbCount: 1,
+      spbPerDay: 1,
+      spots: '$spotdoc.spots', // extract the number only from the doc
+      state: 1,
+      trapCount: 1,
+      year: 1,
+    },
+  },
+  // only modify those who have non-null spots
+  {
+    $match: { spots: { $ne: null } },
   },
 ];

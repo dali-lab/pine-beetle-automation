@@ -22,6 +22,7 @@ const SummarizedRangerDistrictTrappingSchema = new Schema({
     type: Object,
   },
   spots: {
+    default: null,
     min: 0,
     type: Number,
   },

@@ -3,6 +3,8 @@ import {
   csvDownloadCreator,
   csvUploadCreator,
   deleteFile,
+  getIndexes,
+  upsertOpCreator,
 } from './csv-upload';
 
 import {
@@ -16,6 +18,8 @@ import { cleanBodyCreator } from './requests';
 import {
   aggregationPipelineCreator,
   matchStateYear,
+  matchYear,
+  mergeSpotDataCreator,
 } from './mongo';
 
 export {
@@ -27,6 +31,10 @@ export {
   deleteFile,
   generateErrorResponse,
   generateResponse,
+  getIndexes,
   matchStateYear,
+  matchYear,
+  mergeSpotDataCreator,
   newError,
+  upsertOpCreator,
 };

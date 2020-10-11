@@ -11,6 +11,7 @@ Expects the following in the body:
 - `cleridCount`
 - `cleridPerDay` (Object)
 - `county`
+- `endobrev`
 - `spbCount`
 - `spbPerDay` (Object)
 - `spots`
@@ -55,6 +56,7 @@ Expects the following in the body:
 - `cleridCount`
 - `cleridPerDay` (Object)
 - `county`
+- `endobrev`
 - `spbCount`
 - `spbPerDay` (Object)
 - `spots`

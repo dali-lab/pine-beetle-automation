@@ -10,6 +10,7 @@ Expects the following in the body:
 
 - `cleridCount`
 - `cleridPerDay` (Object)
+- `endobrev`
 - `rangerDistrict`
 - `spbCount`
 - `spbPerDay` (Object)
@@ -54,6 +55,7 @@ Expects the following in the body:
 
 - `cleridCount`
 - `cleridPerDay` (Object)
+- `endobrev`
 - `rangerDistrict`
 - `spbCount`
 - `spbPerDay` (Object)

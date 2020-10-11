@@ -10,6 +10,11 @@ const SummarizedRangerDistrictTrappingSchema = new Schema({
     // { trapName: Number ...  }
     type: Object,
   },
+  endobrev: {
+    max: 1,
+    min: 0,
+    type: Number,
+  },
   rangerDistrict: {
     type: String,
   },

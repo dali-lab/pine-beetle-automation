@@ -10,7 +10,7 @@ export const aggregationPipelineCreator = (location, collection) => [
   {
     $match: { [location]: { $ne: null } },
   },
-  // select total days, and beetles per trap, group by county/rd, trap name, state, year
+  // select total days, endobrev, beetles per trap, group by county/rd, trap name, state, year
   {
     $group: {
       _id: {
@@ -20,11 +20,12 @@ export const aggregationPipelineCreator = (location, collection) => [
         year: '$year',
       },
       cleridCount: { $sum: '$cleridCount' },
+      endobrev: { $sum: '$endobrev' },
       spbCount: { $sum: '$spbCount' },
       totalDaysActive: { $sum: '$daysActive' },
     },
   },
-  // select beetle counts, trap count, beetles per day per trap, group by county/RD, state, year
+  // select beetle counts, trap count, endobrev, beetles per day per trap, group by county/RD, state, year
   {
     $group: {
       _id: {
@@ -39,6 +40,7 @@ export const aggregationPipelineCreator = (location, collection) => [
           v: { $divide: ['$cleridCount', '$totalDaysActive'] },
         },
       },
+      endobrev: { $sum: '$endobrev' },
       spbCount: { $sum: '$spbCount' },
       spbPerDay: { // this creates an array, which is casted during project to object
         $push: {
@@ -57,12 +59,20 @@ export const aggregationPipelineCreator = (location, collection) => [
       cleridPerDay: { // cast k,v array to object
         $arrayToObject: '$cleridPerDay',
       },
+      endobrev: { // reduce to boolean 1 or 0 for endobrev/no endobrev
+        $cond: [
+          { $gt: ['$endobrev', 0] },
+          1,
+          0,
+        ],
+      },
+      // endobrevCount: 1,
       [location]: `$_id.${location}`,
       spbCount: 1,
       spbPerDay: { // cast k,v array to object
         $arrayToObject: '$spbPerDay',
       },
-      spots: { $literal: null },
+      spots: { $literal: null }, // TODO: investigate way to not overwrite this field
       state: '$_id.state',
       trapCount: 1,
       year: '$_id.year',
@@ -73,7 +83,7 @@ export const aggregationPipelineCreator = (location, collection) => [
     $merge: {
       into: collection,
       on: [location, 'state', 'year'],
-      whenMatched: 'replace',
+      // whenMatched: 'replace',
     },
   },
 ];
@@ -102,6 +112,18 @@ export const matchYear = (year) => [
 // internal helper function to 'invert' the location
 const getOtherLocation = (location) => (location === 'county' ? 'rangerDistrict' : 'county');
 
+/* NOTE: the below technique is a very poor usage of aggregation, and I discovered that
+ * directly matching Y/S/C/RD, projecting only Y/S/C/RD/spots, and directly doing a default
+ * merge should accomplish all of this without needing to read and bulkwrite the data all over again.
+ * this is because merge does a sort of { ...originalobject, ...mergedobject } to the document,
+ * allowing us to directly insert/overwrite certain fields. Darn!
+ *
+ * https://docs.mongodb.com/manual/reference/operator/aggregation/merge/#merge-whenmatched-merge
+ *
+ * fix technique: reimplement this pipeline and break it up into a selection stage and a merge stage.
+ * merge stage should be conditional on location, likely in a different function.
+ * put that in instead of bulkWrite for the spot controller.
+ */
 /**
  * @description builds pipeline to do a join (mass populate) on a collection with spot data
  * @param {String} location the geographic grouping county/rd to work on

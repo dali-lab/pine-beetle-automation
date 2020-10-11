@@ -4,7 +4,9 @@ import numeral from 'numeral';
 
 // use custom casting to better read unclean data
 mongoose.SchemaTypes.Number.cast((v) => {
-  if (v === null || v === '') return null; // explicitly allow null as a possible value
+  if (v === null) return null; // explicitly allow null as a possible value
+
+  if (v === '') return 0; // blank is zero
 
   const val = numeral(v).value(); // otherwise enforce numeral's extended casting
   if (val === null) throw new Error();
@@ -40,7 +42,9 @@ const UnsummarizedTrappingSchema = new Schema({
     type: Number,
   },
   endobrev: {
-    type: Number, // unsure of this
+    max: 1,
+    min: 0,
+    type: Number,
   },
   fips: {
     type: Number,

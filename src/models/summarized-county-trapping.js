@@ -13,6 +13,11 @@ const SummarizedCountyTrappingSchema = new Schema({
   county: {
     type: String,
   },
+  endobrev: {
+    max: 1,
+    min: 0,
+    type: Number,
+  },
   spbCount: {
     min: 0,
     type: Number,

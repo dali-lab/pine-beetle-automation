@@ -112,13 +112,17 @@ export const matchYear = (year) => [
 // internal helper function to 'invert' the location
 const getOtherLocation = (location) => (location === 'county' ? 'rangerDistrict' : 'county');
 
-/* NOTE: the bleow technique is a very poor usage of aggregation, and I discovered that
+/* NOTE: the below technique is a very poor usage of aggregation, and I discovered that
  * directly matching Y/S/C/RD, projecting only Y/S/C/RD/spots, and directly doing a default
  * merge should accomplish all of this without needing to read and bulkwrite the data all over again.
  * this is because merge does a sort of { ...originalobject, ...mergedobject } to the document,
  * allowing us to directly insert/overwrite certain fields. Darn!
  *
  * https://docs.mongodb.com/manual/reference/operator/aggregation/merge/#merge-whenmatched-merge
+ *
+ * fix technique: reimplement this pipeline and break it up into a selection stage and a merge stage.
+ * merge stage should be conditional on location, likely in a different function.
+ * put that in instead of bulkWrite for the spot controller.
  */
 /**
  * @description builds pipeline to do a join (mass populate) on a collection with spot data

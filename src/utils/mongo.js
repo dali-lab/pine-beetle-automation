@@ -62,7 +62,7 @@ export const aggregationPipelineCreator = (location, collection) => [
       spbPerDay: { // cast k,v array to object
         $arrayToObject: '$spbPerDay',
       },
-      spots: { $literal: null },
+      spots: { $literal: null }, // investigate way to not overwrite this field
       state: '$_id.state',
       trapCount: 1,
       year: '$_id.year',

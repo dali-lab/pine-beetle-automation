@@ -98,8 +98,6 @@ CountyPredictionRouter.route('/predict')
     }
   });
 
-export default CountyPredictionRouter;
-
 CountyPredictionRouter.route('/:id')
   .get(async (req, res) => {
     try {
@@ -148,3 +146,5 @@ CountyPredictionRouter.route('/:id')
       res.status(status).send(errorResponse);
     }
   });
+
+export default CountyPredictionRouter;

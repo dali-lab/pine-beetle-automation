@@ -1,4 +1,5 @@
-import { RDPredictionModel } from '../models';
+import { RDPredictionModel, SummarizedRangerDistrictTrappingModel } from '../models';
+import * as rModel from './r-model';
 
 import { RESPONSE_TYPES } from '../constants';
 
@@ -77,4 +78,65 @@ export const deleteById = async (id) => {
   const deletedDoc = await RDPredictionModel.findByIdAndDelete(id);
   if (!deletedDoc) throw newError(RESPONSE_TYPES.NOT_FOUND, 'ID not found');
   return deletedDoc;
+};
+
+/**
+   * @description generates all predictions for the ranger district level data.
+   * @param {Object} [filter] optional filter object
+   * @returns {Promise<[RDPredictionModel]>} all docs
+   */
+export const generateAllPredictions = async (filter = {}) => {
+  const filteredTrappingData = await SummarizedRangerDistrictTrappingModel.find(filter);
+  const allTrappingData = (filter === {}) ? filteredTrappingData : await SummarizedRangerDistrictTrappingModel.find({});
+
+  filteredTrappingData.forEach(async (trappingObj) => {
+    const {
+      cleridPerDay,
+      endobrev,
+      rangerDistrict,
+      spbPerDay,
+      state,
+      trapCount,
+      year,
+    } = trappingObj;
+
+    const t1 = allTrappingData.find((obj) => {
+      return obj.year === year - 1 && obj.state === state && obj.rangerDistrict === rangerDistrict;
+    });
+
+    const t2 = allTrappingData.find((obj) => {
+      return obj.year === year - 2 && obj.state === state && obj.rangerDistrict === rangerDistrict;
+    });
+
+    if (!t1 || !t2) return;
+    console.log(trappingObj);
+    console.log(t1);
+
+    const spb = trappingObj.spbCount;
+    const cleridst1 = t1.cleridCount;
+    const spotst1 = t1.spots;
+    const spotst2 = t2.spots;
+
+    if (!spb || !cleridst1 || !spotst1 || !spotst2) return;
+
+    const prediction = await rModel.runModel(
+      spb,
+      cleridst1,
+      spotst1,
+      spotst2,
+      endobrev,
+    );
+
+    await insertOne({
+      cleridPerDay,
+      prediction,
+      rangerDistrict,
+      spbPerDay,
+      state,
+      trapCount,
+      year,
+    });
+  });
+  const predictions = await getAll();
+  return predictions;
 };

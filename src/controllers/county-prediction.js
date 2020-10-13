@@ -83,13 +83,13 @@ export const deleteById = async (id) => {
 /**
    * @description generates all predictions for the county level data.
    * @param {Object} [filter] optional filter object
-   * @returns {Promise<CountyPredictionModel>}
-   * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
+   * @returns {Promise<[CountyPredictionModel]>} all docs
    */
 export const generateAllPredictions = async (filter = {}) => {
-  const trappingData = await SummarizedCountyTrappingModel.find(filter);
+  const filteredTrappingData = await SummarizedCountyTrappingModel.find(filter);
+  const allTrappingData = (filter === {}) ? filteredTrappingData : await SummarizedCountyTrappingModel.find({});
 
-  trappingData.forEach(async (trappingObject) => {
+  filteredTrappingData.forEach(async (trappingObject) => {
     const {
       cleridPerDay,
       county,
@@ -100,11 +100,11 @@ export const generateAllPredictions = async (filter = {}) => {
       year,
     } = trappingObject;
 
-    const t1 = trappingData.find((obj) => {
+    const t1 = allTrappingData.find((obj) => {
       return obj.year === year - 1 && obj.state === state && obj.county === county;
     });
 
-    const t2 = trappingData.find((obj) => {
+    const t2 = allTrappingData.find((obj) => {
       return obj.year === year - 2 && obj.state === state && obj.county === county;
     });
 

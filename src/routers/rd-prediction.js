@@ -85,6 +85,19 @@ RDPredictionRouter.route('/download')
     }
   });
 
+RDPredictionRouter.route('/predict')
+  .get(async (req, res) => {
+    try {
+      const data = await RDPrediction.generateAllPredictions(req.query);
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, data));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    }
+  });
+
 RDPredictionRouter.route('/:id')
   .get(async (req, res) => {
     try {

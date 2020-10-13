@@ -1,4 +1,5 @@
-import { CountyPredictionModel } from '../models';
+import { CountyPredictionModel, SummarizedCountyTrappingModel } from '../models';
+import * as rModel from './r-model';
 
 import { RESPONSE_TYPES } from '../constants';
 
@@ -77,4 +78,66 @@ export const deleteById = async (id) => {
   const deletedDoc = await CountyPredictionModel.findByIdAndDelete(id);
   if (!deletedDoc) throw newError(RESPONSE_TYPES.NOT_FOUND, 'ID not found');
   return deletedDoc;
+};
+
+/**
+   * @description generates all predictions for the county level data.
+   * @param {Object} [filter] optional filter object
+   * @returns {Promise<CountyPredictionModel>}
+   * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
+   */
+export const generateAllPredictions = async (filter = {}) => {
+  const trappingData = await SummarizedCountyTrappingModel.find(filter);
+
+  trappingData.forEach(async (trappingObject) => {
+    const {
+      cleridPerDay,
+      county,
+      endobrev,
+      spbPerDay,
+      state,
+      trapCount,
+      year,
+    } = trappingObject;
+
+    const t1 = trappingData.find((obj) => {
+      return obj.year === year - 1 && obj.state === state && obj.county === county;
+    });
+
+    const t2 = trappingData.find((obj) => {
+      return obj.year === year - 2 && obj.state === state && obj.county === county;
+    });
+
+    // TODO: should we identify default values for when these are missing?
+    if (!(t1 && t2)) return;
+
+    const spb = trappingObject.spbCount;
+    const cleridst1 = t1.cleridCount;
+    const spotst1 = t1.spots;
+    const spotst2 = t2.spots;
+
+    // TODO: should we identify default values for when these are missing?
+    if (!(spb && cleridst1 && spotst1 && spotst2)) return;
+
+    const prediction = await rModel.runModel(
+      spb,
+      cleridst1,
+      spotst1,
+      spotst2,
+      endobrev,
+    );
+
+    await insertOne({
+      cleridPerDay,
+      county,
+      prediction,
+      spbPerDay,
+      state,
+      trapCount,
+      year,
+    });
+  });
+
+  const predictions = await getAll();
+  return predictions;
 };

@@ -5,7 +5,7 @@ import R from 'r-script';
 
 const rpath = path.resolve(__dirname, '../r-scripts/SPB-Predictions.v02.R');
 
-export const runModel = (SPB, cleridst1, spotst1, spotst2, endobrev) => {
+export const runModel = (SPB = 0, cleridst1 = 0, spotst1 = 0, spotst2 = 0, endobrev = 0) => {
   return new Promise((resolve, reject) => {
     R(rpath)
       .data({

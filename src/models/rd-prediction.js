@@ -1,8 +1,14 @@
+/* eslint-disable sort-keys */
 import mongoose, { Schema } from 'mongoose';
 
 // rd prediction model
 const RDPredictionSchema = new Schema({
   cleridPerDay: {
+    min: 0,
+    type: Number,
+  },
+  endobrev: {
+    max: 1,
     min: 0,
     type: Number,
   },
@@ -31,9 +37,13 @@ const RDPredictionSchema = new Schema({
   },
 });
 
-// compound index of yr -> state -> rd
-// eslint-disable-next-line sort-keys
-RDPredictionSchema.index({ year: 1, state: 1, rangerDistrict: 1 }, { unique: true });
+// compound index of yr -> state -> rd -> endobrev
+RDPredictionSchema.index({
+  year: 1,
+  state: 1,
+  rangerDistrict: 1,
+  endobrev: 1,
+}, { unique: true });
 
 const RDPredictionModel = mongoose.model('RDPrediction', RDPredictionSchema);
 

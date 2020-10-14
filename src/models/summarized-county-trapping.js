@@ -1,3 +1,4 @@
+/* eslint-disable sort-keys */
 import mongoose, { Schema } from 'mongoose';
 
 // collection 3: county-level trapping data aggregated by year
@@ -17,6 +18,9 @@ const SummarizedCountyTrappingSchema = new Schema({
     max: 1,
     min: 0,
     type: Number,
+  },
+  season: {
+    type: String,
   },
   spbCount: {
     min: 0,
@@ -44,9 +48,14 @@ const SummarizedCountyTrappingSchema = new Schema({
   },
 });
 
-// compound index of yr -> state -> county
-// eslint-disable-next-line sort-keys
-SummarizedCountyTrappingSchema.index({ year: 1, state: 1, county: 1 }, { unique: true });
+// compound index of yr -> state -> county -> season -> endobrev
+SummarizedCountyTrappingSchema.index({
+  year: 1,
+  state: 1,
+  county: 1,
+  season: 1,
+  endobrev: 1,
+}, { unique: true });
 
 const SummarizedCountyTrappingModel = mongoose.model('SummarizedCountyTrapping', SummarizedCountyTrappingSchema);
 

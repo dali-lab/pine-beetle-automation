@@ -7,6 +7,10 @@ const SummarizedRangerDistrictTrappingSchema = new Schema({
     min: 0,
     type: Number,
   },
+  cleridPer2Weeks: {
+    min: 0,
+    type: Number,
+  },
   cleridPerDay: {
     // { trapName: Number ...  }
     type: Object,
@@ -23,6 +27,10 @@ const SummarizedRangerDistrictTrappingSchema = new Schema({
     type: String,
   },
   spbCount: {
+    min: 0,
+    type: Number,
+  },
+  spbPer2Weeks: {
     min: 0,
     type: Number,
   },

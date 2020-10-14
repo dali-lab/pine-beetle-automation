@@ -89,8 +89,10 @@ export const deleteById = async (id) => {
    * @returns {Promise<[RDPredictionModel]>} all docs
    */
 export const generateAllPredictions = async (filter = {}) => {
-  const filteredTrappingData = await SummarizedRangerDistrictTrappingModel.find(filter);
-  const allTrappingData = Object.keys(filter).length > 0 ? await SummarizedRangerDistrictTrappingModel.find({}) : filteredTrappingData;
+  const filteredTrappingData = await SummarizedRangerDistrictTrappingModel.find({ ...filter, season: 'spring' });
+  const allTrappingData = Object.keys(filter).length > 0
+    ? await SummarizedRangerDistrictTrappingModel.find({ season: 'spring' })
+    : filteredTrappingData;
 
   const promises = filteredTrappingData.map((trappingObj) => {
     return new Promise((resolve, reject) => {
@@ -98,6 +100,7 @@ export const generateAllPredictions = async (filter = {}) => {
         cleridPerDay,
         endobrev,
         rangerDistrict,
+        spbPer2Weeks: spb,
         spbPerDay,
         state,
         trapCount,
@@ -105,17 +108,20 @@ export const generateAllPredictions = async (filter = {}) => {
       } = trappingObj;
 
       const t1 = allTrappingData.find((obj) => {
-        return parseInt(obj.year, 10) === parseInt(year - 1, 10) && obj.state === state && obj.rangerDistrict === rangerDistrict;
+        return obj.year === year - 1
+          && obj.state === state
+          && obj.rangerDistrict === rangerDistrict;
       });
 
       const t2 = allTrappingData.find((obj) => {
-        return parseInt(obj.year, 10) === parseInt(year - 2, 10) && obj.state === state && obj.rangerDistrict === rangerDistrict;
+        return obj.year === year - 2
+          && obj.state === state
+          && obj.rangerDistrict === rangerDistrict;
       });
 
       if (!t1 || !t2) return resolve();
 
-      const spb = trappingObj.spbCount;
-      const cleridst1 = t1.cleridCount;
+      const cleridst1 = t1.cleridPer2Weeks;
       const spotst1 = t1.spots;
       const spotst2 = t2.spots;
 
@@ -128,6 +134,7 @@ export const generateAllPredictions = async (filter = {}) => {
         .then((prediction) => {
           resolve({
             cleridPerDay,
+            endobrev,
             prediction,
             rangerDistrict,
             spbPerDay,

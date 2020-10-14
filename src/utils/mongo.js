@@ -187,11 +187,15 @@ export const mergeSpotDataCreator = (location) => [
   },
   {
     $project: {
-      _id: 0,
+      _id: 1,
       cleridCount: 1,
+      cleridPer2Weeks: 1,
       cleridPerDay: 1,
+      endobrev: 1,
       [location]: 1,
+      season: 1,
       spbCount: 1,
+      spbPer2Weeks: 1,
       spbPerDay: 1,
       spots: '$spotdoc.spots', // extract the number only from the doc
       state: 1,

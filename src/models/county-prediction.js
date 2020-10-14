@@ -18,7 +18,7 @@ const CountyPredictionSchema = new Schema({
   prediction: [
     {
       _row: String,
-      predictions: { min: 0, type: Number },
+      Predictions: { min: 0, type: Number },
     }],
   spbPerDay: {
     // { trapName: Number ...  }

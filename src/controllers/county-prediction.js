@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-globals */
 import { CountyPredictionModel, SummarizedCountyTrappingModel } from '../models';
 import * as rModel from './r-model';
 
@@ -5,7 +6,9 @@ import { RESPONSE_TYPES } from '../constants';
 
 import {
   cleanBodyCreator,
+  getIndexes,
   newError,
+  upsertOpCreator,
 } from '../utils';
 
 const modelAttributes = Object.keys(CountyPredictionModel.schema.paths)
@@ -87,57 +90,66 @@ export const deleteById = async (id) => {
    */
 export const generateAllPredictions = async (filter = {}) => {
   const filteredTrappingData = await SummarizedCountyTrappingModel.find(filter);
-  const allTrappingData = (filter === {}) ? filteredTrappingData : await SummarizedCountyTrappingModel.find({});
+  const allTrappingData = Object.keys(filter).length > 0 ? await SummarizedCountyTrappingModel.find({}) : filteredTrappingData;
 
-  filteredTrappingData.forEach(async (trappingObject) => {
-    const {
-      cleridPerDay,
-      county,
-      endobrev,
-      spbPerDay,
-      state,
-      trapCount,
-      year,
-    } = trappingObject;
+  const promises = filteredTrappingData.map((trappingObject) => {
+    return new Promise((resolve, reject) => {
+      const {
+        cleridPerDay,
+        county,
+        endobrev,
+        spbPerDay,
+        state,
+        trapCount,
+        year,
+      } = trappingObject;
 
-    const t1 = allTrappingData.find((obj) => {
-      return obj.year === year - 1 && obj.state === state && obj.county === county;
-    });
+      const t1 = allTrappingData.find((obj) => {
+        return parseInt(obj.year, 10) === parseInt(year - 1, 10) && obj.state === state && obj.county === county;
+      });
 
-    const t2 = allTrappingData.find((obj) => {
-      return obj.year === year - 2 && obj.state === state && obj.county === county;
-    });
+      const t2 = allTrappingData.find((obj) => {
+        return parseInt(obj.year, 10) === parseInt(year - 2, 10) && obj.state === state && obj.county === county;
+      });
 
-    // TODO: should we identify default values for when these are missing?
-    if (!(t1 && t2)) return;
+      // TODO: should we identify default values for when these are missing?
+      if (!(t1 && t2)) return resolve();
 
-    const spb = trappingObject.spbCount;
-    const cleridst1 = t1.cleridCount;
-    const spotst1 = t1.spots;
-    const spotst2 = t2.spots;
+      const spb = trappingObject.spbCount;
+      const cleridst1 = t1.cleridCount;
+      const spotst1 = t1.spots;
+      const spotst2 = t2.spots;
 
-    // TODO: should we identify default values for when these are missing?
-    if (!(spb && cleridst1 && spotst1 && spotst2)) return;
+      // TODO: should we identify default values for when these are missing?
+      if (isNaN(spb) || spb === null || isNaN(cleridst1) || cleridst1 === null
+      || isNaN(spotst1) || spotst1 === null || isNaN(spotst2) || spotst2 === null) {
+        return resolve();
+      }
 
-    const prediction = await rModel.runModel(
-      spb,
-      cleridst1,
-      spotst1,
-      spotst2,
-      endobrev,
-    );
-
-    await insertOne({
-      cleridPerDay,
-      county,
-      prediction,
-      spbPerDay,
-      state,
-      trapCount,
-      year,
+      return rModel.runModel(spb, cleridst1, spotst1, spotst2, endobrev)
+        .then((prediction) => {
+          resolve({
+            cleridPerDay,
+            county,
+            prediction,
+            spbPerDay,
+            state,
+            trapCount,
+            year,
+          });
+        })
+        .catch((error) => {
+          reject(error);
+        });
     });
   });
 
-  const predictions = await getAll();
-  return predictions;
+  const data = await Promise.all(promises);
+  const updatedData = data.filter((obj) => !!obj);
+
+  const upsertOp = upsertOpCreator(getIndexes(CountyPredictionModel));
+  const writeOp = updatedData.map(upsertOp);
+  await CountyPredictionModel.bulkWrite(writeOp);
+
+  return getAll();
 };

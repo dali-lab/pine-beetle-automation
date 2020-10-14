@@ -4,8 +4,8 @@ import mongoose, { Schema } from 'mongoose';
 // rd prediction model
 const RDPredictionSchema = new Schema({
   cleridPerDay: {
-    min: 0,
-    type: Number,
+    // { trapName: Number ...  }
+    type: Object,
   },
   endobrev: {
     max: 1,
@@ -21,8 +21,8 @@ const RDPredictionSchema = new Schema({
     type: String,
   },
   spbPerDay: {
-    min: 0,
-    type: Number,
+    // { trapName: Number ...  }
+    type: Object,
   },
   state: {
     type: String,

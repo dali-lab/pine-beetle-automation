@@ -85,6 +85,19 @@ CountyPredictionRouter.route('/download')
     }
   });
 
+CountyPredictionRouter.route('/predict')
+  .get(async (req, res) => {
+    try {
+      const data = await CountyPrediction.generateAllPredictions(req.query);
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, data));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    }
+  });
+
 CountyPredictionRouter.route('/:id')
   .get(async (req, res) => {
     try {

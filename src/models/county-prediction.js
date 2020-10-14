@@ -4,8 +4,8 @@ import mongoose, { Schema } from 'mongoose';
 // county prediction model
 const CountyPredictionSchema = new Schema({
   cleridPerDay: {
-    min: 0,
-    type: Number,
+    // { trapName: Number ...  }
+    type: Object,
   },
   county: {
     type: String,
@@ -21,8 +21,8 @@ const CountyPredictionSchema = new Schema({
       predictions: { min: 0, type: Number },
     }],
   spbPerDay: {
-    min: 0,
-    type: Number,
+    // { trapName: Number ...  }
+    type: Object,
   },
   state: {
     type: String,

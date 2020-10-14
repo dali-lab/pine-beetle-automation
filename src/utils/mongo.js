@@ -61,7 +61,7 @@ export const aggregationPipelineCreator = (location, collection) => [
     $project: {
       _id: 0,
       cleridCount: 1,
-      cleridPer2Weeks: { $divide: ['$cleridCount', '$totalTrappingDays'] },
+      cleridPer2Weeks: { $multiply: [14, { $divide: ['$cleridCount', '$totalTrappingDays'] }] },
       cleridPerDay: { // cast k,v array to object
         $arrayToObject: '$cleridPerDay',
       },
@@ -69,7 +69,7 @@ export const aggregationPipelineCreator = (location, collection) => [
       [location]: `$_id.${location}`,
       season: '$_id.season',
       spbCount: 1,
-      spbPer2Weeks: { $divide: ['$spbCount', '$totalTrappingDays'] },
+      spbPer2Weeks: { $multiply: [14, { $divide: ['$spbCount', '$totalTrappingDays'] }] },
       spbPerDay: { // cast k,v array to object
         $arrayToObject: '$spbPerDay',
       },

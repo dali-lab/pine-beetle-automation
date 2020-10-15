@@ -6,6 +6,7 @@ import { RESPONSE_TYPES } from '../constants';
 
 import {
   cleanBodyCreator,
+  csvDownloadCreator,
   getIndexes,
   newError,
   upsertOpCreator,
@@ -16,6 +17,13 @@ const modelAttributes = Object.keys(RDPredictionModel.schema.paths)
 
 // this is a function to clean req.body
 const cleanBody = cleanBodyCreator(modelAttributes);
+
+/**
+ * @description downloads a csv of the entire collection
+ * @throws RESPONSE_TYPES.INTERNAL_ERROR for problem parsing CSV
+ * @returns {String} path to CSV file
+ */
+export const downloadCsv = csvDownloadCreator(RDPredictionModel, modelAttributes);
 
 /**
  * @description Fetches one year's data from the ranger district prediction collection.

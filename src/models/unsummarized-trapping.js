@@ -6,7 +6,7 @@ import numeral from 'numeral';
 mongoose.SchemaTypes.Number.cast((v) => {
   if (v === null) return null; // explicitly allow null as a possible value
 
-  if (v === '') return 0; // blank is zero
+  if (v === '' || v === 'NULL') return 0; // blank is zero
 
   const val = numeral(v).value(); // otherwise enforce numeral's extended casting
   if (val === null) throw new Error();
@@ -69,7 +69,7 @@ const UnsummarizedTrappingSchema = new Schema({
     type: String,
   },
   sirexLure: {
-    type: String, // unsure of this
+    type: String,
   },
   spbCount: {
     min: 0,
@@ -84,25 +84,19 @@ const UnsummarizedTrappingSchema = new Schema({
   trap: {
     type: String,
   },
-  week: {
-    max: 52,
-    min: 1,
-    type: Number,
-  },
   year: {
     min: 1900,
     type: Number,
   },
 });
 
-// compound index of yr -> state -> rangerDistrict -> county -> trap -> week -> collectionDate
+// compound index of yr -> state -> rangerDistrict -> county -> trap -> collectionDate
 UnsummarizedTrappingSchema.index({
   year: 1,
   state: 1,
   rangerDistrict: 1,
   county: 1,
   trap: 1,
-  week: 1,
   collectionDate: 1,
 }, { unique: true });
 

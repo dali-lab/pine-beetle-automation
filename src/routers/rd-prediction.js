@@ -47,14 +47,14 @@ RDPredictionRouter.route('/')
 RDPredictionRouter.route('/filter')
   .get(async (req, res) => {
     const {
-      county,
       endYear,
+      rangerDistrict,
       startYear,
       state,
     } = req.query;
 
     try {
-      const result = await RDPrediction.getByFilter(startYear, endYear, state, county);
+      const result = await RDPrediction.getByFilter(startYear, endYear, state, rangerDistrict);
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
@@ -88,7 +88,9 @@ RDPredictionRouter.route('/download')
 RDPredictionRouter.route('/predict')
   .get(async (req, res) => {
     try {
-      const data = await RDPrediction.generateAllPredictions(req.query);
+      const filter = req.query.year ? req.query : { ...req.query, year: parseInt(req.query.year, 10) };
+
+      const data = await RDPrediction.generateAllPredictions(filter);
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, data));
     } catch (error) {
       const errorResponse = generateErrorResponse(error);

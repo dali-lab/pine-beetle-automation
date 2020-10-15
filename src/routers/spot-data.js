@@ -109,8 +109,8 @@ spotDataRouter.route('/merge/:location')
       }
 
       const message = year
-        ? `merged spots by county for ${year}`
-        : 'merged all spots by county';
+        ? `merged spots by ${location} for ${year}`
+        : `merged all spots by ${location}`;
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, message));
     } catch (error) {

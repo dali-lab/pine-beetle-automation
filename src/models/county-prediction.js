@@ -1,3 +1,4 @@
+/* eslint-disable sort-keys */
 import mongoose, { Schema } from 'mongoose';
 
 // county prediction model
@@ -9,10 +10,15 @@ const CountyPredictionSchema = new Schema({
   county: {
     type: String,
   },
+  endobrev: {
+    max: 1,
+    min: 0,
+    type: Number,
+  },
   prediction: [
     {
       _row: String,
-      predictions: { min: 0, type: Number },
+      Predictions: { min: 0, type: Number },
     }],
   spbPerDay: {
     // { trapName: Number ...  }
@@ -31,9 +37,13 @@ const CountyPredictionSchema = new Schema({
   },
 });
 
-// compound index of yr -> state -> county
-// eslint-disable-next-line sort-keys
-CountyPredictionSchema.index({ year: 1, state: 1, county: 1 }, { unique: true });
+// compound index of yr -> state -> county -> endobrev
+CountyPredictionSchema.index({
+  year: 1,
+  state: 1,
+  county: 1,
+  endobrev: 1,
+}, { unique: true });
 
 const CountyPredictionModel = mongoose.model('CountyPrediction', CountyPredictionSchema);
 

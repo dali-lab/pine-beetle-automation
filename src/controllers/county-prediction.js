@@ -6,6 +6,7 @@ import { RESPONSE_TYPES } from '../constants';
 
 import {
   cleanBodyCreator,
+  csvDownloadCreator,
   getIndexes,
   newError,
   upsertOpCreator,
@@ -16,6 +17,13 @@ const modelAttributes = Object.keys(CountyPredictionModel.schema.paths)
 
 // this is a function to clean req.body
 const cleanBody = cleanBodyCreator(modelAttributes);
+
+/**
+ * @description downloads a csv of the entire collection
+ * @throws RESPONSE_TYPES.INTERNAL_ERROR for problem parsing CSV
+ * @returns {String} path to CSV file
+ */
+export const downloadCsv = csvDownloadCreator(CountyPredictionModel, modelAttributes);
 
 /**
  * @description Fetches one year's data from the county prediction collection.
@@ -89,8 +97,10 @@ export const deleteById = async (id) => {
    * @returns {Promise<[CountyPredictionModel]>} all docs
    */
 export const generateAllPredictions = async (filter = {}) => {
-  const filteredTrappingData = await SummarizedCountyTrappingModel.find(filter);
-  const allTrappingData = Object.keys(filter).length > 0 ? await SummarizedCountyTrappingModel.find({}) : filteredTrappingData;
+  const filteredTrappingData = await SummarizedCountyTrappingModel.find({ ...filter, season: 'spring' });
+  const allTrappingData = Object.keys(filter).length > 0
+    ? await SummarizedCountyTrappingModel.find({ season: 'spring' })
+    : filteredTrappingData;
 
   const promises = filteredTrappingData.map((trappingObject) => {
     return new Promise((resolve, reject) => {
@@ -98,6 +108,7 @@ export const generateAllPredictions = async (filter = {}) => {
         cleridPerDay,
         county,
         endobrev,
+        spbPer2Weeks: spb,
         spbPerDay,
         state,
         trapCount,
@@ -105,18 +116,21 @@ export const generateAllPredictions = async (filter = {}) => {
       } = trappingObject;
 
       const t1 = allTrappingData.find((obj) => {
-        return parseInt(obj.year, 10) === parseInt(year - 1, 10) && obj.state === state && obj.county === county;
+        return obj.year === year - 1
+          && obj.state === state
+          && obj.county === county;
       });
 
       const t2 = allTrappingData.find((obj) => {
-        return parseInt(obj.year, 10) === parseInt(year - 2, 10) && obj.state === state && obj.county === county;
+        return obj.year === year - 2
+          && obj.state === state
+          && obj.county === county;
       });
 
       // TODO: should we identify default values for when these are missing?
       if (!(t1 && t2)) return resolve();
 
-      const spb = trappingObject.spbCount;
-      const cleridst1 = t1.cleridCount;
+      const cleridst1 = t1.cleridPer2Weeks;
       const spotst1 = t1.spots;
       const spotst2 = t2.spots;
 
@@ -131,6 +145,7 @@ export const generateAllPredictions = async (filter = {}) => {
           resolve({
             cleridPerDay,
             county,
+            endobrev,
             prediction,
             spbPerDay,
             state,

@@ -1,8 +1,13 @@
+/* eslint-disable sort-keys */
 import mongoose, { Schema } from 'mongoose';
 
 // collection 4: rangerdistrict-level trapping data aggregated by year
 const SummarizedRangerDistrictTrappingSchema = new Schema({
   cleridCount: {
+    min: 0,
+    type: Number,
+  },
+  cleridPer2Weeks: {
     min: 0,
     type: Number,
   },
@@ -18,7 +23,14 @@ const SummarizedRangerDistrictTrappingSchema = new Schema({
   rangerDistrict: {
     type: String,
   },
+  season: {
+    type: String,
+  },
   spbCount: {
+    min: 0,
+    type: Number,
+  },
+  spbPer2Weeks: {
     min: 0,
     type: Number,
   },
@@ -44,9 +56,14 @@ const SummarizedRangerDistrictTrappingSchema = new Schema({
   },
 });
 
-// compound index of yr -> state -> rangerDistrict
-// eslint-disable-next-line sort-keys
-SummarizedRangerDistrictTrappingSchema.index({ year: 1, state: 1, rangerDistrict: 1 }, { unique: true });
+// compound index of yr -> state -> rangerDistrict -> season -> endobrev
+SummarizedRangerDistrictTrappingSchema.index({
+  year: 1,
+  state: 1,
+  rangerDistrict: 1,
+  season: 1,
+  endobrev: 1,
+}, { unique: true });
 
 const SummarizedRangerDistrictTrappingModel = mongoose.model('SummarizedRangerDistrictTrapping', SummarizedRangerDistrictTrappingSchema);
 

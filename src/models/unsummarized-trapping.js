@@ -42,6 +42,7 @@ const UnsummarizedTrappingSchema = new Schema({
     type: Number,
   },
   endobrev: {
+    default: 1,
     max: 1,
     min: 0,
     type: Number,

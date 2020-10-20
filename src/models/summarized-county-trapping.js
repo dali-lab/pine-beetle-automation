@@ -23,9 +23,6 @@ const SummarizedCountyTrappingSchema = new Schema({
     min: 0,
     type: Number,
   },
-  season: {
-    type: String,
-  },
   spbCount: {
     min: 0,
     type: Number,
@@ -46,6 +43,10 @@ const SummarizedCountyTrappingSchema = new Schema({
   state: {
     type: String,
   },
+  totalTrappingDays: {
+    min: 1,
+    type: Number,
+  },
   trapCount: {
     min: 1,
     type: Number,
@@ -56,12 +57,11 @@ const SummarizedCountyTrappingSchema = new Schema({
   },
 });
 
-// compound index of yr -> state -> county -> season -> endobrev
+// compound index of yr -> state -> county -> endobrev
 SummarizedCountyTrappingSchema.index({
   year: 1,
   state: 1,
   county: 1,
-  season: 1,
   endobrev: 1,
 }, { unique: true });
 

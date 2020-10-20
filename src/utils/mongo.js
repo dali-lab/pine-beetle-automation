@@ -5,18 +5,21 @@
  * @returns {Array<Object>} that should be used as ... to input into aggregate
  */
 export const aggregationPipelineCreator = (location, collection) => [
+  // only aggregate spring data
+  {
+    $match: { season: 'spring' },
+  },
   // filter out docs that are recorded on the other geographical organization
   // (RD for county, county for RD)
   {
     $match: { [location]: { $ne: null } },
   },
-  // select total days, beetles per trap, group by county/rd, trap name, state, year, season, endobrev
+  // select total days, beetles per trap, group by county/rd, trap name, state, year, endobrev
   {
     $group: {
       _id: {
         endobrev: '$endobrev',
         [location]: `$${location}`,
-        season: '$season',
         state: '$state',
         trap: '$trap',
         year: '$year',
@@ -26,13 +29,12 @@ export const aggregationPipelineCreator = (location, collection) => [
       totalDaysActive: { $sum: '$daysActive' },
     },
   },
-  // select beetle counts, trap count, total trapping days, beetles per day per trap, group by county/RD, state, year, season, endo
+  // select beetle counts, trap count, total trapping days, beetles per day per trap, group by county/RD, state, year, endo
   {
     $group: {
       _id: {
         endobrev: '$_id.endobrev',
         [location]: `$_id.${location}`,
-        season: '$_id.season',
         state: '$_id.state',
         year: '$_id.year',
       },
@@ -67,7 +69,6 @@ export const aggregationPipelineCreator = (location, collection) => [
       },
       endobrev: '$_id.endobrev',
       [location]: `$_id.${location}`,
-      season: '$_id.season',
       spbCount: 1,
       spbPer2Weeks: { $multiply: [14, { $divide: ['$spbCount', '$totalTrappingDays'] }] },
       spbPerDay: { // cast k,v array to object
@@ -75,6 +76,7 @@ export const aggregationPipelineCreator = (location, collection) => [
       },
       spots: { $literal: null }, // TODO: investigate way to not overwrite this field
       state: '$_id.state',
+      totalTrappingDays: 1,
       trapCount: 1,
       year: '$_id.year',
     },
@@ -83,7 +85,7 @@ export const aggregationPipelineCreator = (location, collection) => [
   {
     $merge: {
       into: collection,
-      on: ['year', 'state', location, 'season', 'endobrev'],
+      on: ['year', 'state', location, 'endobrev'],
       // whenMatched: 'replace',
     },
   },
@@ -193,12 +195,12 @@ export const mergeSpotDataCreator = (location) => [
       cleridPerDay: 1,
       endobrev: 1,
       [location]: 1,
-      season: 1,
       spbCount: 1,
       spbPer2Weeks: 1,
       spbPerDay: 1,
       spots: '$spotdoc.spots', // extract the number only from the doc
       state: 1,
+      totalTrappingDays: 1,
       trapCount: 1,
       year: 1,
     },

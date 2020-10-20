@@ -15,11 +15,10 @@ const CountyPredictionSchema = new Schema({
     min: 0,
     type: Number,
   },
-  prediction: [
-    {
-      _row: String,
-      Predictions: { min: 0, type: Number },
-    }],
+  prediction: {
+    // { entry: value ... }
+    type: Object,
+  },
   spbPerDay: {
     // { trapName: Number ...  }
     type: Object,
@@ -42,7 +41,6 @@ CountyPredictionSchema.index({
   year: 1,
   state: 1,
   county: 1,
-  endobrev: 1,
 }, { unique: true });
 
 const CountyPredictionModel = mongoose.model('CountyPrediction', CountyPredictionSchema);

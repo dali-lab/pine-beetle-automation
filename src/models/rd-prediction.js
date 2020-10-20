@@ -12,11 +12,10 @@ const RDPredictionSchema = new Schema({
     min: 0,
     type: Number,
   },
-  prediction: [
-    {
-      _row: String,
-      Predictions: { min: 0, type: Number },
-    }],
+  prediction: {
+    // { entry: value ... }
+    type: Object,
+  },
   rangerDistrict: {
     type: String,
   },
@@ -42,7 +41,6 @@ RDPredictionSchema.index({
   year: 1,
   state: 1,
   rangerDistrict: 1,
-  endobrev: 1,
 }, { unique: true });
 
 const RDPredictionModel = mongoose.model('RDPrediction', RDPredictionSchema);

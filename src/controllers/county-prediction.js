@@ -97,9 +97,9 @@ export const deleteById = async (id) => {
    * @returns {Promise<[CountyPredictionModel]>} all docs
    */
 export const generateAllPredictions = async (filter = {}) => {
-  const filteredTrappingData = await SummarizedCountyTrappingModel.find({ ...filter, season: 'spring' });
+  const filteredTrappingData = await SummarizedCountyTrappingModel.find(filter);
   const allTrappingData = Object.keys(filter).length > 0
-    ? await SummarizedCountyTrappingModel.find({ season: 'spring' })
+    ? await SummarizedCountyTrappingModel.find()
     : filteredTrappingData;
 
   const promises = filteredTrappingData.map((trappingObject) => {
@@ -142,11 +142,13 @@ export const generateAllPredictions = async (filter = {}) => {
 
       return rModel.runModel(spb, cleridst1, spotst1, spotst2, endobrev)
         .then((prediction) => {
+          const flattenedPred = Object.fromEntries(prediction.map((pred) => [pred._row, pred.Predictions]));
+
           resolve({
             cleridPerDay,
             county,
             endobrev,
-            prediction,
+            prediction: flattenedPred,
             spbPerDay,
             state,
             trapCount,

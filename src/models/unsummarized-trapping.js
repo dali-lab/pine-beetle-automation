@@ -6,10 +6,10 @@ import numeral from 'numeral';
 mongoose.SchemaTypes.Number.cast((v) => {
   if (v === null) return null; // explicitly allow null as a possible value
 
-  if (v === '' || v === 'NULL') return 0; // blank is zero
+  if (v === '') return 0; // blank is zero
 
   const val = numeral(v).value(); // otherwise enforce numeral's extended casting
-  if (val === null) throw new Error();
+  if (val === null) throw new Error(); // null will be thrown on cast error
   return val;
 });
 

@@ -24,6 +24,9 @@ const cleanBody = cleanBodyCreator(modelAttributes);
 
 const cleanCsv = cleanCsvCreator(CSV_TO_UNSUMMARIZED);
 
+// removes strange null valued rows
+const filterNulls = (document) => document.cleridCount !== 'NULL' && document.spbCount !== 'NULL';
+
 const stateToAbbrevTransform = (document) => {
   return {
     ...document,
@@ -40,7 +43,14 @@ const csvUpserter = upsertOpCreator(getIndexes(UnsummarizedTrappingModel));
  * @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
  * @throws other errors depending on what went wrong
  */
-export const uploadCsv = csvUploadCreator(UnsummarizedTrappingModel, cleanCsv, cleanBody, null, stateToAbbrevTransform, csvUpserter);
+export const uploadCsv = csvUploadCreator(
+  UnsummarizedTrappingModel,
+  cleanCsv,
+  cleanBody,
+  filterNulls,
+  stateToAbbrevTransform,
+  csvUpserter,
+);
 
 /**
  * @description downloads a csv of the entire collection

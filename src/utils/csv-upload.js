@@ -86,7 +86,7 @@ export const csvUploadCreator = (ModelName, cleanCsv, cleanBody, filter, transfo
         if (!cleanedData) reject(newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in csv'));
 
         // apply filter if it exists
-        if (!filter || (filter && filter(cleanedData))) {
+        if (!filter || filter(cleanedData)) {
           // apply transformation if it exists
           docs.push(transform ? transform(cleanedData) : cleanedData);
         }

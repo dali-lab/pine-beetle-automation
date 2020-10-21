@@ -113,34 +113,35 @@ const predictionGenerator = async (filteredTrappingData, allTrappingData) => {
         trapCount,
         year,
       } = trappingObject;
-      // console.log(trappingObject);
 
+      // look for 1 year before
       const t1 = allTrappingData.find((obj) => {
         return obj.year === year - 1
           && obj.state === state
           && obj.county === county;
       });
 
+      // look for 2 years before
       const t2 = allTrappingData.find((obj) => {
         return obj.year === year - 2
           && obj.state === state
           && obj.county === county;
       });
 
-      // TODO: should we identify default values for when these are missing?
+      // return nothing if missing years of data
       if (!(t1 && t2)) return resolve();
 
       const cleridst1 = t1.cleridPer2Weeks;
       const spotst1 = t1.spots;
       const spotst2 = t2.spots;
-      // console.log(spbPer2Weeks, cleridst1, spotst1, spotst2);
 
-      // TODO: should we identify default values for when these are missing?
+      // return nothing if missing data within years
       if (isNaN(spbPer2Weeks) || spbPer2Weeks === null || isNaN(cleridst1) || cleridst1 === null
       || isNaN(spotst1) || spotst1 === null || isNaN(spotst2) || spotst2 === null) {
         return resolve();
       }
 
+      // run model and return results
       return rModel.runModel(spbPer2Weeks, cleridst1, spotst1, spotst2, endobrev)
         .then((prediction) => {
           const flattenedPred = Object.fromEntries(prediction.map((pred) => [pred._row, pred.Predictions]));
@@ -162,9 +163,11 @@ const predictionGenerator = async (filteredTrappingData, allTrappingData) => {
     });
   });
 
+  // filter out blank responses
   const data = await Promise.all(promises);
   const updatedData = data.filter((obj) => !!obj);
 
+  // upsert results into db
   const upsertOp = upsertOpCreator(getIndexes(CountyPredictionModel));
   const writeOp = updatedData.map(upsertOp);
   return CountyPredictionModel.bulkWrite(writeOp);

@@ -88,10 +88,18 @@ RDPredictionRouter.route('/download')
 RDPredictionRouter.route('/predict')
   .get(async (req, res) => {
     try {
-      const filter = req.query.year ? req.query : { ...req.query, year: parseInt(req.query.year, 10) };
+      const { state, year } = req.query;
+      if (state && year) {
+        await RDPrediction.generateStateYearPredictions(state, parseInt(year, 10));
+      } else {
+        await RDPrediction.generateAllPredictions();
+      }
 
-      const data = await RDPrediction.generateAllPredictions(filter);
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, data));
+      const message = state && year
+        ? `predicted by ranger district on ${state} for ${year}`
+        : 'predicted all by ranger district';
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, message));
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;

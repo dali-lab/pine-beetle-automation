@@ -76,6 +76,8 @@ export const aggregationPipelineCreator = (location, collection) => [
         $arrayToObject: '$spbPerDay',
       },
       spots: { $literal: null }, // TODO: investigate way to not overwrite this field
+      spotst1: { $literal: null }, // TODO: investigate way to not overwrite this field
+      spotst2: { $literal: null }, // TODO: investigate way to not overwrite this field
       state: '$_id.state',
       totalTrappingDays: 1,
       trapCount: 1,
@@ -148,10 +150,11 @@ export const mergeSpotDataCreator = (location) => [
   {
     $match: { [location]: { $ne: null } },
   },
-  // join from spot data collection
+  // join from spot data collection three times to get y, y-1, y-2
+  // year - 0
   {
     $lookup: {
-      as: 'spotinfo',
+      as: 'spots_raw',
       from: 'spotdatas',
       let: {
         [getOtherLocation(location)]: `$${getOtherLocation(location)}`,
@@ -164,20 +167,18 @@ export const mergeSpotDataCreator = (location) => [
           $match: {
             $expr: {
               $and: [
-                {
-                  $eq: [`$${location}`, `$$${location}`],
-                },
-                {
-                  $eq: [`$${getOtherLocation(location)}`, null],
-                },
-                {
-                  $eq: ['$state', '$$state'],
-                },
-                {
-                  $eq: ['$year', '$$year'],
-                },
+                { $eq: [`$${location}`, `$$${location}`] },
+                { $eq: [`$${getOtherLocation(location)}`, null] },
+                { $eq: ['$state', '$$state'] },
+                { $eq: ['$year', '$$year'] },
               ],
             },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            spots: '$spots',
           },
         },
       ],
@@ -188,16 +189,95 @@ export const mergeSpotDataCreator = (location) => [
     $replaceWith: {
       $mergeObjects: [
         '$$ROOT',
-        { spotdoc: { $arrayElemAt: ['$spotinfo', 0] } },
+        { spots: { $arrayElemAt: ['$spots_raw', 0] } },
       ],
     },
   },
-  // remove the spotinfo array
+  // year - 1
   {
-    $project: {
-      spotinfo: 0,
+    $lookup: {
+      as: 'spotst1_raw',
+      from: 'spotdatas',
+      let: {
+        [getOtherLocation(location)]: `$${getOtherLocation(location)}`,
+        [location]: `$${location}`,
+        state: '$state',
+        year: '$year',
+      },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $and: [
+                { $eq: [`$${location}`, `$$${location}`] },
+                { $eq: [`$${getOtherLocation(location)}`, null] },
+                { $eq: ['$state', '$$state'] },
+                { $eq: ['$year', { $sum: ['$$year', -1] }] },
+              ],
+            },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            spots: '$spots',
+          },
+        },
+      ],
     },
   },
+  // extract the correct spot document out of an array
+  {
+    $replaceWith: {
+      $mergeObjects: [
+        '$$ROOT',
+        { spotst1: { $arrayElemAt: ['$spotst1_raw', 0] } },
+      ],
+    },
+  },
+  // year - 2
+  {
+    $lookup: {
+      as: 'spotst2_raw',
+      from: 'spotdatas',
+      let: {
+        [getOtherLocation(location)]: `$${getOtherLocation(location)}`,
+        [location]: `$${location}`,
+        state: '$state',
+        year: '$year',
+      },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $and: [
+                { $eq: [`$${location}`, `$$${location}`] },
+                { $eq: [`$${getOtherLocation(location)}`, null] },
+                { $eq: ['$state', '$$state'] },
+                { $eq: ['$year', { $sum: ['$$year', -2] }] },
+              ],
+            },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            spots: '$spots',
+          },
+        },
+      ],
+    },
+  },
+  // extract the correct spot document out of an array
+  {
+    $replaceWith: {
+      $mergeObjects: [
+        '$$ROOT',
+        { spotst2: { $arrayElemAt: ['$spotst2_raw', 0] } },
+      ],
+    },
+  },
+  // clear out raw arrays, reformat spots
   {
     $project: {
       _id: 1,
@@ -209,16 +289,14 @@ export const mergeSpotDataCreator = (location) => [
       spbCount: 1,
       spbPer2Weeks: 1,
       spbPerDay: 1,
-      spots: '$spotdoc.spots', // extract the number only from the doc
+      spots: '$spots.spots',
+      spotst1: '$spotst1.spots',
+      spotst2: '$spotst2.spots',
       state: 1,
       totalTrappingDays: 1,
       trapCount: 1,
       year: 1,
     },
-  },
-  // only modify those who have non-null spots
-  {
-    $match: { spots: { $ne: null } },
   },
 ];
 

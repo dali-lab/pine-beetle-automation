@@ -1,3 +1,4 @@
+/* eslint-disable sort-keys */
 /**
  * @description creates a custom aggregation pipeline for either county or RD
  * @param {String} location either 'county' or 'rangerDistrict'
@@ -208,5 +209,231 @@ export const mergeSpotDataCreator = (location) => [
   // only modify those who have non-null spots
   {
     $match: { spots: { $ne: null } },
+  },
+];
+
+// eslint-disable-next-line no-unused-vars
+const predictionFetchCreator = (location, collection) => [
+  {
+    $sort: {
+      year: 1,
+      state: 1,
+      [location]: 1,
+      endobrev: 1,
+    },
+  }, {
+    $group: {
+      _id: {
+        [location]: `$${location}`,
+        state: '$state',
+        year: '$year',
+      },
+      cleridPerDay: {
+        $last: '$cleridPerDay',
+      },
+      endobrev: {
+        $last: '$endobrev',
+      },
+      spbPerDay: {
+        $last: '$spbPerDay',
+      },
+      spbPerTwoWeeks: {
+        $last: '$spbPer2Weeks',
+      },
+      trapCount: {
+        $last: '$trapCount',
+      },
+    },
+  }, {
+    $project: {
+      _id: 0,
+      cleridPerDay: 1,
+      county: '$_id.county',
+      endobrev: 1,
+      [location]: `$_id.${location}`,
+      spbPerDay: 1,
+      spbPerTwoWeeks: 1,
+      state: '$_id.state',
+      trapCount: 1,
+      year: '$_id.year',
+    },
+  },
+];
+
+const temp2 = [
+  {
+    $sort: {
+      year: 1,
+      state: 1,
+      county: 1,
+      endobrev: 1,
+    },
+  }, {
+    $group: {
+      _id: {
+        year: '$year',
+        state: '$state',
+        county: '$county',
+      },
+      cleridPerDay: {
+        $last: '$cleridPerDay',
+      },
+      endobrev: {
+        $last: '$endobrev',
+      },
+      spbPerDay: {
+        $last: '$spbPerDay',
+      },
+      spbPer2Weeks: {
+        $last: '$spbPer2Weeks',
+      },
+      trapCount: {
+        $last: '$trapCount',
+      },
+    },
+  }, {
+    $project: {
+      _id: 0,
+      cleridPerDay: 1,
+      county: '$_id.county',
+      endobrev: 1,
+      spbPerDay: 1,
+      spbPer2Weeks: 1,
+      state: '$_id.state',
+      trapCount: 1,
+      year: '$_id.year',
+    },
+  }, {
+    $lookup: {
+      from: 'summarizedcountytrappings',
+      as: 't1arr',
+      let: {
+        county: '$county',
+        endobrev: '$endobrev',
+        state: '$state',
+        year: '$year',
+      },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $and: [
+                {
+                  $eq: [
+                    '$county', '$$county',
+                  ],
+                }, {
+                  $eq: [
+                    '$endobrev', '$$endobrev',
+                  ],
+                }, {
+                  $eq: [
+                    '$state', '$$state',
+                  ],
+                }, {
+                  $eq: [
+                    '$year', {
+                      $sum: [
+                        '$$year', -1,
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        },
+      ],
+    },
+  }, {
+    $lookup: {
+      from: 'summarizedcountytrappings',
+      as: 't2arr',
+      let: {
+        county: '$county',
+        endobrev: '$endobrev',
+        state: '$state',
+        year: '$year',
+      },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $and: [
+                {
+                  $eq: [
+                    '$county', '$$county',
+                  ],
+                }, {
+                  $eq: [
+                    '$endobrev', '$$endobrev',
+                  ],
+                }, {
+                  $eq: [
+                    '$state', '$$state',
+                  ],
+                }, {
+                  $eq: [
+                    '$year', {
+                      $sum: [
+                        '$$year', -2,
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        },
+      ],
+    },
+  }, {
+    $replaceWith: {
+      $mergeObjects: [
+        '$$ROOT', {
+          t1: {
+            $arrayElemAt: [
+              '$t1arr', 0,
+            ],
+          },
+        }, {
+          t2: {
+            $arrayElemAt: [
+              '$t2arr', 0,
+            ],
+          },
+        },
+      ],
+    },
+  }, {
+    $project: {
+      _id: 0,
+      cleridPerDay: 1,
+      cleridst1: '$t1.cleridPer2Weeks',
+      county: 1,
+      endobrev: 1,
+      spbPer2Weeks: 1,
+      spbPerDay: 1,
+      spotst1: '$t1.spots',
+      spotst2: '$t2.spots',
+      state: 1,
+      trapCount: 1,
+      year: 1,
+    },
+  }, {
+    $match: {
+      cleridst1: {
+        $ne: null,
+      },
+      spbPer2Weeks: {
+        $ne: null,
+      },
+      spotst1: {
+        $ne: null,
+      },
+      spotst2: {
+        $ne: null,
+      },
+    },
   },
 ];

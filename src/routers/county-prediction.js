@@ -88,10 +88,18 @@ CountyPredictionRouter.route('/download')
 CountyPredictionRouter.route('/predict')
   .get(async (req, res) => {
     try {
-      const filter = req.query.year ? req.query : { ...req.query, year: parseInt(req.query.year, 10) };
+      const { state, year } = req.query;
+      if (state && year) {
+        await CountyPrediction.generateStateYearPredictions(state, parseInt(year, 10));
+      } else {
+        await CountyPrediction.generateAllPredictions();
+      }
 
-      const data = await CountyPrediction.generateAllPredictions(filter);
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, data));
+      const message = state && year
+        ? `predicted by county on ${state} for ${year}`
+        : 'predicted all by county';
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, message));
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;

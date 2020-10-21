@@ -8,6 +8,9 @@ import {
   cleanBodyCreator,
   csvDownloadCreator,
   getIndexes,
+  predictionFetchCreator,
+  matchState,
+  matchStateYear,
   newError,
   upsertOpCreator,
 } from '../utils';
@@ -93,27 +96,24 @@ export const deleteById = async (id) => {
 
 /**
    * @description generates all predictions for the county level data.
-   * @param {Object} [filter] optional filter object
+   * @param {Array<SummarizedCountyTrappingModel> filteredTrappingData the array of data to generate predictions over
+   * @param {Array<SummarizedCountyTrappingModel> allTrappingData the array of data to do reverse year lookups on
    * @returns {Promise<[CountyPredictionModel]>} all docs
    */
-export const generateAllPredictions = async (filter = {}) => {
-  const filteredTrappingData = await SummarizedCountyTrappingModel.find(filter);
-  const allTrappingData = Object.keys(filter).length > 0
-    ? await SummarizedCountyTrappingModel.find()
-    : filteredTrappingData;
-
+const predictionGenerator = async (filteredTrappingData, allTrappingData) => {
   const promises = filteredTrappingData.map((trappingObject) => {
     return new Promise((resolve, reject) => {
       const {
         cleridPerDay,
         county,
         endobrev,
-        spbPer2Weeks: spb,
+        spbPer2Weeks,
         spbPerDay,
         state,
         trapCount,
         year,
       } = trappingObject;
+      // console.log(trappingObject);
 
       const t1 = allTrappingData.find((obj) => {
         return obj.year === year - 1
@@ -133,14 +133,15 @@ export const generateAllPredictions = async (filter = {}) => {
       const cleridst1 = t1.cleridPer2Weeks;
       const spotst1 = t1.spots;
       const spotst2 = t2.spots;
+      // console.log(spbPer2Weeks, cleridst1, spotst1, spotst2);
 
       // TODO: should we identify default values for when these are missing?
-      if (isNaN(spb) || spb === null || isNaN(cleridst1) || cleridst1 === null
+      if (isNaN(spbPer2Weeks) || spbPer2Weeks === null || isNaN(cleridst1) || cleridst1 === null
       || isNaN(spotst1) || spotst1 === null || isNaN(spotst2) || spotst2 === null) {
         return resolve();
       }
 
-      return rModel.runModel(spb, cleridst1, spotst1, spotst2, endobrev)
+      return rModel.runModel(spbPer2Weeks, cleridst1, spotst1, spotst2, endobrev)
         .then((prediction) => {
           const flattenedPred = Object.fromEntries(prediction.map((pred) => [pred._row, pred.Predictions]));
 
@@ -166,7 +167,35 @@ export const generateAllPredictions = async (filter = {}) => {
 
   const upsertOp = upsertOpCreator(getIndexes(CountyPredictionModel));
   const writeOp = updatedData.map(upsertOp);
-  await CountyPredictionModel.bulkWrite(writeOp);
+  return CountyPredictionModel.bulkWrite(writeOp);
+};
 
-  return getAll();
+/**
+ * @description generates all preds on county level
+ */
+export const generateAllPredictions = async () => {
+  const allTrappingData = await SummarizedCountyTrappingModel.aggregate([
+    ...predictionFetchCreator('county'),
+  ]).exec();
+
+  return predictionGenerator(allTrappingData, allTrappingData);
+};
+
+/**
+ * @description generates predictions by county on a state and year
+ * @param {String} state the state abbreviation
+ * @param {String} year the year abbreviation
+ */
+export const generateStateYearPredictions = async (state, year) => {
+  const filteredTrappingData = await SummarizedCountyTrappingModel.aggregate([
+    ...matchStateYear(state, year),
+    ...predictionFetchCreator('county'),
+  ]).exec();
+
+  const allTrappingData = await SummarizedCountyTrappingModel.aggregate([
+    ...matchState(state),
+    ...predictionFetchCreator('county'),
+  ]).exec();
+
+  return predictionGenerator(filteredTrappingData, allTrappingData);
 };

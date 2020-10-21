@@ -36,7 +36,7 @@ const RDPredictionSchema = new Schema({
   },
 });
 
-// compound index of yr -> state -> rd -> endobrev
+// compound index of yr -> state -> rd
 RDPredictionSchema.index({
   year: 1,
   state: 1,

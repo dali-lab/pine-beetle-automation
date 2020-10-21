@@ -36,7 +36,7 @@ const CountyPredictionSchema = new Schema({
   },
 });
 
-// compound index of yr -> state -> county -> endobrev
+// compound index of yr -> state -> county
 CountyPredictionSchema.index({
   year: 1,
   state: 1,

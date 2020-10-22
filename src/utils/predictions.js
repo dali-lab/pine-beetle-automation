@@ -2,6 +2,14 @@
 /* eslint-disable no-restricted-globals */
 /* eslint-disable new-cap */
 
+/**
+ * higher-order function to create a prediction generator
+ * @param {String} location either 'county' or 'rangerDistrict'
+ * @param {Function} ScriptRunner service to execute the model running
+ * @param {mongoose.Model} writeModel destination model to write to
+ * @param {Function} upsertOp an upsert operation to do bulkwrites with
+ * @returns {(sourceTrappingData: Array<Object>, t1TrappingData: Array<Object>) => Promise}
+ */
 export const predictionGeneratorCreator = (location, ScriptRunner, WriteModel, upsertOp) => async (sourceTrappingData, t1TrappingData) => {
   const rawinputs = sourceTrappingData.map((trappingObject) => {
     const {
@@ -21,7 +29,7 @@ export const predictionGeneratorCreator = (location, ScriptRunner, WriteModel, u
         && obj[location] === loc;
     });
 
-    const cleridst1 = t1?.cleridPer2Weeks; // default 77 if not found, do that later
+    const cleridst1 = t1?.cleridPer2Weeks ?? 77; // default 77 if not found
 
     if (SPB === null || isNaN(SPB) || cleridst1 === null || isNaN(cleridst1)
     || spotst1 === null || isNaN(spotst2) || spotst2 === null || isNaN(spotst2)
@@ -36,8 +44,11 @@ export const predictionGeneratorCreator = (location, ScriptRunner, WriteModel, u
     };
   });
 
+  // remove missing entries
   const inputs = rawinputs.filter((obj) => !!obj);
   const allPredictions = await ScriptRunner(inputs);
+
+  // reformat and insert predictions object
   const updatedData = inputs.map((doc, index) => {
     const {
       cleridPerDay,

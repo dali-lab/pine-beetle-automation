@@ -90,9 +90,9 @@ CountyPredictionRouter.route('/predict')
     try {
       const { state, year } = req.query;
       if (state && year) {
-        console.log(await CountyPrediction.generateStateYearPredictions(state, parseInt(year, 10)));
+        await CountyPrediction.generateStateYearPredictions(state, parseInt(year, 10));
       } else {
-        console.log(await CountyPrediction.generateAllPredictions());
+        await CountyPrediction.generateAllPredictions();
       }
 
       const message = state && year

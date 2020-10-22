@@ -40,30 +40,4 @@ rModelRouter.route('/')
     }
   });
 
-// rModelRouter.route('/test')
-//   .get(async (req, res) => {
-//     const array = [{
-//       cleridst1: 29.666666666666668,
-//       endobrev: 0,
-//       SPB: 0.000000001,
-//       spotst1: 0,
-//       spotst2: 0,
-//     }, {
-//       cleridst1: 38.5,
-//       endobrev: 0,
-//       SPB: 0.18182,
-//       spotst1: 0.5,
-//       spotst2: 0.5,
-//     }];
-//
-//     try {
-//       const result = await rModel.runTableModel(array);
-//       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
-//     } catch (error) {
-//       console.log(error);
-//       res.status(RESPONSE_CODES.INTERNAL_ERROR.status)
-//         .send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
-//     }
-//   });
-
 export default rModelRouter;

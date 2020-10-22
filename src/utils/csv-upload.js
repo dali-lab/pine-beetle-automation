@@ -86,7 +86,7 @@ export const csvUploadCreator = (ModelName, cleanCsv, cleanBody, filter, transfo
         if (!cleanedData) reject(newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in csv'));
 
         // apply filter if it exists
-        if (!filter || (filter && filter(cleanedData))) {
+        if (!filter || filter(cleanedData)) {
           // apply transformation if it exists
           docs.push(transform ? transform(cleanedData) : cleanedData);
         }
@@ -113,7 +113,8 @@ export const csvUploadCreator = (ModelName, cleanCsv, cleanBody, filter, transfo
  * @throws RESPONSE_TYPES.INTERNAL_ERROR for trouble parsing
  */
 export const csvDownloadCreator = (ModelName, fields) => async () => {
-  const data = await ModelName.find({});
+  // use compound key to sort before creating
+  const data = await ModelName.find().sort(ModelName.schema.indexes()[0][0]);
 
   try {
     const csv = parse(data, { fields });

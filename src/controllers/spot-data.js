@@ -117,6 +117,8 @@ export const mergeCounty = async () => {
     ...mergeSpotDataCreator('county', 'summarizedcountytrappings'),
   ]);
 
+  // console.dir(updatedData, { depth: null });
+
   const upsertOp = upsertOpCreator(getIndexes(SummarizedCountyTrappingModel));
   const writeOp = updatedData.map(upsertOp);
   return SummarizedCountyTrappingModel.bulkWrite(writeOp);

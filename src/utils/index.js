@@ -17,6 +17,8 @@ import { cleanBodyCreator } from './requests';
 
 import {
   aggregationPipelineCreator,
+  predictionFetchCreator,
+  matchState,
   matchStateYear,
   matchYear,
   mergeSpotDataCreator,
@@ -32,6 +34,8 @@ export {
   generateErrorResponse,
   generateResponse,
   getIndexes,
+  predictionFetchCreator,
+  matchState,
   matchStateYear,
   matchYear,
   mergeSpotDataCreator,

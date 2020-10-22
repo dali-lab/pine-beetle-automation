@@ -8,6 +8,8 @@ import {
   cleanBodyCreator,
   csvDownloadCreator,
   getIndexes,
+  predictionFetchCreator,
+  matchStateYear,
   newError,
   upsertOpCreator,
 } from '../utils';
@@ -93,60 +95,54 @@ export const deleteById = async (id) => {
 
 /**
    * @description generates all predictions for the county level data.
-   * @param {Object} [filter] optional filter object
+   * @param {Array<SummarizedCountyTrappingModel> sourceTrappingData the array of data to generate predictions over
+   * @param {Array<SummarizedCountyTrappingModel> t1TrappingData the array of data to do reverse year lookups on
    * @returns {Promise<[CountyPredictionModel]>} all docs
    */
-export const generateAllPredictions = async (filter = {}) => {
-  const filteredTrappingData = await SummarizedCountyTrappingModel.find({ ...filter, season: 'spring' });
-  const allTrappingData = Object.keys(filter).length > 0
-    ? await SummarizedCountyTrappingModel.find({ season: 'spring' })
-    : filteredTrappingData;
-
-  const promises = filteredTrappingData.map((trappingObject) => {
+const predictionGenerator = async (sourceTrappingData, t1TrappingData) => {
+  const promises = sourceTrappingData.map((trappingObject) => {
     return new Promise((resolve, reject) => {
       const {
         cleridPerDay,
         county,
         endobrev,
-        spbPer2Weeks: spb,
+        spbPer2Weeks,
         spbPerDay,
+        spotst1,
+        spotst2,
         state,
         trapCount,
         year,
       } = trappingObject;
 
-      const t1 = allTrappingData.find((obj) => {
+      // look for 1 year before
+      const t1 = t1TrappingData.find((obj) => {
         return obj.year === year - 1
           && obj.state === state
           && obj.county === county;
       });
 
-      const t2 = allTrappingData.find((obj) => {
-        return obj.year === year - 2
-          && obj.state === state
-          && obj.county === county;
-      });
-
-      // TODO: should we identify default values for when these are missing?
-      if (!(t1 && t2)) return resolve();
+      // return nothing if missing years of data
+      if (!t1) return resolve();
 
       const cleridst1 = t1.cleridPer2Weeks;
-      const spotst1 = t1.spots;
-      const spotst2 = t2.spots;
 
-      // TODO: should we identify default values for when these are missing?
-      if (isNaN(spb) || spb === null || isNaN(cleridst1) || cleridst1 === null
+      // return nothing if missing data within years
+      if (isNaN(spbPer2Weeks) || spbPer2Weeks === null || isNaN(cleridst1) || cleridst1 === null
       || isNaN(spotst1) || spotst1 === null || isNaN(spotst2) || spotst2 === null) {
         return resolve();
       }
 
-      return rModel.runModel(spb, cleridst1, spotst1, spotst2, endobrev)
+      // run model and return results
+      return rModel.runModel(spbPer2Weeks, cleridst1, spotst1, spotst2, endobrev)
         .then((prediction) => {
+          const flattenedPred = Object.fromEntries(prediction.map((pred) => [pred._row, pred.Predictions]));
+
           resolve({
             cleridPerDay,
             county,
             endobrev,
-            prediction,
+            prediction: flattenedPred,
             spbPerDay,
             state,
             trapCount,
@@ -159,12 +155,45 @@ export const generateAllPredictions = async (filter = {}) => {
     });
   });
 
+  // filter out blank responses
   const data = await Promise.all(promises);
   const updatedData = data.filter((obj) => !!obj);
 
+  // upsert results into db
   const upsertOp = upsertOpCreator(getIndexes(CountyPredictionModel));
   const writeOp = updatedData.map(upsertOp);
-  await CountyPredictionModel.bulkWrite(writeOp);
+  return CountyPredictionModel.bulkWrite(writeOp);
+};
 
-  return getAll();
+/**
+ * @description generates all preds on county level
+ */
+export const generateAllPredictions = async () => {
+  const allTrappingData = await SummarizedCountyTrappingModel.aggregate([
+    ...predictionFetchCreator('county'),
+  ]).exec();
+
+  return predictionGenerator(allTrappingData, allTrappingData);
+};
+
+/**
+ * @description generates predictions by county on a state and year
+ * @param {String} state the state abbreviation
+ * @param {String} year the year abbreviation
+ */
+export const generateStateYearPredictions = async (state, year) => {
+  const sourcePromise = SummarizedCountyTrappingModel.aggregate([
+    ...matchStateYear(state, year),
+    ...predictionFetchCreator('county'),
+  ]).exec();
+
+  const t1Promise = SummarizedCountyTrappingModel.aggregate([
+    ...matchStateYear(state, year - 1),
+    ...predictionFetchCreator('county'),
+  ]).exec();
+
+  const sourceTrappingData = await sourcePromise;
+  const t1TrappingData = await t1Promise;
+
+  return predictionGenerator(sourceTrappingData, t1TrappingData);
 };

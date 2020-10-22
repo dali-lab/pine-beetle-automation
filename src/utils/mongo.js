@@ -333,8 +333,11 @@ export const predictionFetchCreator = (location) => [
       spbPer2Weeks: {
         $last: '$spbPer2Weeks',
       },
-      spots: {
-        $last: '$spots',
+      spotst1: {
+        $last: '$spotst1',
+      },
+      spotst2: {
+        $last: '$spotst2',
       },
       trapCount: {
         $last: '$trapCount',
@@ -352,7 +355,8 @@ export const predictionFetchCreator = (location) => [
       [location]: `$_id.${location}`,
       spbPerDay: 1,
       spbPer2Weeks: 1,
-      spots: 1,
+      spotst1: 1,
+      spotst2: 1,
       state: '$_id.state',
       trapCount: 1,
       year: '$_id.year',

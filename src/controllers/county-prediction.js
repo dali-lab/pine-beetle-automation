@@ -9,7 +9,6 @@ import {
   csvDownloadCreator,
   getIndexes,
   predictionFetchCreator,
-  matchState,
   matchStateYear,
   newError,
   upsertOpCreator,
@@ -96,12 +95,12 @@ export const deleteById = async (id) => {
 
 /**
    * @description generates all predictions for the county level data.
-   * @param {Array<SummarizedCountyTrappingModel> filteredTrappingData the array of data to generate predictions over
-   * @param {Array<SummarizedCountyTrappingModel> allTrappingData the array of data to do reverse year lookups on
+   * @param {Array<SummarizedCountyTrappingModel> sourceTrappingData the array of data to generate predictions over
+   * @param {Array<SummarizedCountyTrappingModel> t1TrappingData the array of data to do reverse year lookups on
    * @returns {Promise<[CountyPredictionModel]>} all docs
    */
-const predictionGenerator = async (filteredTrappingData, allTrappingData) => {
-  const promises = filteredTrappingData.map((trappingObject) => {
+const predictionGenerator = async (sourceTrappingData, t1TrappingData) => {
+  const promises = sourceTrappingData.map((trappingObject) => {
     return new Promise((resolve, reject) => {
       const {
         cleridPerDay,
@@ -109,31 +108,24 @@ const predictionGenerator = async (filteredTrappingData, allTrappingData) => {
         endobrev,
         spbPer2Weeks,
         spbPerDay,
+        spotst1,
+        spotst2,
         state,
         trapCount,
         year,
       } = trappingObject;
 
       // look for 1 year before
-      const t1 = allTrappingData.find((obj) => {
+      const t1 = t1TrappingData.find((obj) => {
         return obj.year === year - 1
           && obj.state === state
           && obj.county === county;
       });
 
-      // look for 2 years before
-      const t2 = allTrappingData.find((obj) => {
-        return obj.year === year - 2
-          && obj.state === state
-          && obj.county === county;
-      });
-
       // return nothing if missing years of data
-      if (!(t1 && t2)) return resolve();
+      if (!t1) return resolve();
 
       const cleridst1 = t1.cleridPer2Weeks;
-      const spotst1 = t1.spots;
-      const spotst2 = t2.spots;
 
       // return nothing if missing data within years
       if (isNaN(spbPer2Weeks) || spbPer2Weeks === null || isNaN(cleridst1) || cleridst1 === null
@@ -190,15 +182,18 @@ export const generateAllPredictions = async () => {
  * @param {String} year the year abbreviation
  */
 export const generateStateYearPredictions = async (state, year) => {
-  const filteredTrappingData = await SummarizedCountyTrappingModel.aggregate([
+  const sourcePromise = SummarizedCountyTrappingModel.aggregate([
     ...matchStateYear(state, year),
     ...predictionFetchCreator('county'),
   ]).exec();
 
-  const allTrappingData = await SummarizedCountyTrappingModel.aggregate([
-    ...matchState(state),
+  const t1Promise = SummarizedCountyTrappingModel.aggregate([
+    ...matchStateYear(state, year - 1),
     ...predictionFetchCreator('county'),
   ]).exec();
 
-  return predictionGenerator(filteredTrappingData, allTrappingData);
+  const sourceTrappingData = await sourcePromise;
+  const t1TrappingData = await t1Promise;
+
+  return predictionGenerator(sourceTrappingData, t1TrappingData);
 };

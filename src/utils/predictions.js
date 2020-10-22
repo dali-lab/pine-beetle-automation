@@ -48,7 +48,7 @@ export const predictionGeneratorCreator = (location, ScriptRunner, WriteModel, u
   const inputs = rawinputs.filter((obj) => !!obj);
   const allPredictions = await ScriptRunner(inputs);
 
-  // reformat and insert predictions object
+  // reformat and insert corresponding predictions object at the same index
   const updatedData = inputs.map((doc, index) => {
     const {
       cleridPerDay,

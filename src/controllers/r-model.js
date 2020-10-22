@@ -8,6 +8,11 @@ import { RESPONSE_TYPES } from '../constants';
 
 const rpath = path.resolve(__dirname, '../r-scripts/SPB-Predictions.v02-DALI.R');
 
+/**
+ * runs the r model by feeding it an array of entries
+ * @param {Array} array the data
+ * @returns {Promise<Array>} finished predictions
+ */
 export const runModel = (array) => {
   const data = array.map((doc) => {
     const {

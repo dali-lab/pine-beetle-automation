@@ -35,7 +35,6 @@ export const predictionGeneratorCreator = (location, ScriptRunner, WriteModel, u
       SPB,
     };
   });
-  console.log(rawinputs);
 
   const inputs = rawinputs.filter((obj) => !!obj);
   const allPredictions = await ScriptRunner(inputs);
@@ -70,9 +69,7 @@ export const predictionGeneratorCreator = (location, ScriptRunner, WriteModel, u
     };
   });
 
-  return updatedData;
   // upsert results into db
-  // const upsertOp = upsertOpCreator(getIndexes(CountyPredictionModel));
-  // const writeOp = updatedData.map(upsertOp);
-  // return CountyPredictionModel.bulkWrite(writeOp);
+  const writeOp = updatedData.map(upsertOp);
+  return WriteModel.bulkWrite(writeOp);
 };

@@ -28,6 +28,9 @@ const cleanBody = cleanBodyCreator(modelAttributes);
  */
 export const downloadCsv = csvDownloadCreator(CountyPredictionModel, modelAttributes);
 
+// upsert transform
+const upsertOp = upsertOpCreator(getIndexes(CountyPredictionModel));
+
 /**
  * @description Fetches one year's data from the county prediction collection.
  * @param {String} id ID of the document wanted
@@ -94,7 +97,7 @@ export const deleteById = async (id) => {
   return deletedDoc;
 };
 
-const predictionGenerator = predictionGeneratorCreator('county', rModel.runModel);
+const predictionGenerator = predictionGeneratorCreator('county', rModel.runModel, CountyPredictionModel, upsertOp);
 
 /**
    * @description generates all predictions for the county level data.

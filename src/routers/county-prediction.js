@@ -92,7 +92,7 @@ CountyPredictionRouter.route('/predict')
       if (state && year) {
         console.log(await CountyPrediction.generateStateYearPredictions(state, parseInt(year, 10)));
       } else {
-        await CountyPrediction.generateAllPredictions();
+        console.log(await CountyPrediction.generateAllPredictions());
       }
 
       const message = state && year

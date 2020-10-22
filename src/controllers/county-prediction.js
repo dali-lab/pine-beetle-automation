@@ -165,6 +165,78 @@ const predictionGenerator = async (sourceTrappingData, t1TrappingData) => {
   return CountyPredictionModel.bulkWrite(writeOp);
 };
 
+const tabularPredictionGenerator = async (sourceTrappingData, t1TrappingData) => {
+  const rawinputs = sourceTrappingData.map((trappingObject) => {
+    const {
+      county,
+      spbPer2Weeks: SPB,
+      spotst1,
+      spotst2,
+      state,
+      year,
+    } = trappingObject;
+
+    // look for 1 year before
+    const t1 = t1TrappingData.find((obj) => {
+      return obj.year === year - 1
+          && obj.state === state
+          && obj.county === county;
+    });
+
+    const cleridst1 = t1?.cleridPer2Weeks; // default 77 if not found, do that later
+
+    if (SPB === null || SPB === undefined || cleridst1 === null || cleridst1 === undefined
+    || spotst1 === null || spotst1 === undefined || spotst2 === null || spotst2 === undefined) {
+      return null;
+    }
+
+    return {
+      ...trappingObject,
+      cleridst1,
+      SPB,
+    };
+  });
+
+  const inputs = rawinputs.filter((obj) => !!obj);
+  const allPredictions = await rModel.runModel(inputs);
+  const updatedData = inputs.map((doc, index) => {
+    const {
+      cleridPerDay,
+      county,
+      endobrev,
+      spbPerDay,
+      state,
+      SPB,
+      cleridst1,
+      spotst1,
+      spotst2,
+      trapCount,
+      year,
+    } = doc;
+
+    return {
+      cleridPerDay,
+      county,
+      endobrev,
+      prediction: allPredictions[index],
+      SPB,
+      spotst1,
+      cleridst1,
+      spotst2,
+      spbPerDay,
+      state,
+      trapCount,
+      year,
+    };
+  });
+
+  return updatedData;
+  // upsert results into db
+  // const upsertOp = upsertOpCreator(getIndexes(CountyPredictionModel));
+  // const writeOp = updatedData.map(upsertOp);
+  // return CountyPredictionModel.bulkWrite(writeOp);
+};
+
 /**
  * @description generates all preds on county level
  */
@@ -195,5 +267,5 @@ export const generateStateYearPredictions = async (state, year) => {
   const sourceTrappingData = await sourcePromise;
   const t1TrappingData = await t1Promise;
 
-  return predictionGenerator(sourceTrappingData, t1TrappingData);
+  return tabularPredictionGenerator(sourceTrappingData, t1TrappingData);
 };

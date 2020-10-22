@@ -13,6 +13,8 @@ attach(input[[1]]) # takes single parameter, called as R.data({ data: [{ SPB, cl
 # this script DOES NOT check 'array' for validity; the caller is responsible.
 attach(data)
 
+write.csv(data, 'test.csv')
+
 # Coefficients below were estimated for a zero-inflated Poisson model fit to historical data using pscl package in R.
 # These coefficients, and means and SDs that follow, remain the same for all predictions.
 # ______ Later insert code here that will ...

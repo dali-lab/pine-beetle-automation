@@ -21,9 +21,9 @@ rModelRouter.route('/')
     } = req.query;
 
     const input = [{
-      cleridst1: parseInt(cleridst1, 10),
+      cleridst1: parseFloat(cleridst1, 10),
       endobrev: parseInt(endobrev, 10),
-      SPB: parseInt(SPB, 10),
+      SPB: parseFloat(SPB, 10),
       spotst1: parseInt(spotst1, 10),
       spotst2: parseInt(spotst2, 10),
     }];

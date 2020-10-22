@@ -113,7 +113,8 @@ export const csvUploadCreator = (ModelName, cleanCsv, cleanBody, filter, transfo
  * @throws RESPONSE_TYPES.INTERNAL_ERROR for trouble parsing
  */
 export const csvDownloadCreator = (ModelName, fields) => async () => {
-  const data = await ModelName.find({});
+  // use compound key to sort before creating
+  const data = await ModelName.find().sort(ModelName.schema.indexes()[0][0]);
 
   try {
     const csv = parse(data, { fields });

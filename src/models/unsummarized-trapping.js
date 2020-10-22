@@ -67,6 +67,7 @@ const UnsummarizedTrappingSchema = new Schema({
     type: String,
   },
   season: {
+    lowercase: true,
     type: String,
   },
   sirexLure: {

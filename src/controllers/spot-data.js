@@ -115,10 +115,12 @@ export const deleteById = async (id) => {
  * @param {String} [state] optional state filter
  */
 export const mergeSpots = async (timescale, location, year, state) => {
+  // merge all with endobrev = 0
   const noendoPipeline = mergeSpotDataCreator[timescale](location, COLLECTION_NAMES.SUMMARIZED[location], 0);
   if (year && state) noendoPipeline.unshift(...matchStateYear(state, year));
   else if (year) noendoPipeline.unshift(...matchYear(year));
 
+  // merge all with endobrev = 1
   const endoPipeline = mergeSpotDataCreator[timescale](location, COLLECTION_NAMES.SUMMARIZED[location], 1);
   if (year && state) noendoPipeline.unshift(...matchStateYear(state, year));
   else if (year) noendoPipeline.unshift(...matchYear(year));
@@ -127,5 +129,5 @@ export const mergeSpots = async (timescale, location, year, state) => {
 
   const endo = SpotDataModel.aggregate(endoPipeline).exec();
 
-  console.log(await Promise.all([noendo, endo]));
+  return Promise.all([noendo, endo]);
 };

@@ -6,8 +6,16 @@ import RESPONSE_TYPES from './response-types.json';
 
 const STATE_TO_ABBREV = Object.fromEntries(Object.entries(ABBREV_TO_STATE).map(([k, v]) => [v, k]));
 
+const COLLECTION_NAMES = {
+  SUMMARIZED: {
+    county: 'summarizedcountytrappings',
+    rangerDistrict: 'summarizedrangerdistricttrappings',
+  },
+};
+
 export {
   ABBREV_TO_STATE,
+  COLLECTION_NAMES,
   CSV_TO_SPOTS,
   CSV_TO_UNSUMMARIZED,
   STATE_TO_ABBREV,

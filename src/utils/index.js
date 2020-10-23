@@ -13,6 +13,8 @@ import {
   newError,
 } from './responses';
 
+import { predictionGeneratorCreator } from './predictions';
+
 import { cleanBodyCreator } from './requests';
 
 import {
@@ -35,6 +37,7 @@ export {
   generateResponse,
   getIndexes,
   predictionFetchCreator,
+  predictionGeneratorCreator,
   matchState,
   matchStateYear,
   matchYear,

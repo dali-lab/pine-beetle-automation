@@ -1,11 +1,12 @@
 import { Router } from 'express';
 
-import {
-  RESPONSE_CODES,
-  RESPONSE_TYPES,
-} from '../constants';
+import { RESPONSE_TYPES } from '../constants';
 
-import { generateResponse } from '../utils';
+import {
+  generateErrorResponse,
+  generateResponse,
+} from '../utils';
+
 import { rModel } from '../controllers';
 
 const rModelRouter = Router();
@@ -20,13 +21,23 @@ rModelRouter.route('/')
       spotst2 = 0,
     } = req.query;
 
+    const input = [{
+      cleridst1: parseFloat(cleridst1, 10),
+      endobrev: parseInt(endobrev, 10),
+      SPB: parseFloat(SPB, 10),
+      spotst1: parseInt(spotst1, 10),
+      spotst2: parseInt(spotst2, 10),
+    }];
+
     try {
-      const result = await rModel.runModel(SPB, cleridst1, spotst1, spotst2, endobrev);
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+      const result = await rModel.runModel(input);
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result[0]));
     } catch (error) {
-      console.log(error);
-      res.status(RESPONSE_CODES.INTERNAL_ERROR.status)
-        .send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, error));
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
     }
   });
 

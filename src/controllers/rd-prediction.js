@@ -9,6 +9,7 @@ import {
   csvDownloadCreator,
   getIndexes,
   predictionFetchCreator,
+  predictionGeneratorCreator,
   matchStateYear,
   newError,
   upsertOpCreator,
@@ -26,6 +27,9 @@ const cleanBody = cleanBodyCreator(modelAttributes);
  * @returns {String} path to CSV file
  */
 export const downloadCsv = csvDownloadCreator(RDPredictionModel, modelAttributes);
+
+// upsert transform
+const upsertOp = upsertOpCreator(getIndexes(RDPredictionModel));
 
 /**
  * @description Fetches one year's data from the ranger district prediction collection.
@@ -94,76 +98,12 @@ export const deleteById = async (id) => {
 };
 
 /**
-   * @description generates all predictions for the ranger district level data.
-   * @param {Array<SummarizedRangerDistrictTrappingModel> sourceTrappingData the array of data to generate predictions over
-   * @param {Array<SummarizedRangerDistrictTrappingModel> t1TrappingData the array of data to do reverse year lookups on
-   * @returns {Promise<[RDPredictionModel]>} all docs
-   */
-const predictionGenerator = async (sourceTrappingData, t1TrappingData) => {
-  const promises = sourceTrappingData.map((trappingObject) => {
-    return new Promise((resolve, reject) => {
-      const {
-        cleridPerDay,
-        endobrev,
-        rangerDistrict,
-        spbPer2Weeks,
-        spbPerDay,
-        spotst1,
-        spotst2,
-        state,
-        trapCount,
-        year,
-      } = trappingObject;
-
-      // look for 1 year before
-      const t1 = t1TrappingData.find((obj) => {
-        return obj.year === year - 1
-          && obj.state === state
-          && obj.rangerDistrict === rangerDistrict;
-      });
-
-      // return nothing if missing years of data
-      if (!t1) return resolve();
-
-      const cleridst1 = t1.cleridPer2Weeks;
-
-      // return nothing if missing data within years
-      if (isNaN(spbPer2Weeks) || spbPer2Weeks === null || isNaN(cleridst1) || cleridst1 === null
-      || isNaN(spotst1) || spotst1 === null || isNaN(spotst2) || spotst2 === null) {
-        return resolve();
-      }
-
-      // run model and return results
-      return rModel.runModel(spbPer2Weeks, cleridst1, spotst1, spotst2, endobrev)
-        .then((prediction) => {
-          const flattenedPred = Object.fromEntries(prediction.map((pred) => [pred._row, pred.Predictions]));
-
-          resolve({
-            cleridPerDay,
-            endobrev,
-            prediction: flattenedPred,
-            rangerDistrict,
-            spbPerDay,
-            state,
-            trapCount,
-            year,
-          });
-        })
-        .catch((error) => {
-          reject(error);
-        });
-    });
-  });
-
-  // filter out blank responses
-  const data = await Promise.all(promises);
-  const updatedData = data.filter((obj) => !!obj);
-
-  // upsert results into db
-  const upsertOp = upsertOpCreator(getIndexes(RDPredictionModel));
-  const writeOp = updatedData.map(upsertOp);
-  return RDPredictionModel.bulkWrite(writeOp);
-};
+  * @description generates all predictions for the ranger district level data.
+  * @param {Array<SummarizedRangerDistrictTrappingModel> sourceTrappingData the array of data to generate predictions over
+  * @param {Array<SummarizedRangerDistrictTrappingModel> t1TrappingData the array of data to do reverse year lookups on
+  * @returns {Promise<[RDPredictionModel]>} all docs
+  */
+const predictionGenerator = predictionGeneratorCreator('rangerDistrict', rModel.runModel, RDPredictionModel, upsertOp);
 
 /**
  * @description generates all preds on ranger district level

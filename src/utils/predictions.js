@@ -52,12 +52,8 @@ export const predictionGeneratorCreator = (location, ScriptRunner, WriteModel, u
   const updatedData = inputs.map((doc, index) => {
     const {
       cleridPerDay,
-      cleridst1,
       endobrev,
-      SPB,
       spbPerDay,
-      spotst1,
-      spotst2,
       state,
       trapCount,
       year,
@@ -66,14 +62,10 @@ export const predictionGeneratorCreator = (location, ScriptRunner, WriteModel, u
 
     return {
       cleridPerDay,
-      cleridst1,
       endobrev,
       [location]: loc,
       prediction: allPredictions[index],
-      SPB,
       spbPerDay,
-      spotst1,
-      spotst2,
       state,
       trapCount,
       year,

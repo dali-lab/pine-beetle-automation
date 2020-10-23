@@ -125,181 +125,117 @@ export const matchState = (state) => [
   },
 ];
 
-// internal helper function to 'invert' the location
-const getOtherLocation = (location) => (location === 'county' ? 'rangerDistrict' : 'county');
+// internal helper function to 'invert' the location (unused rn)
+// const getOtherLocation = (location) => (location === 'county' ? 'rangerDistrict' : 'county');
 
-/* NOTE: the below technique is a very poor usage of aggregation, and I discovered that
- * directly matching Y/S/C/RD, projecting only Y/S/C/RD/spots, and directly doing a default
- * merge should accomplish all of this without needing to read and bulkwrite the data all over again.
- * this is because merge does a sort of { ...originalobject, ...mergedobject } to the document,
- * allowing us to directly insert/overwrite certain fields. Darn!
- *
- * https://docs.mongodb.com/manual/reference/operator/aggregation/merge/#merge-whenmatched-merge
- *
- * fix technique: reimplement this pipeline and break it up into a selection stage and a merge stage.
- * merge stage should be conditional on location, likely in a different function.
- * put that in instead of bulkWrite for the spot controller.
- */
 /**
- * @description builds pipeline to do a join (mass populate) on a collection with spot data
+ * @description builds pipeline to append same year spot data
  * @param {String} location the geographic grouping county/rd to work on
+ * @param {String} outputCollection the collection to append to
+ * @param {Number} endobrev mandatory to do both 0 and 1 for merge to work
  */
-export const mergeSpotDataCreator = (location) => [
+const t0 = (location, outputCollection, endobrev) => [
   // filter out docs that are recorded on the other geographical organization
   // (RD for county, county for RD)
   {
     $match: { [location]: { $ne: null } },
   },
-  // join from spot data collection three times to get y, y-1, y-2
-  // year - 0
-  {
-    $lookup: {
-      as: 'spots_raw',
-      from: 'spotdatas',
-      let: {
-        [getOtherLocation(location)]: `$${getOtherLocation(location)}`,
-        [location]: `$${location}`,
-        state: '$state',
-        year: '$year',
-      },
-      pipeline: [
-        {
-          $match: {
-            $expr: {
-              $and: [
-                { $eq: [`$${location}`, `$$${location}`] },
-                { $eq: [`$${getOtherLocation(location)}`, null] },
-                { $eq: ['$state', '$$state'] },
-                { $eq: ['$year', '$$year'] },
-              ],
-            },
-          },
-        },
-        {
-          $project: {
-            _id: 0,
-            spots: '$spots',
-          },
-        },
-      ],
-    },
-  },
-  // extract the correct spot document out of an array
-  {
-    $replaceWith: {
-      $mergeObjects: [
-        '$$ROOT',
-        { spots: { $arrayElemAt: ['$spots_raw', 0] } },
-      ],
-    },
-  },
-  // year - 1
-  {
-    $lookup: {
-      as: 'spotst1_raw',
-      from: 'spotdatas',
-      let: {
-        [getOtherLocation(location)]: `$${getOtherLocation(location)}`,
-        [location]: `$${location}`,
-        state: '$state',
-        year: '$year',
-      },
-      pipeline: [
-        {
-          $match: {
-            $expr: {
-              $and: [
-                { $eq: [`$${location}`, `$$${location}`] },
-                { $eq: [`$${getOtherLocation(location)}`, null] },
-                { $eq: ['$state', '$$state'] },
-                { $eq: ['$year', { $sum: ['$$year', -1] }] },
-              ],
-            },
-          },
-        },
-        {
-          $project: {
-            _id: 0,
-            spots: '$spots',
-          },
-        },
-      ],
-    },
-  },
-  // extract the correct spot document out of an array
-  {
-    $replaceWith: {
-      $mergeObjects: [
-        '$$ROOT',
-        { spotst1: { $arrayElemAt: ['$spotst1_raw', 0] } },
-      ],
-    },
-  },
-  // year - 2
-  {
-    $lookup: {
-      as: 'spotst2_raw',
-      from: 'spotdatas',
-      let: {
-        [getOtherLocation(location)]: `$${getOtherLocation(location)}`,
-        [location]: `$${location}`,
-        state: '$state',
-        year: '$year',
-      },
-      pipeline: [
-        {
-          $match: {
-            $expr: {
-              $and: [
-                { $eq: [`$${location}`, `$$${location}`] },
-                { $eq: [`$${getOtherLocation(location)}`, null] },
-                { $eq: ['$state', '$$state'] },
-                { $eq: ['$year', { $sum: ['$$year', -2] }] },
-              ],
-            },
-          },
-        },
-        {
-          $project: {
-            _id: 0,
-            spots: '$spots',
-          },
-        },
-      ],
-    },
-  },
-  // extract the correct spot document out of an array
-  {
-    $replaceWith: {
-      $mergeObjects: [
-        '$$ROOT',
-        { spotst2: { $arrayElemAt: ['$spotst2_raw', 0] } },
-      ],
-    },
-  },
-  // clear out raw arrays, reformat spots
+  // fit the shape of data to only update spots, fix an arbitrary endobrev
   {
     $project: {
-      _id: 1,
-      cleridCount: 1,
-      cleridPer2Weeks: 1,
-      cleridPerDay: 1,
-      endobrev: 1,
-      [location]: 1,
-      spbCount: 1,
-      spbPer2Weeks: 1,
-      spbPerDay: 1,
-      spots: '$spots.spots',
-      spotst1: '$spotst1.spots',
-      spotst2: '$spotst2.spots',
+      _id: 0,
+      endobrev: { $literal: endobrev },
+      spots: 1,
       state: 1,
-      totalTrappingDays: 1,
-      trapCount: 1,
       year: 1,
+      [location]: 1,
+    },
+  },
+  {
+    $merge: {
+      into: outputCollection,
+      on: ['year', 'state', location, 'endobrev'],
+      whenMatched: 'merge',
+      whenNotMatched: 'discard',
     },
   },
 ];
 
+/**
+ * @description builds pipeline to append prior year spot data
+ * @param {String} location the geographic grouping county/rd to work on
+ * @param {String} outputCollection the collection to append to
+ * @param {Number} endobrev mandatory to do both 0 and 1 for merge to work
+ */
+const t1 = (location, outputCollection, endobrev) => [
+  // filter out docs that are recorded on the other geographical organization
+  // (RD for county, county for RD)
+  {
+    $match: { [location]: { $ne: null } },
+  },
+  // fit the shape of data to only update spots, fix an arbitrary endobrev
+  {
+    $project: {
+      _id: 0,
+      endobrev: { $literal: endobrev },
+      spotst1: '$spots', // rename
+      state: 1,
+      year: { $sum: ['$year', 1] }, // lookahead of one year
+      [location]: 1,
+    },
+  },
+  {
+    $merge: {
+      into: outputCollection,
+      on: ['year', 'state', location, 'endobrev'],
+      whenMatched: 'merge',
+      whenNotMatched: 'discard',
+    },
+  },
+];
+
+/**
+ * @description builds pipeline to append 2 year ago spot data
+ * @param {String} location the geographic grouping county/rd to work on
+ * @param {String} outputCollection the collection to append to
+ * @param {Number} endobrev mandatory to do both 0 and 1 for merge to work
+ */
+const t2 = (location, outputCollection, endobrev) => [
+  // filter out docs that are recorded on the other geographical organization
+  // (RD for county, county for RD)
+  {
+    $match: { [location]: { $ne: null } },
+  },
+  // fit the shape of data to only update spots, fix an arbitrary endobrev
+  {
+    $project: {
+      _id: 0,
+      endobrev: { $literal: endobrev },
+      spotst2: '$spots', // rename
+      state: 1,
+      year: { $sum: ['$year', 2] }, // lookahead of 2 years
+      [location]: 1,
+    },
+  },
+  {
+    $merge: {
+      into: outputCollection,
+      on: ['year', 'state', location, 'endobrev'],
+      whenMatched: 'merge',
+      whenNotMatched: 'discard',
+    },
+  },
+];
+
+/**
+ * helper enum to encapsulate all 3 spot joiners
+ */
+export const mergeSpotDataCreator = { t0, t1, t2 };
+
+/**
+ * fetches from the specified model for predictions, filters out duplicate endo/non endo entries
+ * @param {String} location county or rangerDistrict
+ */
 export const predictionFetchCreator = (location) => [
   // sort in order so endobrev goes 0,1
   {

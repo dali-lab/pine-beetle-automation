@@ -1,3 +1,4 @@
+/* eslint-disable sort-keys */
 import mongoose, { Schema } from 'mongoose';
 
 // collection 2: data on damaged trees that are collected in the fall
@@ -32,8 +33,10 @@ const SpotDataSchema = new Schema({
 // to search by county, set RD = null in query
 // to search by RD, ignore county
 SpotDataSchema.index({
-// eslint-disable-next-line sort-keys
-  year: 1, state: 1, rangerDistrict: 1, county: 1,
+  year: 1,
+  state: 1,
+  rangerDistrict: 1,
+  county: 1,
 }, { unique: true });
 
 const SpotDataModel = mongoose.model('SpotData', SpotDataSchema);

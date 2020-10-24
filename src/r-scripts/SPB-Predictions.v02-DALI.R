@@ -8,9 +8,11 @@
 # originally the above were also hard-coded with SPB = 2635, cleridst1 = 582, spotst1 = 1056, spotst2 = 471, endobrev = 1
 #
 # Revised by Jeff Liu, DALI 20F, to accept tabular instead of single-row data
+# Revised by Jeff Liu, Angela Zhang, DALI 20F to fix bug in dividing SPB by 10 when endobrev == 1
 
-attach(input[[1]]) # takes single parameter, called as R.data({ data: [{ SPB, cleridst1, spotst1, spotst2, endobrev }] })
-# this script DOES NOT check 'array' for validity; the caller is responsible.
+
+attach(input[[1]]) # takes single parameter, called as R.data({ data: [{ SPB, cleridst1, spotst1, spotst2, endobrev }] }) from node.js
+# this script DOES NOT check 'data' for validity; the caller is responsible.
 attach(data)
 
 # Coefficients below were estimated for a zero-inflated Poisson model fit to historical data using pscl package in R.

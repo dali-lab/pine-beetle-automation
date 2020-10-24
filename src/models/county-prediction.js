@@ -10,6 +10,9 @@ const CountyPredictionSchema = new Schema({
   county: {
     type: String,
   },
+  cleridst1: {
+    type: Number,
+  },
   endobrev: {
     max: 1,
     min: 0,
@@ -19,9 +22,21 @@ const CountyPredictionSchema = new Schema({
     // { entry: value ... }
     type: Object,
   },
+  SPB: {
+    type: Number,
+  },
   spbPerDay: {
     // { trapName: Number ...  }
     type: Object,
+  },
+  spots: {
+    type: Number,
+  },
+  spotst1: {
+    type: Number,
+  },
+  spotst2: {
+    type: Number,
   },
   state: {
     type: String,

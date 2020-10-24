@@ -43,11 +43,10 @@ spotst1_SD = 2.28771
 spotst2_mean = 1.96596
 spotst2_SD = 2.35512
 
+adjusted_SPB=SPB
+adjusted_SPB[endobrev==1] = adjusted_SPB[endobrev==1]/10 # divide SPB by 10 where endobrevicomin was used
 
-# Prepare input data for model calculations
-if (endobrev==1) SPB=SPB/10     # divide SPB trap captures by 10 if endobrevicomin was used
-
-lnSPB=log(SPB+1)                # log transformations
+lnSPB=log(adjusted_SPB+1)                # log transformations
 lncleridst1=log(cleridst1+1)
 lnspotst1=log(spotst1+1)
 lnspotst2=log(spotst2+1)
@@ -74,7 +73,38 @@ ProbSpots.GT.402  = 1-(pi+(1-pi)*ppois(5,mu,lower.tail=TRUE))    # probability o
 ProbSpots.GT.1095 = 1-(pi+(1-pi)*ppois(6,mu,lower.tail=TRUE))    # probability of > 2979 spots considering both binomial and count model
 
 # construct a dataframe with each row corresponding to one prediction
-preds <- data.frame(pi,mu,expSpots_if_spots,ProbSpots.GT.0,ProbSpots.GT.18,ProbSpots.GT.53,ProbSpots.GT.147,ProbSpots.GT.402,ProbSpots.GT.1095)
+preds = data.frame(
+    SPB,
+    endobrev,
+    cleridst1,
+    spotst1,
+    spotst2,
+    pi,
+    mu,
+    expSpots_if_spots,
+    ProbSpots.GT.0,
+    ProbSpots.GT.18,
+    ProbSpots.GT.53,
+    ProbSpots.GT.147,
+    ProbSpots.GT.402,
+    ProbSpots.GT.1095
+)
+
 # column renaming
-colnames(preds) <- c("pi","mu","Exp spots if outbreak","prob.Spots>0","prob.Spots>19","prob.Spots>53","prob.Spots>147","prob.Spots>402","prob.Spots>1095")
+colnames(preds) = c(
+    "SPB",
+    "endobrev",
+    "cleridst1",
+    "spotst1",
+    "spotst2",
+    "pi",
+    "mu",
+    "Exp spots if outbreak",
+    "prob.Spots>0",
+    "prob.Spots>19",
+    "prob.Spots>53",
+    "prob.Spots>147",
+    "prob.Spots>402",
+    "prob.Spots>1095"
+)
 preds # returns to caller

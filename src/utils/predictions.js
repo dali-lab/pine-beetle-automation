@@ -50,26 +50,30 @@ export const predictionGeneratorCreator = (location, ScriptRunner, WriteModel, u
 
   // reformat and insert corresponding predictions object at the same index
   const updatedData = inputs.map((doc, index) => {
-    const {
-      cleridPerDay,
-      endobrev,
-      spbPerDay,
-      state,
-      trapCount,
-      year,
-      [location]: loc,
-    } = doc;
-
     return {
-      cleridPerDay,
-      endobrev,
-      [location]: loc,
+      ...doc,
       prediction: allPredictions[index],
-      spbPerDay,
-      state,
-      trapCount,
-      year,
     };
+    // const {
+    //   cleridPerDay,
+    //   endobrev,
+    //   spbPerDay,
+    //   state,
+    //   trapCount,
+    //   year,
+    //   [location]: loc,
+    // } = doc;
+    //
+    // return {
+    //   cleridPerDay,
+    //   endobrev,
+    //   [location]: loc,
+    //   prediction: allPredictions[index],
+    //   spbPerDay,
+    //   state,
+    //   trapCount,
+    //   year,
+    // };
   });
 
   // upsert results into db

@@ -112,7 +112,7 @@ spotDataRouter.route('/merge/:timescale/:location')
         return;
       }
 
-      await SpotData.mergeSpots(timescale, location, year ?? parseInt(year, 10), state);
+      await SpotData.mergeSpots(timescale, location, year && parseInt(year, 10), state);
 
       const message = `merged spots at timescale ${timescale} by location ${location} at year ${year} for state ${state}`;
 

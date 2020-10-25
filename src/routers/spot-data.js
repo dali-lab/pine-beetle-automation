@@ -91,26 +91,30 @@ spotDataRouter.route('/download')
     }
   });
 
-spotDataRouter.route('/merge/:location')
+spotDataRouter.route('/merge/:timescale/:location')
   .get(async (req, res) => {
     try {
-      const { location } = req.params;
-      const { year } = req.query;
+      const { location, timescale } = req.params;
+      const { state, year } = req.query;
 
-      if (location === 'county') {
-        if (year) await SpotData.mergeCountyYear(parseInt(year, 10));
-        else await SpotData.mergeCounty();
-      } else if (location === 'rangerDistrict') {
-        if (year) await SpotData.mergeRangerDistrictYear(parseInt(year, 10));
-        else await SpotData.mergeRangerDistrict();
-      } else {
+      if (location !== 'county' && location !== 'rangerDistrict') {
         res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'no location specified'));
         return;
       }
 
-      const message = year
-        ? `merged spots by ${location} for ${year}`
-        : `merged all spots by ${location}`;
+      if (timescale !== 't0' && timescale !== 't1' && timescale !== 't2') {
+        res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'no timescale specified'));
+        return;
+      }
+
+      if (state && !year) {
+        res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'need year for state'));
+        return;
+      }
+
+      await SpotData.mergeSpots(timescale, location, year && parseInt(year, 10), state);
+
+      const message = `merged spots at timescale ${timescale} by location ${location} at year ${year} for state ${state}`;
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, message));
     } catch (error) {

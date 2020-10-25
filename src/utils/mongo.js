@@ -229,8 +229,20 @@ const t2 = (location, outputCollection, endobrev) => [
 
 /**
  * helper enum to encapsulate all 3 spot joiners
+ * @param {String} timescale t0 t1 or t2
  */
-export const mergeSpotDataCreator = { t0, t1, t2 };
+export const mergeSpotDataCreator = (timescale) => {
+  switch (timescale) {
+    case 't0':
+      return t0;
+    case 't1':
+      return t1;
+    case 't2':
+      return t2;
+    default:
+      return undefined;
+  }
+};
 
 /**
  * fetches from the specified model for predictions, filters out duplicate endo/non endo entries

@@ -76,11 +76,11 @@ ProbSpots.GT.1095 = 1-(pi+(1-pi)*ppois(6,mu,lower.tail=TRUE))    # probability o
 
 # construct a dataframe with each row corresponding to one prediction
 preds = data.frame(
-    SPB,
-    endobrev,
-    cleridst1,
-    spotst1,
-    spotst2,
+    # SPB,
+    # endobrev,
+    # cleridst1,
+    # spotst1,
+    # spotst2,
     pi,
     mu,
     expSpots_if_spots,
@@ -94,11 +94,11 @@ preds = data.frame(
 
 # column renaming
 colnames(preds) = c(
-    "SPB",
-    "endobrev",
-    "cleridst1",
-    "spotst1",
-    "spotst2",
+    # "SPB",
+    # "endobrev",
+    # "cleridst1",
+    # "spotst1",
+    # "spotst2",
     "pi",
     "mu",
     "Exp spots if outbreak",
@@ -109,4 +109,5 @@ colnames(preds) = c(
     "prob.Spots>402",
     "prob.Spots>1095"
 )
+
 preds # returns to caller

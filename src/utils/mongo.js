@@ -15,7 +15,7 @@ export const aggregationPipelineCreator = (location, collection) => [
   {
     $match: { [location]: { $ne: null } },
   },
-  // select total days, beetles per trap, group by county/rd, trap name, state, year, endobrev
+  // select total days, beetles per trap, group by trap in year
   {
     $group: {
       _id: {
@@ -30,7 +30,8 @@ export const aggregationPipelineCreator = (location, collection) => [
       totalDaysActive: { $sum: '$daysActive' },
     },
   },
-  // select beetle counts, trap count, total trapping days, beetles per day per trap, group by county/RD, state, year, endo
+  // select beetle counts, trap count, total trapping days, beetles per day per trap, group by county/RD in year
+  // calculate average beetles per trap (unweighted)
   {
     $group: {
       _id: {
@@ -39,6 +40,7 @@ export const aggregationPipelineCreator = (location, collection) => [
         state: '$_id.state',
         year: '$_id.year',
       },
+      cleridAvg: { $avg: { $divide: ['$cleridCount', '$totalDaysActive'] } },
       cleridCount: { $sum: '$cleridCount' },
       cleridPerDay: { // this creates an array, which is casted during project to object
         $push: {
@@ -47,6 +49,7 @@ export const aggregationPipelineCreator = (location, collection) => [
         },
       },
       endobrev: { $sum: '$endobrev' },
+      spbAvg: { $avg: { $divide: ['$spbCount', '$totalDaysActive'] } },
       spbCount: { $sum: '$spbCount' },
       spbPerDay: { // this creates an array, which is casted during project to object
         $push: {
@@ -59,19 +62,18 @@ export const aggregationPipelineCreator = (location, collection) => [
     },
   },
   // reformat the data, remove messy _id and allow mongo to regenerate it, reduce arrays to objects
-  // calculate weighted average of total beetles over total days
   {
     $project: {
       _id: 0,
       cleridCount: 1,
-      cleridPer2Weeks: { $multiply: [14, { $divide: ['$cleridCount', '$totalTrappingDays'] }] },
+      cleridPer2Weeks: { $multiply: [14, '$cleridAvg'] },
       cleridPerDay: { // cast k,v array to object
         $arrayToObject: '$cleridPerDay',
       },
       endobrev: '$_id.endobrev',
       [location]: `$_id.${location}`,
       spbCount: 1,
-      spbPer2Weeks: { $multiply: [14, { $divide: ['$spbCount', '$totalTrappingDays'] }] },
+      spbPer2Weeks: { $multiply: [14, '$spbAvg'] },
       spbPerDay: { // cast k,v array to object
         $arrayToObject: '$spbPerDay',
       },
@@ -89,7 +91,7 @@ export const aggregationPipelineCreator = (location, collection) => [
     $merge: {
       into: collection,
       on: ['year', 'state', location, 'endobrev'],
-      // whenMatched: 'replace',
+      whenMatched: 'merge',
     },
   },
 ];

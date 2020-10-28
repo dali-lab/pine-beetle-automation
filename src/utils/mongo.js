@@ -48,7 +48,6 @@ export const aggregationPipelineCreator = (location, collection) => [
           v: { $divide: ['$cleridCount', '$totalDaysActive'] },
         },
       },
-      endobrev: { $sum: '$endobrev' },
       spbAvg: { $avg: { $divide: ['$spbCount', '$totalDaysActive'] } },
       spbCount: { $sum: '$spbCount' },
       spbPerDay: { // this creates an array, which is casted during project to object
@@ -283,6 +282,9 @@ export const predictionFetchCreator = (location) => [
       spbPer2Weeks: {
         $last: '$spbPer2Weeks',
       },
+      spots: {
+        $last: '$spots',
+      },
       spotst1: {
         $last: '$spotst1',
       },
@@ -305,6 +307,7 @@ export const predictionFetchCreator = (location) => [
       [location]: `$_id.${location}`,
       spbPerDay: 1,
       spbPer2Weeks: 1,
+      spots: 1,
       spotst1: 1,
       spotst2: 1,
       state: '$_id.state',

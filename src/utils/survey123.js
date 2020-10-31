@@ -27,6 +27,7 @@ export const survey123UnpackCreator = (cleanCsvOrJson, cleanBody) => (sixWeekDat
       'Date of Collection': sixWeekData[`Date of Collection ${weekNum}`],
       'Date of initial bloom': sixWeekData['Date of Inital bloom'], // fix spelling
       endobrev: 1,
+      FIPS: null,
       sirexLure: 'Y',
       SPB: sixWeekData[`Number SPB (${weekOrdinal} Collection)`],
       'Trap Name': sixWeekData['Trap name'],
@@ -35,7 +36,7 @@ export const survey123UnpackCreator = (cleanCsvOrJson, cleanBody) => (sixWeekDat
     const cleanedData = cleanBody(cleanCsvOrJson(convertedRawData));
 
     if (!cleanedData) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in csv');
-    if (!cleanedData.collectionDate) return null; // no data for this week
+    if (!cleanedData.collectionDate || cleanedData.daysActive === '0') return undefined; // no data for this week
 
     return cleanedData;
   }).filter((doc) => !!doc); // remove all nulls
@@ -64,7 +65,7 @@ export const deleteInsert = (sixWeeksData) => {
   ];
 };
 
-export const csvUploadSurvey123 = (ModelName, cleanCsv, cleanBody) => async (filename) => {
+export const csvUploadSurvey123Creator = (ModelName, cleanCsv, cleanBody, transform) => async (filename) => {
   const filepath = path.resolve(__dirname, `../../${filename}`);
 
   const docs = [];
@@ -76,16 +77,35 @@ export const csvUploadSurvey123 = (ModelName, cleanCsv, cleanBody) => async (fil
       .on('data', (data) => {
         try {
           // attempt to unpack all weeks 1-6 and push all
-          docs.concat(unpacker(data));
+          const unpackedData = unpacker(data);
+          // apply transformation if it exists
+          const dataToAdd = transform ? unpackedData.map(transform) : unpackedData;
+          docs.push(dataToAdd);
         } catch (error) {
           reject(error);
         }
       })
       .on('error', (err) => reject(err))
       .on('end', (rowCount) => {
-        // apply flatmap transformation to delete and reinsert
-        const deleteInsertOp = docs.flatMap(deleteInsert);
-        ModelName.bulkWrite(deleteInsertOp)
+        const { deletes: deleteOp, inserts: insertOp } = docs.reduce(({ deletes, inserts }, currDoc) => {
+          const ops = deleteInsert(currDoc);
+          if (!ops) return { deletes, inserts };
+
+          const [oneDelete, ...manyInserts] = ops;
+
+          return {
+            deletes: [...deletes, oneDelete],
+            inserts: [...inserts, ...manyInserts],
+          };
+        }, { deletes: [], inserts: [] });
+        // this currently doesn't work :( because our unique indexes are broken
+        // // apply flatmap transformation to delete and reinsert, also remove nulls
+        // const deleteInsertOp = docs.flatMap(deleteInsert).filter((doc) => !!doc);
+        ModelName.bulkWrite(deleteOp, { ordered: false })
+          .then((deleteRes) => {
+            return ModelName.bulkWrite(insertOp, { ordered: false })
+              .then((insertRes) => [deleteRes, insertRes]);
+          })
           .then((res) => {
             console.log(`successfully parsed ${rowCount} rows from csv upload`);
             resolve(res);

@@ -29,13 +29,21 @@ import {
   mergeSpotDataCreator,
 } from './mongo';
 
+import {
+  survey123UnpackCreator,
+  deleteInsert,
+  csvUploadSurvey123Creator,
+} from './survey123';
+
 export {
   aggregationPipelineCreator,
   cleanBodyCreator,
   cleanCsvCreator,
   csvDownloadCreator,
   csvUploadCreator,
+  csvUploadSurvey123Creator,
   deleteFile,
+  deleteInsert,
   generateErrorResponse,
   generateResponse,
   getIndexes,
@@ -47,5 +55,6 @@ export {
   matchYear,
   mergeSpotDataCreator,
   newError,
+  survey123UnpackCreator,
   upsertOpCreator,
 };

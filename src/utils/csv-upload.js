@@ -42,8 +42,8 @@ export const deleteFile = async (filename, isAbsolutePath) => {
  * @returns {Array<String>} array of string index names
  */
 export const getIndexes = (Model) => {
-  const indices = Model.schema.indexes();
-  return Object.keys(indices[0][0]);
+  const indexes = Model.schema.indexes();
+  return Object.keys(indexes.find(([_idx, attr]) => !!attr.unique)[0]);
 };
 
 /**

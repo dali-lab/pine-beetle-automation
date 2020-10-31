@@ -12,12 +12,12 @@ import {
   csvUploadCreator,
   cleanBodyCreator,
   getIndexes,
+  getModelAttributes,
   newError,
   upsertOpCreator,
 } from '../utils';
 
-const modelAttributes = Object.keys(UnsummarizedTrappingModel.schema.paths)
-  .filter((attr) => attr !== '_id' && attr !== '__v');
+const modelAttributes = getModelAttributes(UnsummarizedTrappingModel);
 
 // this is a function to clean req.body
 const cleanBody = cleanBodyCreator(modelAttributes);

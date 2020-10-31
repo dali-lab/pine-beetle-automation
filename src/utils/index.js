@@ -15,7 +15,10 @@ import {
 
 import { predictionGeneratorCreator } from './predictions';
 
-import { cleanBodyCreator } from './requests';
+import {
+  cleanBodyCreator,
+  getModelAttributes,
+} from './requests';
 
 import {
   aggregationPipelineCreator,
@@ -36,6 +39,7 @@ export {
   generateErrorResponse,
   generateResponse,
   getIndexes,
+  getModelAttributes,
   predictionFetchCreator,
   predictionGeneratorCreator,
   matchState,

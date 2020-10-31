@@ -8,6 +8,7 @@ import {
   cleanBodyCreator,
   csvDownloadCreator,
   getIndexes,
+  getModelAttributes,
   predictionFetchCreator,
   predictionGeneratorCreator,
   matchStateYear,
@@ -15,8 +16,7 @@ import {
   upsertOpCreator,
 } from '../utils';
 
-const modelAttributes = Object.keys(CountyPredictionModel.schema.paths)
-  .filter((attr) => attr !== '_id' && attr !== '__v');
+const modelAttributes = getModelAttributes(CountyPredictionModel);
 
 // this is a function to clean req.body
 const cleanBody = cleanBodyCreator(modelAttributes);

@@ -114,3 +114,70 @@ export const csvUploadSurvey123Creator = (ModelName, cleanCsv, cleanBody, transf
       });
   });
 };
+
+export const unsummarizedDataCsvUploadCreator = (ModelName, cleanCsv, cleanBody, filter, transform) => async (filename) => {
+  const filepath = path.resolve(__dirname, `../../${filename}`);
+
+  const inserts = [];
+  const deletions = [];
+
+  return new Promise((resolve, reject) => {
+    parseFile(filepath, { headers: true })
+      .on('data', (data) => {
+        // cast the csv fields to our schema
+        const cleanedData = cleanBody(cleanCsv(data));
+        if (!cleanedData) reject(newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in csv'));
+
+        // apply filter
+        if (filter && filter(cleanedData)) {
+          // apply transform
+          const doc = transform ? transform(cleanedData) : cleanedData;
+          inserts.push(doc);
+
+          const {
+            county, rangerDistrict, state, year,
+          } = doc;
+
+          deletions.push({
+            county,
+            rangerDistrict,
+            state,
+            year,
+          });
+        }
+      })
+      .on('error', (err) => reject(err))
+      .on('end', (rowCount) => {
+        const insertOp = inserts.map((document) => ({
+          insertOne: {
+            document,
+          },
+        }));
+
+        const deleteOp = deletions.map(({
+          county, rangerDistrict, state, year,
+        }) => ({
+          // clear out by county, rd, state, year
+          deleteMany: {
+            filter: {
+              county,
+              rangerDistrict,
+              state,
+              year,
+            },
+          },
+        }));
+
+        ModelName.bulkWrite(deleteOp, { ordered: false })
+          .then((deleteRes) => {
+            return ModelName.bulkWrite(insertOp, { ordered: false })
+              .then((insertRes) => [deleteRes, insertRes]);
+          })
+          .then((res) => {
+            console.log(`successfully parsed ${rowCount} rows from csv upload`);
+            resolve(res);
+          })
+          .catch((err) => reject(err));
+      });
+  });
+};

@@ -30,9 +30,10 @@ import {
 } from './mongo';
 
 import {
-  survey123UnpackCreator,
-  deleteInsert,
   csvUploadSurvey123Creator,
+  deleteInsert,
+  survey123UnpackCreator,
+  unsummarizedDataCsvUploadCreator,
 } from './survey123';
 
 export {
@@ -48,13 +49,14 @@ export {
   generateResponse,
   getIndexes,
   getModelAttributes,
-  predictionFetchCreator,
-  predictionGeneratorCreator,
   matchState,
   matchStateYear,
   matchYear,
   mergeSpotDataCreator,
   newError,
+  predictionFetchCreator,
+  predictionGeneratorCreator,
   survey123UnpackCreator,
+  unsummarizedDataCsvUploadCreator,
   upsertOpCreator,
 };

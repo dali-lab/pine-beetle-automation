@@ -30,7 +30,7 @@ export const runModel = (array) => {
     }
 
     return {
-      cleridst1,
+      cleridst1: cleridst1 || 77, // default to 77 if 0
       endobrev,
       SPB,
       spotst1,

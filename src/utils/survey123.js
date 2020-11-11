@@ -45,9 +45,14 @@ export const survey123UnpackCreator = (cleanCsvOrJson, cleanBody) => (sixWeekDat
 export const deleteInsert = (sixWeeksData) => {
   if (!sixWeeksData.length) return null;
 
-  const { globalID } = sixWeeksData[0];
+  const {
+    county, rangerDistrict, state, year,
+  } = sixWeeksData[0];
 
-  if (!globalID) throw newError(RESPONSE_TYPES.INTERNAL_ERROR, 'missing globalID for survey123');
+  if (!(year && state && (county || rangerDistrict))) {
+    throw newError(RESPONSE_TYPES.INTERNAL_ERROR,
+      'missing row identifier (year, state, county, or ranger district) for survey123');
+  }
 
   const insertOps = sixWeeksData.map((weekData) => ({
     insertOne: {
@@ -57,8 +62,13 @@ export const deleteInsert = (sixWeeksData) => {
 
   return [
     {
-      deleteMany: { // first clear out all with same globalID
-        filter: { globalID },
+      deleteMany: { // first clear out all with same year, state, county, rd
+        filter: {
+          county,
+          rangerDistrict,
+          state,
+          year,
+        },
       },
     },
     ...insertOps, // then insert new ones
@@ -79,8 +89,7 @@ export const csvUploadSurvey123Creator = (ModelName, cleanCsv, cleanBody, transf
           // attempt to unpack all weeks 1-6 and push all
           const unpackedData = unpacker(data);
           // apply transformation if it exists
-          const dataToAdd = transform ? unpackedData.map(transform) : unpackedData;
-          docs.push(dataToAdd);
+          docs.push(transform ? unpackedData.map(transform) : unpackedData);
         } catch (error) {
           reject(error);
         }
@@ -98,9 +107,7 @@ export const csvUploadSurvey123Creator = (ModelName, cleanCsv, cleanBody, transf
             inserts: [...inserts, ...manyInserts],
           };
         }, { deletes: [], inserts: [] });
-        // this currently doesn't work :( because our unique indexes are broken
-        // // apply flatmap transformation to delete and reinsert, also remove nulls
-        // const deleteInsertOp = docs.flatMap(deleteInsert).filter((doc) => !!doc);
+
         ModelName.bulkWrite(deleteOp, { ordered: false })
           .then((deleteRes) => {
             return ModelName.bulkWrite(insertOp, { ordered: false })

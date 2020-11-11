@@ -16,6 +16,43 @@ const ordinals = {
 
 const ordinalStrings = Object.entries(ordinals);
 
+export const survey123WebhookUnpackCreator = (cleanJson, cleanBody) => (sixWeekData) => {
+  return ordinalStrings.map(([weekNum]) => {
+    // cast everything to the unrolled schema in our 2011-2017 csv format
+    // so we can leverage the same cleanCsv (and that works on json too)
+    const convertedRawData = {
+      'Active Trapping Days': sixWeekData[`TrappingInterval${weekNum}`],
+      Clerid: sixWeekData[`Number_Clerids${weekNum}`],
+      'County/Parish': sixWeekData.County,
+      'Date of Collection': sixWeekData[`CollectionDate${weekNum}`],
+      'Date of initial bloom': sixWeekData.Initial_Bloom,
+      endobrev: 1,
+      FIPS: null,
+      'National Forest (Ranger District)': sixWeekData.Nat_Forest_Ranger_Dist,
+      Season: sixWeekData.Season,
+      sirexLure: 'Y',
+      SPB: sixWeekData[`Number_SPB${weekNum}`],
+      State: sixWeekData.USA_State,
+      'Trap Lure': sixWeekData.Trap_Lure,
+      'Trap Name': sixWeekData.Trap_name,
+      'Traps set out on:': sixWeekData.TrapSetDate,
+      'What bloomed?': sixWeekData.Species_Bloom,
+      x: sixWeekData.Longitude,
+      y: sixWeekData.Latitude,
+      Year: sixWeekData.Year,
+    };
+
+    const cleanedData = cleanBody(cleanJson(convertedRawData));
+
+    if (!cleanedData) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in webhook data');
+    // want to check if '0' or 0 so only doing double equals
+    // eslint-disable-next-line eqeqeq
+    if (!cleanedData.collectionDate || cleanedData.daysActive == '0') return undefined; // no data for this week
+
+    return cleanedData;
+  }).filter((doc) => !!doc); // remove all nulls
+};
+
 export const survey123UnpackCreator = (cleanCsvOrJson, cleanBody) => (sixWeekData) => {
   return ordinalStrings.map(([weekNum, weekOrdinal]) => {
     // cast everything to the unrolled schema in our 2011-2017 csv format

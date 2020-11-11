@@ -10,16 +10,18 @@ import {
 
 import {
   CSV_TO_UNSUMMARIZED,
-  STATE_TO_ABBREV_NOSPACE,
+  STATE_TO_ABBREV_COMBINED,
   // RESPONSE_TYPES,
 } from '../constants';
 
 import {
-  cleanCsvCreator,
-  cleanBodyCreator,
-  getModelAttributes,
   // newError,
+  cleanBodyCreator,
+  cleanCsvCreator,
   csvUploadSurvey123Creator,
+  deleteInsert,
+  getModelAttributes,
+  survey123WebhookUnpackCreator,
 } from '../utils';
 
 const unsummarizedModelAttributes = getModelAttributes(UnsummarizedTrappingModel);
@@ -30,10 +32,12 @@ const cleanBody = cleanBodyCreator(unsummarizedModelAttributes);
 // casts either csv or json data to model schema
 const cleanCsvOrJson = cleanCsvCreator(CSV_TO_UNSUMMARIZED);
 
-const stateToAbbrevNoSpaceTransform = (document) => {
+const survey123WebhookUnpacker = survey123WebhookUnpackCreator(cleanCsvOrJson, cleanBody);
+
+const stateToAbbrevTransform = (document) => {
   return {
     ...document,
-    state: STATE_TO_ABBREV_NOSPACE[document.state],
+    state: STATE_TO_ABBREV_COMBINED[document.state],
   };
 };
 
@@ -47,5 +51,17 @@ export const uploadCsv = csvUploadSurvey123Creator(
   UnsummarizedTrappingModel,
   cleanCsvOrJson,
   cleanBody,
-  stateToAbbrevNoSpaceTransform,
+  stateToAbbrevTransform,
 );
+
+export const uploadSurvey123FromWebhook = async (rawData) => {
+  const data = survey123WebhookUnpacker(rawData)
+    .map(stateToAbbrevTransform);
+
+  const [deleteOp, ...insertOp] = deleteInsert(data);
+
+  const deleteRes = await UnsummarizedTrappingModel.bulkWrite([deleteOp], { ordered: false });
+  const insertRes = await UnsummarizedTrappingModel.bulkWrite(insertOp, { ordered: false });
+
+  return [deleteRes, insertRes];
+};

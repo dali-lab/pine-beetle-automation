@@ -29,9 +29,9 @@ export const predictionGeneratorCreator = (location, ScriptRunner, WriteModel, u
         && obj[location] === loc;
     });
 
-    const cleridst1 = t1?.cleridPer2Weeks ?? 0;
+    const cleridst1 = t1?.cleridPer2Weeks ?? null;
 
-    if (SPB === null || isNaN(SPB) || cleridst1 === null || isNaN(cleridst1)
+    if (SPB === null || isNaN(SPB) || isNaN(cleridst1)
     || spotst1 === null || isNaN(spotst2) || spotst2 === null || isNaN(spotst2)
     || endobrev === null || isNaN(endobrev)) {
       return null;

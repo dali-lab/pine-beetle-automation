@@ -23,14 +23,14 @@ export const runModel = (array) => {
       spotst2,
     } = doc;
 
-    if (SPB === null || isNaN(SPB) || cleridst1 === null || isNaN(cleridst1)
+    if (SPB === null || isNaN(SPB) || isNaN(cleridst1)
     || spotst1 === null || isNaN(spotst2) || spotst2 === null || isNaN(spotst2)
     || endobrev === null || isNaN(endobrev)) {
       throw newError(RESPONSE_TYPES.INTERNAL_ERROR, 'bad format for R model');
     }
 
     return {
-      cleridst1: cleridst1 || 77, // default to 77 if 0
+      cleridst1: cleridst1 ?? 77, // default to 77 if null or undefined
       endobrev,
       SPB,
       spotst1,

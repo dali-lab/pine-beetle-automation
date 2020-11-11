@@ -92,15 +92,13 @@ const UnsummarizedTrappingSchema = new Schema({
   },
 });
 
-// compound index of yr -> state -> rangerDistrict -> county -> trap -> collectionDate
+// compound index of yr -> state -> rangerDistrict -> county
 UnsummarizedTrappingSchema.index({
   year: 1,
   state: 1,
   rangerDistrict: 1,
   county: 1,
-  trap: 1,
-  collectionDate: 1,
-}, { unique: true });
+}, { unique: false });
 
 const UnsummarizedTrappingModel = mongoose.model('UnsummarizedTrapping', UnsummarizedTrappingSchema);
 

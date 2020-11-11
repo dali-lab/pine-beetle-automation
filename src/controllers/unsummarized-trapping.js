@@ -7,17 +7,15 @@ import {
 } from '../constants';
 
 import {
+  cleanBodyCreator,
   cleanCsvCreator,
   csvDownloadCreator,
-  csvUploadCreator,
-  cleanBodyCreator,
-  getIndexes,
+  getModelAttributes,
   newError,
-  upsertOpCreator,
+  unsummarizedDataCsvUploadCreator,
 } from '../utils';
 
-const modelAttributes = Object.keys(UnsummarizedTrappingModel.schema.paths)
-  .filter((attr) => attr !== '_id' && attr !== '__v');
+const modelAttributes = getModelAttributes(UnsummarizedTrappingModel);
 
 // this is a function to clean req.body
 const cleanBody = cleanBodyCreator(modelAttributes);
@@ -34,22 +32,18 @@ const stateToAbbrevTransform = (document) => {
   };
 };
 
-// provides the upsert operation for csv uploading
-const csvUpserter = upsertOpCreator(getIndexes(UnsummarizedTrappingModel));
-
 /**
  * @description uploads a csv to the unsummarized collection
  * @param {String} filename the csv filename on disk
  * @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
  * @throws other errors depending on what went wrong
  */
-export const uploadCsv = csvUploadCreator(
+export const uploadCsv = unsummarizedDataCsvUploadCreator(
   UnsummarizedTrappingModel,
   cleanCsv,
   cleanBody,
   filterNulls,
   stateToAbbrevTransform,
-  csvUpserter,
 );
 
 /**

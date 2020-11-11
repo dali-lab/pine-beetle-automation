@@ -9,12 +9,12 @@ import {
   aggregationPipelineCreator,
   cleanBodyCreator,
   csvDownloadCreator,
+  getModelAttributes,
   matchStateYear,
   newError,
 } from '../utils';
 
-const modelAttributes = Object.keys(SummarizedRangerDistrictTrappingModel.schema.paths)
-  .filter((attr) => attr !== '_id' && attr !== '__v');
+const modelAttributes = getModelAttributes(SummarizedRangerDistrictTrappingModel);
 
 // this is a function to clean req.body
 const cleanBody = cleanBodyCreator(modelAttributes);

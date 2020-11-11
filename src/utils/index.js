@@ -15,7 +15,10 @@ import {
 
 import { predictionGeneratorCreator } from './predictions';
 
-import { cleanBodyCreator } from './requests';
+import {
+  cleanBodyCreator,
+  getModelAttributes,
+} from './requests';
 
 import {
   aggregationPipelineCreator,
@@ -26,22 +29,34 @@ import {
   mergeSpotDataCreator,
 } from './mongo';
 
+import {
+  csvUploadSurvey123Creator,
+  deleteInsert,
+  survey123UnpackCreator,
+  unsummarizedDataCsvUploadCreator,
+} from './survey123';
+
 export {
   aggregationPipelineCreator,
   cleanBodyCreator,
   cleanCsvCreator,
   csvDownloadCreator,
   csvUploadCreator,
+  csvUploadSurvey123Creator,
   deleteFile,
+  deleteInsert,
   generateErrorResponse,
   generateResponse,
   getIndexes,
-  predictionFetchCreator,
-  predictionGeneratorCreator,
+  getModelAttributes,
   matchState,
   matchStateYear,
   matchYear,
   mergeSpotDataCreator,
   newError,
+  predictionFetchCreator,
+  predictionGeneratorCreator,
+  survey123UnpackCreator,
+  unsummarizedDataCsvUploadCreator,
   upsertOpCreator,
 };

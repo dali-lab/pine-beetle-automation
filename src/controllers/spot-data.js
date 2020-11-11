@@ -12,6 +12,7 @@ import {
   csvDownloadCreator,
   csvUploadCreator,
   getIndexes,
+  getModelAttributes,
   mergeSpotDataCreator,
   matchStateYear,
   matchYear,
@@ -19,8 +20,7 @@ import {
   upsertOpCreator,
 } from '../utils';
 
-const modelAttributes = Object.keys(SpotDataModel.schema.paths)
-  .filter((attr) => attr !== '_id' && attr !== '__v');
+const modelAttributes = getModelAttributes(SpotDataModel);
 
 // this is a function to clean req.body
 const cleanBody = cleanBodyCreator(modelAttributes);

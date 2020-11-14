@@ -1,7 +1,8 @@
 import countyPredictionRouter from './county-prediction';
 import healthcheck from './healthcheck';
-import rModel from './r-model';
+import pipeline from './pipeline';
 import rdPredictionRouter from './rd-prediction';
+import rModel from './r-model';
 import spotDataRouter from './spot-data';
 import summarizedCountyTrappingRouter from './summarized-county-trapping';
 import summarizedRangerDistrictTrappingRouter from './summarized-rangerdistrict-trapping';
@@ -11,6 +12,7 @@ import unsummarizedTrappingRouter from './unsummarized-trapping';
 export default {
   'county-prediction': countyPredictionRouter,
   healthcheck,
+  pipeline,
   'r-model': rModel,
   'rd-prediction': rdPredictionRouter,
   'spot-data': spotDataRouter,

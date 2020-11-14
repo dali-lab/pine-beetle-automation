@@ -1,4 +1,5 @@
 import * as CountyPrediction from './county-prediction';
+import * as Pipeline from './pipeline';
 import * as RDPrediction from './rd-prediction';
 import * as rModel from './r-model';
 import * as SpotData from './spot-data';
@@ -9,6 +10,7 @@ import * as UnsummarizedTrapping from './unsummarized-trapping';
 
 export {
   CountyPrediction,
+  Pipeline,
   RDPrediction,
   rModel,
   SpotData,

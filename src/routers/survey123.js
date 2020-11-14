@@ -41,4 +41,22 @@ survey123Router.route('/upload')
     }
   });
 
+survey123Router.route('/new')
+  .post(async (req, res) => {
+    const {
+      feature: {
+        attributes,
+      },
+    } = req.body;
+
+    await Survey123.uploadSurvey123FromWebhook(attributes);
+    res.send(generateResponse(RESPONSE_TYPES.SUCCESS));
+  });
+
+survey123Router.route('/edit')
+  .post(async (_req, res) => {
+    // TODO: implement this
+    res.send(generateResponse(RESPONSE_TYPES.SUCCESS));
+  });
+
 export default survey123Router;

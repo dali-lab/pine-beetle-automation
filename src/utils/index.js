@@ -33,6 +33,7 @@ import {
   csvUploadSurvey123Creator,
   deleteInsert,
   survey123UnpackCreator,
+  survey123WebhookUnpackCreator,
   unsummarizedDataCsvUploadCreator,
 } from './survey123';
 
@@ -57,6 +58,7 @@ export {
   predictionFetchCreator,
   predictionGeneratorCreator,
   survey123UnpackCreator,
+  survey123WebhookUnpackCreator,
   unsummarizedDataCsvUploadCreator,
   upsertOpCreator,
 };

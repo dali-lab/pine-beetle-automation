@@ -83,12 +83,16 @@ export const deleteInsert = (sixWeeksData) => {
   if (!sixWeeksData.length) return null;
 
   const {
-    county, rangerDistrict, state, year,
+    county,
+    rangerDistrict,
+    state,
+    trap,
+    year,
   } = sixWeeksData[0];
 
   if (!(year && state && (county || rangerDistrict))) {
     throw newError(RESPONSE_TYPES.INTERNAL_ERROR,
-      'missing row identifier (year, state, county, or ranger district) for survey123');
+      'missing row identifier (year, state, county, ranger district, trap name) for survey123');
   }
 
   const insertOps = sixWeeksData.map((weekData) => ({
@@ -104,6 +108,7 @@ export const deleteInsert = (sixWeeksData) => {
           county,
           rangerDistrict,
           state,
+          trap,
           year,
         },
       },
@@ -179,13 +184,18 @@ export const unsummarizedDataCsvUploadCreator = (ModelName, cleanCsv, cleanBody,
           inserts.push(doc);
 
           const {
-            county, rangerDistrict, state, year,
+            county,
+            rangerDistrict,
+            state,
+            trap,
+            year,
           } = doc;
 
           deletions.push({
             county,
             rangerDistrict,
             state,
+            trap,
             year,
           });
         }
@@ -199,7 +209,11 @@ export const unsummarizedDataCsvUploadCreator = (ModelName, cleanCsv, cleanBody,
         }));
 
         const deleteOp = deletions.map(({
-          county, rangerDistrict, state, year,
+          county,
+          rangerDistrict,
+          state,
+          trap,
+          year,
         }) => ({
           // clear out by county, rd, state, year
           deleteMany: {
@@ -207,6 +221,7 @@ export const unsummarizedDataCsvUploadCreator = (ModelName, cleanCsv, cleanBody,
               county,
               rangerDistrict,
               state,
+              trap,
               year,
             },
           },

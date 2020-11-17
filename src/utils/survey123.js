@@ -45,9 +45,7 @@ export const survey123WebhookUnpackCreator = (cleanJson, cleanBody) => (sixWeekD
     const cleanedData = cleanBody(cleanJson(convertedRawData));
 
     if (!cleanedData) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in webhook data');
-    // want to check if '0' or 0 so only doing double equals
-    // eslint-disable-next-line eqeqeq
-    if (!cleanedData.collectionDate || cleanedData.daysActive == '0') return undefined; // no data for this week
+    if (!cleanedData.collectionDate || !cleanedData.daysActive || cleanedData.daysActive === '0') return undefined; // no data for this week
 
     return cleanedData;
   }).filter((doc) => !!doc); // remove all nulls
@@ -73,7 +71,7 @@ export const survey123UnpackCreator = (cleanCsvOrJson, cleanBody) => (sixWeekDat
     const cleanedData = cleanBody(cleanCsvOrJson(convertedRawData));
 
     if (!cleanedData) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in csv');
-    if (!cleanedData.collectionDate || cleanedData.daysActive === '0') return undefined; // no data for this week
+    if (!cleanedData.collectionDate || !cleanedData.daysActive || cleanedData.daysActive === '0') return undefined; // no data for this week
 
     return cleanedData;
   }).filter((doc) => !!doc); // remove all nulls

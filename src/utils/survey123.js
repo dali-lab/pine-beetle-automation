@@ -46,13 +46,14 @@ export const survey123WebhookUnpackCreator = (cleanJson, cleanBody) => (sixWeekD
 
     if (!cleanedData) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in webhook data');
 
+    if (!cleanedData.collectionDate || !cleanedData.daysActive || cleanedData.daysActive === '0') return undefined; // no data for this week
     const shouldDeleteSurvey = sixWeekData.DeleteSurvey === 'yes';
     const isFinalCollection = sixWeekData.Is_Final_Collection === 'yes';
 
-    if (!cleanedData.collectionDate || !cleanedData.daysActive || cleanedData.daysActive === '0') return undefined; // no data for this week
-    if (shouldDeleteSurvey || !isFinalCollection) return undefined; // incomplete/bad data for this week
-
-    return cleanedData;
+    return {
+      ...cleanedData,
+      shouldInsert: !shouldDeleteSurvey && isFinalCollection,
+    };
   }).filter((doc) => !!doc); // remove all nulls
 };
 
@@ -77,13 +78,16 @@ export const survey123UnpackCreator = (cleanCsvOrJson, cleanBody) => (sixWeekDat
 
     if (!cleanedData) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in csv');
 
+    if (!cleanedData.collectionDate || !cleanedData.daysActive || cleanedData.daysActive === '0') return undefined; // no data for this week
     const shouldDeleteSurvey = sixWeekData['Delete this survey?'] === 'yes';
     const isFinalCollection = ['yes', '', null, undefined].includes(sixWeekData['Is this the Final Collection?']);
 
-    if (!cleanedData.collectionDate || !cleanedData.daysActive || cleanedData.daysActive === '0') return undefined; // no data for this week
-    if (shouldDeleteSurvey || !isFinalCollection) return undefined; // incomplete/bad data for this week
+    if (shouldDeleteSurvey || !isFinalCollection) return undefined; // no action for bad or incomplete data
 
-    return cleanedData;
+    return {
+      ...cleanedData,
+      shouldInsert: true, // ignore this for survey123 csvs
+    };
   }).filter((doc) => !!doc); // remove all nulls
 };
 
@@ -93,6 +97,7 @@ export const deleteInsert = (sixWeeksData) => {
   const {
     county,
     rangerDistrict,
+    shouldInsert,
     state,
     trap,
     year,
@@ -103,11 +108,11 @@ export const deleteInsert = (sixWeeksData) => {
       'missing row identifier (year, state, county, ranger district, trap name) for survey123');
   }
 
-  const insertOps = sixWeeksData.map((weekData) => ({
+  const insertOps = shouldInsert ? sixWeeksData.map((weekData) => ({
     insertOne: {
       document: weekData,
     },
-  }));
+  })) : [];
 
   return [
     {

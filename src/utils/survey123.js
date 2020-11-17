@@ -88,7 +88,7 @@ export const deleteInsert = (sixWeeksData) => {
     year,
   } = sixWeeksData[0];
 
-  if (!(year && state && (county || rangerDistrict))) {
+  if (!(trap && year && state && (county || rangerDistrict))) {
     throw newError(RESPONSE_TYPES.INTERNAL_ERROR,
       'missing row identifier (year, state, county, ranger district, trap name) for survey123');
   }

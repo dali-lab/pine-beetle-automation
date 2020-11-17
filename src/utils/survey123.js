@@ -45,7 +45,12 @@ export const survey123WebhookUnpackCreator = (cleanJson, cleanBody) => (sixWeekD
     const cleanedData = cleanBody(cleanJson(convertedRawData));
 
     if (!cleanedData) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in webhook data');
+
+    const shouldDeleteSurvey = sixWeekData.DeleteSurvey === 'yes';
+    const isFinalCollection = sixWeekData.Is_Final_Collection === 'yes';
+
     if (!cleanedData.collectionDate || !cleanedData.daysActive || cleanedData.daysActive === '0') return undefined; // no data for this week
+    if (shouldDeleteSurvey || !isFinalCollection) return undefined; // incomplete/bad data for this week
 
     return cleanedData;
   }).filter((doc) => !!doc); // remove all nulls
@@ -71,7 +76,12 @@ export const survey123UnpackCreator = (cleanCsvOrJson, cleanBody) => (sixWeekDat
     const cleanedData = cleanBody(cleanCsvOrJson(convertedRawData));
 
     if (!cleanedData) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in csv');
+
+    const shouldDeleteSurvey = sixWeekData['Delete this survey?'] === 'yes';
+    const isFinalCollection = ['yes', '', null, undefined].includes(sixWeekData['Is this the Final Collection?']);
+
     if (!cleanedData.collectionDate || !cleanedData.daysActive || cleanedData.daysActive === '0') return undefined; // no data for this week
+    if (shouldDeleteSurvey || !isFinalCollection) return undefined; // incomplete/bad data for this week
 
     return cleanedData;
   }).filter((doc) => !!doc); // remove all nulls
@@ -127,7 +137,7 @@ export const csvUploadSurvey123Creator = (ModelName, cleanCsv, cleanBody, filter
       .on('data', (data) => {
         try {
           // attempt to unpack all weeks 1-6 and push all
-          const unpackedData = unpacker(data);
+          const unpackedData = unpacker(data) ?? [];
           // apply transformation if it exists
           if (!filter || filter(unpackedData)) {
             docs.push(transform ? unpackedData.map(transform) : unpackedData);

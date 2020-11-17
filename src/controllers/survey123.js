@@ -57,7 +57,10 @@ export const uploadSurvey123FromWebhook = async (rawData) => {
   const data = survey123WebhookUnpacker(rawData)
     .map(stateToAbbrevTransform);
 
-  const [deleteOp, ...insertOp] = deleteInsert(data);
+  const deleteInsertOp = deleteInsert(data);
+  if (!deleteInsertOp) return [];
+
+  const [deleteOp, ...insertOp] = deleteInsertOp;
 
   const deleteRes = await UnsummarizedTrappingModel.bulkWrite([deleteOp], { ordered: false });
   const insertRes = await UnsummarizedTrappingModel.bulkWrite(insertOp, { ordered: false });

@@ -115,7 +115,7 @@ export const deleteInsert = (sixWeeksData) => {
   ];
 };
 
-export const csvUploadSurvey123Creator = (ModelName, cleanCsv, cleanBody, transform) => async (filename) => {
+export const csvUploadSurvey123Creator = (ModelName, cleanCsv, cleanBody, filter, transform) => async (filename) => {
   const filepath = path.resolve(__dirname, `../../${filename}`);
 
   const docs = [];
@@ -129,7 +129,9 @@ export const csvUploadSurvey123Creator = (ModelName, cleanCsv, cleanBody, transf
           // attempt to unpack all weeks 1-6 and push all
           const unpackedData = unpacker(data);
           // apply transformation if it exists
-          docs.push(transform ? unpackedData.map(transform) : unpackedData);
+          if (!filter || filter(unpackedData)) {
+            docs.push(transform ? unpackedData.map(transform) : unpackedData);
+          }
         } catch (error) {
           reject(error);
         }
@@ -164,7 +166,7 @@ export const unsummarizedDataCsvUploadCreator = (ModelName, cleanCsv, cleanBody,
         if (!cleanedData) reject(newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in csv'));
 
         // apply filter
-        if (filter && filter(cleanedData)) {
+        if (!filter || filter(cleanedData)) {
           // apply transform
           const doc = transform ? transform(cleanedData) : cleanedData;
           inserts.push(doc);

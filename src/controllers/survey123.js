@@ -42,6 +42,7 @@ export const uploadCsv = csvUploadSurvey123Creator(
   UnsummarizedTrappingModel,
   cleanCsvOrJson,
   cleanBody,
+  undefined,
   stateToAbbrevTransform,
 );
 

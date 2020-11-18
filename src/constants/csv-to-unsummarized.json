@@ -6,6 +6,7 @@
     "Date of initial bloom": "bloomDate",
     "endobrev": "endobrev",
     "FIPS": "fips",
+    "GlobalID": "globalID",
     "National Forest (Ranger District)": "rangerDistrict",
     "Season": "season",
     "sirexLure": "sirexLure",

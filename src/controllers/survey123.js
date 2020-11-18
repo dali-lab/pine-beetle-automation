@@ -52,25 +52,22 @@ export const uploadCsv = csvUploadSurvey123Creator(
  * @returns {Promise<Array>} delete result and insert result data
  */
 export const uploadSurvey123FromWebhook = async (rawData) => {
-  const isFinalCollection = rawData.Is_Final_Collection === 'yes';
-
   const data = survey123WebhookUnpacker(rawData)
     .map(stateToAbbrevTransform);
 
-  const deleteInsertOp = deleteInsert(data);
-  if (!deleteInsertOp) return []; // TODO: may reinvestigate this, consider deleting always
+  const globalID = rawData.globalid.replace(/(\{|\})/g, '').toLowerCase();
+
+  // either use deleteInsert or directly delete the data even if none of it is valid
+  // TODO: need to test this behavior
+  const deleteInsertOp = deleteInsert(data) ?? [{ deleteMany: { filter: { globalID } } }];
 
   const [deleteOp, ...insertOp] = deleteInsertOp;
 
   const deleteRes = await UnsummarizedTrappingModel.bulkWrite([deleteOp], { ordered: false });
   const insertRes = await UnsummarizedTrappingModel.bulkWrite(insertOp, { ordered: false });
 
-  // run pipeline if final collection
-  // TODO: get rid of this if statement
-  if (isFinalCollection) {
-    const { state, year } = data.find((d) => !!d);
-    if (state && year) await runPipelineStateYear(state, year);
-  }
+  const { state, year } = data.find((d) => !!d);
+  if (state && year) await runPipelineStateYear(state, year);
 
   return [deleteRes, insertRes];
 };

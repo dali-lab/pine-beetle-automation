@@ -50,8 +50,15 @@ survey123Router.route('/new')
       },
     } = req.body;
 
-    await Survey123.uploadSurvey123FromWebhook(attributes);
-    res.send(generateResponse(RESPONSE_TYPES.SUCCESS));
+    try {
+      await Survey123.uploadSurvey123FromWebhook(attributes);
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    }
   });
 
 survey123Router.route('/edit')

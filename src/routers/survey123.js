@@ -34,6 +34,7 @@ survey123Router.route('/upload')
       console.log(errorMessage);
       res.status(status).send(errorResponse);
     } finally {
+      // TODO: this isn't working for some reason for long uploads
       // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
       setTimeout(() => {
         deleteFile(req.file.path);

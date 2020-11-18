@@ -1,4 +1,3 @@
-/* eslint-disable import/prefer-default-export */
 import path from 'path';
 import { parseFile } from 'fast-csv';
 
@@ -82,6 +81,7 @@ export const survey123UnpackCreator = (cleanCsvOrJson, cleanBody) => (sixWeekDat
     const shouldDeleteSurvey = sixWeekData['Delete this survey?'] === 'yes';
     const isFinalCollection = ['yes', '', null, undefined].includes(sixWeekData['Is this the Final Collection?']);
 
+    // TODO: investigate this over-deleting bug, consider making this active for csv too
     if (shouldDeleteSurvey || !isFinalCollection) return undefined; // no action for bad or incomplete data
 
     return {
@@ -101,7 +101,7 @@ export const deleteInsert = (sixWeeksData) => {
     state,
     trap,
     year,
-  } = sixWeeksData[0];
+  } = sixWeeksData.find((d) => !!d);
 
   if (!(trap && year && state && (county || rangerDistrict))) {
     throw newError(RESPONSE_TYPES.INTERNAL_ERROR,
@@ -142,7 +142,7 @@ export const csvUploadSurvey123Creator = (ModelName, cleanCsv, cleanBody, filter
       .on('data', (data) => {
         try {
           // attempt to unpack all weeks 1-6 and push all
-          const unpackedData = unpacker(data) ?? [];
+          const unpackedData = unpacker(data);
           // apply transformation if it exists
           if (!filter || filter(unpackedData)) {
             docs.push(transform ? unpackedData.map(transform) : unpackedData);

@@ -58,7 +58,7 @@ export const uploadSurvey123FromWebhook = async (rawData) => {
     .map(stateToAbbrevTransform);
 
   const deleteInsertOp = deleteInsert(data);
-  if (!deleteInsertOp) return [];
+  if (!deleteInsertOp) return []; // TODO: may reinvestigate this, consider deleting always
 
   const [deleteOp, ...insertOp] = deleteInsertOp;
 
@@ -66,6 +66,7 @@ export const uploadSurvey123FromWebhook = async (rawData) => {
   const insertRes = await UnsummarizedTrappingModel.bulkWrite(insertOp, { ordered: false });
 
   // run pipeline if final collection
+  // TODO: get rid of this if statement
   if (isFinalCollection) {
     const { state, year } = data.find((d) => !!d);
     if (state && year) await runPipelineStateYear(state, year);

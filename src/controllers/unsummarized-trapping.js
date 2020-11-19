@@ -1,7 +1,10 @@
+import compose from 'compose-function';
+
 import { UnsummarizedTrappingModel } from '../models';
 
 import {
   CSV_TO_UNSUMMARIZED,
+  RANGER_DISTRICT_NAME_MAPPING,
   STATE_TO_ABBREV,
   RESPONSE_TYPES,
 } from '../constants';
@@ -25,12 +28,19 @@ const cleanCsv = cleanCsvCreator(CSV_TO_UNSUMMARIZED);
 // removes strange null valued rows
 const filterNulls = (document) => document.cleridCount !== 'NULL' && document.spbCount !== 'NULL';
 
-const stateToAbbrevTransform = (document) => {
-  return {
-    ...document,
-    state: STATE_TO_ABBREV[document.state],
-  };
-};
+// transform state name
+const stateToAbbrevTransform = (document) => ({
+  ...document,
+  state: STATE_TO_ABBREV[document.state],
+});
+
+// transform ranger district name
+const rangerDistrictNameTransform = (document) => ({
+  ...document,
+  rangerDistrict: RANGER_DISTRICT_NAME_MAPPING[document.rangerDistrict],
+});
+
+const transformDocument = compose(stateToAbbrevTransform, rangerDistrictNameTransform);
 
 /**
  * @description uploads a csv to the unsummarized collection
@@ -43,7 +53,7 @@ export const uploadCsv = unsummarizedDataCsvUploadCreator(
   cleanCsv,
   cleanBody,
   filterNulls,
-  stateToAbbrevTransform,
+  transformDocument,
 );
 
 /**

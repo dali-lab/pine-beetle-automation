@@ -112,11 +112,29 @@ export const csvUploadCreator = (ModelName, cleanCsv, cleanBody, filter, transfo
  * @returns {Function} which when envoked, returns a filepath to a CSV of the collection contents
  * @throws RESPONSE_TYPES.INTERNAL_ERROR for trouble parsing
  */
-export const csvDownloadCreator = (ModelName, fields) => async () => {
-  // use compound key to sort before creating
-  const data = await ModelName.find().sort(ModelName.schema.indexes()[0][0]);
+export const csvDownloadCreator = (ModelName, fields) => async (filters) => {
+  const {
+    county,
+    endYear,
+    rangerDistrict,
+    startYear,
+    state,
+  } = filters;
 
   try {
+    // use compound key to sort before creating
+    const query = ModelName.find();
+
+    if (startYear) query.find({ year: { $gte: parseInt(startYear, 10) } });
+    if (endYear) query.find({ year: { $lte: parseInt(endYear, 10) } });
+    if (state) query.find({ state });
+    if (county) query.find({ county });
+    if (rangerDistrict) query.find({ rangerDistrict });
+
+    const data = await query
+      .sort(ModelName.schema.indexes()[0][0])
+      .exec();
+
     const csv = parse(data, { fields });
     const filepath = path.resolve(__dirname, `../../uploads/${Math.random().toString(36).substring(7)}.csv`);
 

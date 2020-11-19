@@ -66,11 +66,11 @@ RDPredictionRouter.route('/filter')
   });
 
 RDPredictionRouter.route('/download')
-  .get(async (_req, res) => {
+  .get(async (req, res) => {
     let filepath;
 
     try {
-      filepath = await RDPrediction.downloadCsv();
+      filepath = await RDPrediction.downloadCsv(req.query);
       res.sendFile(filepath);
     } catch (error) {
       const errorResponse = generateErrorResponse(error);

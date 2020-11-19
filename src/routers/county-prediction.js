@@ -66,11 +66,11 @@ CountyPredictionRouter.route('/filter')
   });
 
 CountyPredictionRouter.route('/download')
-  .get(async (_req, res) => {
+  .get(async (req, res) => {
     let filepath;
 
     try {
-      filepath = await CountyPrediction.downloadCsv();
+      filepath = await CountyPrediction.downloadCsv(req.query);
       res.sendFile(filepath);
     } catch (error) {
       const errorResponse = generateErrorResponse(error);

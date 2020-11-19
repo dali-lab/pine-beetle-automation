@@ -93,6 +93,24 @@ export const deleteById = async (id) => {
 };
 
 /**
+ * @description Deletes all data in the collection
+ * @returns {Promise}
+ */
+export const deleteAll = async () => {
+  return SummarizedRangerDistrictTrappingModel.deleteMany();
+};
+
+/**
+ * @description Deletes all data in the collection
+ * @param {String} state state name
+ * @param {Number} year year
+ * @returns {Promise}
+ */
+export const deleteStateYear = async (state, year) => {
+  return SummarizedRangerDistrictTrappingModel.deleteMany({ state, year });
+};
+
+/**
  * @description Summarizes all trapping data at the ranger district level. Will overwrite all entries in this collection.
  */
 export const summarizeAll = async () => {

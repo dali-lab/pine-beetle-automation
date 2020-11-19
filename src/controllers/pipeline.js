@@ -1,26 +1,42 @@
 import { mergeSpots } from './spot-data';
 
 import {
+  deleteAll as countySummarizeDeleteAll,
+  deleteStateYear as countySummarizeDeleteStateYear,
   summarizeAll as countySummarizeAll,
   summarizeStateYear as countySummarizeStateYear,
 } from './summarized-county-trapping';
 
 import {
+  deleteAll as rangerDistrictSummarizeDeleteAll,
+  deleteStateYear as rangerDistrictSummarizeDeleteStateYear,
   summarizeAll as rangerDistrictSummarizeAll,
   summarizeStateYear as rangerDistrictSummarizeStateYear,
 } from './summarized-rangerdistrict-trapping';
 
 import {
+  deleteAll as countyPredictionDeleteAll,
+  deleteStateYear as countyPredictionDeleteStateYear,
   generateStateYearPredictions as countyGenerateStateYearPredictions,
   generateAllPredictions as countyGenerateAllPredictions,
 } from './county-prediction';
 
 import {
+  deleteAll as rangerDistrictPredictionDeleteAll,
+  deleteStateYear as rangerDistrictPredictionDeleteStateYear,
   generateStateYearPredictions as rangerDistrictGenerateStateYearPredictions,
   generateAllPredictions as rangerDistrictGenerateAllPredictions,
 } from './rd-prediction';
 
 export const runPipelineAll = async () => {
+  // drop all summarized data and predictions
+  const deleteResult = await Promise.all([
+    countySummarizeDeleteAll(),
+    rangerDistrictSummarizeDeleteAll(),
+    countyPredictionDeleteAll(),
+    rangerDistrictPredictionDeleteAll(),
+  ]);
+
   // summarize county and ranger district data
   const summarizeResult = await Promise.all([
     countySummarizeAll(),
@@ -44,6 +60,7 @@ export const runPipelineAll = async () => {
   ]);
 
   return {
+    deleteResult,
     predictionResult,
     spotAppendResult,
     summarizeResult,
@@ -58,6 +75,14 @@ export const runPipelineAll = async () => {
  */
 export const runPipelineStateYear = async (state, rawYear = '0') => {
   const year = parseInt(rawYear, 10);
+
+  // drop all summarized data and predictions
+  const deleteResult = await Promise.all([
+    countySummarizeDeleteStateYear(state, year),
+    rangerDistrictSummarizeDeleteStateYear(state, year),
+    countyPredictionDeleteStateYear(state, year),
+    rangerDistrictPredictionDeleteStateYear(state, year),
+  ]);
 
   // summarize county and ranger district data
   const summarizeResult = await Promise.all([
@@ -82,6 +107,7 @@ export const runPipelineStateYear = async (state, rawYear = '0') => {
   ]);
 
   return {
+    deleteResult,
     predictionResult,
     spotAppendResult,
     summarizeResult,

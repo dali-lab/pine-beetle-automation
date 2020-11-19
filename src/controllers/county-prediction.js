@@ -98,6 +98,24 @@ export const deleteById = async (id) => {
 };
 
 /**
+ * @description Deletes all data in the collection
+ * @returns {Promise}
+ */
+export const deleteAll = async () => {
+  return CountyPredictionModel.deleteMany();
+};
+
+/**
+ * @description Deletes all data in the collection
+ * @param {String} state state name
+ * @param {Number} year year
+ * @returns {Promise}
+ */
+export const deleteStateYear = async (state, year) => {
+  return CountyPredictionModel.deleteMany({ state, year });
+};
+
+/**
    * @description generates all predictions for the county level data.
    * @param {Array<SummarizedCountyTrappingModel> sourceTrappingData the array of data to generate predictions over
    * @param {Array<SummarizedCountyTrappingModel> t1TrappingData the array of data to do reverse year lookups on

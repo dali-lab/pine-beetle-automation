@@ -89,11 +89,11 @@ summarizedRangerDistrictTrappingRouter.route('/filter')
   });
 
 summarizedRangerDistrictTrappingRouter.route('/download')
-  .get(async (_req, res) => {
+  .get(async (req, res) => {
     let filepath;
 
     try {
-      filepath = await SummarizedRangerDistrictTrapping.downloadCsv();
+      filepath = await SummarizedRangerDistrictTrapping.downloadCsv(req.query);
       res.sendFile(filepath);
     } catch (error) {
       const errorResponse = generateErrorResponse(error);

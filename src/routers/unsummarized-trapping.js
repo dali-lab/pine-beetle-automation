@@ -72,11 +72,11 @@ unsummarizedTrappingRouter.route('/upload')
   });
 
 unsummarizedTrappingRouter.route('/download')
-  .get(async (_req, res) => {
+  .get(async (req, res) => {
     let filepath;
 
     try {
-      filepath = await UnsummarizedTrapping.downloadCsv();
+      filepath = await UnsummarizedTrapping.downloadCsv(req.query);
       res.sendFile(filepath);
     } catch (error) {
       const errorResponse = generateErrorResponse(error);

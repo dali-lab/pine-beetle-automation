@@ -89,11 +89,11 @@ summarizedCountyTrappingRouter.route('/aggregate')
   });
 
 summarizedCountyTrappingRouter.route('/download')
-  .get(async (_req, res) => {
+  .get(async (req, res) => {
     let filepath;
 
     try {
-      filepath = await SummarizedCountyTrapping.downloadCsv();
+      filepath = await SummarizedCountyTrapping.downloadCsv(req.query);
       res.sendFile(filepath);
     } catch (error) {
       const errorResponse = generateErrorResponse(error);

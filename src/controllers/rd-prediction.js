@@ -98,6 +98,24 @@ export const deleteById = async (id) => {
 };
 
 /**
+ * @description Deletes all data in the collection
+ * @returns {Promise}
+ */
+export const deleteAll = async () => {
+  return RDPredictionModel.deleteMany();
+};
+
+/**
+ * @description Deletes all data in the collection
+ * @param {String} state state name
+ * @param {Number} year year
+ * @returns {Promise}
+ */
+export const deleteStateYear = async (state, year) => {
+  return RDPredictionModel.deleteMany({ state, year });
+};
+
+/**
   * @description generates all predictions for the ranger district level data.
   * @param {Array<SummarizedRangerDistrictTrappingModel> sourceTrappingData the array of data to generate predictions over
   * @param {Array<SummarizedRangerDistrictTrappingModel> t1TrappingData the array of data to do reverse year lookups on

@@ -72,11 +72,11 @@ spotDataRouter.route('/upload')
   });
 
 spotDataRouter.route('/download')
-  .get(async (_req, res) => {
+  .get(async (req, res) => {
     let filepath;
 
     try {
-      filepath = await SpotData.downloadCsv();
+      filepath = await SpotData.downloadCsv(req.query);
       res.sendFile(filepath);
     } catch (error) {
       const errorResponse = generateErrorResponse(error);

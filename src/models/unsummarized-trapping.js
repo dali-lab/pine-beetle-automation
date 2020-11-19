@@ -50,6 +50,10 @@ const UnsummarizedTrappingSchema = new Schema({
   fips: {
     type: Number,
   },
+  globalID: {
+    type: String,
+    index: true,
+  },
   latitude: {
     max: 90,
     min: -90,

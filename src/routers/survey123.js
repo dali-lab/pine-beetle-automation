@@ -41,7 +41,7 @@ survey123Router.route('/upload')
     }
   });
 
-survey123Router.route('/new')
+survey123Router.route('/webhook')
   .post(async (req, res) => {
     const {
       feature: {
@@ -49,14 +49,15 @@ survey123Router.route('/new')
       },
     } = req.body;
 
-    await Survey123.uploadSurvey123FromWebhook(attributes);
-    res.send(generateResponse(RESPONSE_TYPES.SUCCESS));
-  });
-
-survey123Router.route('/edit')
-  .post(async (_req, res) => {
-    // TODO: implement this
-    res.send(generateResponse(RESPONSE_TYPES.SUCCESS));
+    try {
+      await Survey123.uploadSurvey123FromWebhook(attributes);
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    }
   });
 
 export default survey123Router;

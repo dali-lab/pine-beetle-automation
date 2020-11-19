@@ -24,9 +24,17 @@ export const runModel = (array) => {
     } = doc;
 
     if (SPB === null || isNaN(SPB) || isNaN(cleridst1)
-    || spotst1 === null || isNaN(spotst2) || spotst2 === null || isNaN(spotst2)
+    || spotst1 === null || isNaN(spotst1) || spotst2 === null || isNaN(spotst2)
     || endobrev === null || isNaN(endobrev)) {
       throw newError(RESPONSE_TYPES.INTERNAL_ERROR, 'bad format for R model');
+    }
+
+    const allValidInput = [SPB, cleridst1, spotst1, spotst2, endobrev].reduce((acc, curr) => (
+      acc && (curr === null || curr >= 0)
+    ), true);
+
+    if (!allValidInput) {
+      throw newError(RESPONSE_TYPES.INTERNAL_ERROR, 'bad format for R model, no negatives allowed');
     }
 
     return {

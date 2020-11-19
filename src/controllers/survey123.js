@@ -42,6 +42,7 @@ export const uploadCsv = csvUploadSurvey123Creator(
   UnsummarizedTrappingModel,
   cleanCsvOrJson,
   cleanBody,
+  undefined,
   stateToAbbrevTransform,
 );
 
@@ -51,21 +52,26 @@ export const uploadCsv = csvUploadSurvey123Creator(
  * @returns {Promise<Array>} delete result and insert result data
  */
 export const uploadSurvey123FromWebhook = async (rawData) => {
-  const isFinalCollection = rawData.Is_Final_Collection === 'yes';
-
   const data = survey123WebhookUnpacker(rawData)
     .map(stateToAbbrevTransform);
 
-  const [deleteOp, ...insertOp] = deleteInsert(data);
+  const globalID = rawData.globalid.replace(/(\{|\})/g, '').toLowerCase();
+
+  // either use deleteInsert or directly delete the data even if none of it is valid
+  const deleteInsertOp = deleteInsert(data) ?? [{ deleteMany: { filter: { globalID } } }];
+
+  const [deleteOp, ...insertOp] = deleteInsertOp;
 
   const deleteRes = await UnsummarizedTrappingModel.bulkWrite([deleteOp], { ordered: false });
   const insertRes = await UnsummarizedTrappingModel.bulkWrite(insertOp, { ordered: false });
 
-  // run pipeline if final collection
-  if (isFinalCollection) {
-    const { state, year } = data.find((d) => !!d);
-    if (state && year) await runPipelineStateYear(state, year);
-  }
+  const { USA_State: stateName, Year } = rawData || {};
+
+  const state = STATE_TO_ABBREV_COMBINED[stateName];
+  const year = parseInt(Year, 10);
+
+  // run pipeline given state and year
+  if (state && year) await runPipelineStateYear(state, year);
 
   return [deleteRes, insertRes];
 };

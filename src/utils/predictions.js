@@ -32,8 +32,16 @@ export const predictionGeneratorCreator = (location, ScriptRunner, WriteModel, u
     const cleridst1 = t1?.cleridPer2Weeks ?? null;
 
     if (SPB === null || isNaN(SPB) || isNaN(cleridst1)
-    || spotst1 === null || isNaN(spotst2) || spotst2 === null || isNaN(spotst2)
+    || spotst1 === null || isNaN(spotst1) || spotst2 === null || isNaN(spotst2)
     || endobrev === null || isNaN(endobrev)) {
+      return null;
+    }
+
+    const allValidInput = [SPB, cleridst1, spotst1, spotst2, endobrev].reduce((acc, curr) => (
+      acc && (curr === null || curr >= 0)
+    ), true);
+
+    if (!allValidInput) {
       return null;
     }
 

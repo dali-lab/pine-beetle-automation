@@ -1,4 +1,3 @@
-/* eslint-disable import/prefer-default-export */
 import path from 'path';
 import { parseFile } from 'fast-csv';
 
@@ -28,6 +27,7 @@ export const survey123WebhookUnpackCreator = (cleanJson, cleanBody) => (sixWeekD
       'Date of initial bloom': sixWeekData.Initial_Bloom,
       endobrev: 1,
       FIPS: null,
+      GlobalID: sixWeekData.globalid.replace(/(\{|\})/g, '').toLowerCase(), // transform into regular form
       'National Forest (Ranger District)': sixWeekData.Nat_Forest_Ranger_Dist,
       Season: sixWeekData.Season,
       sirexLure: 'Y',
@@ -45,11 +45,16 @@ export const survey123WebhookUnpackCreator = (cleanJson, cleanBody) => (sixWeekD
     const cleanedData = cleanBody(cleanJson(convertedRawData));
 
     if (!cleanedData) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in webhook data');
-    // want to check if '0' or 0 so only doing double equals
-    // eslint-disable-next-line eqeqeq
-    if (!cleanedData.collectionDate || cleanedData.daysActive == '0') return undefined; // no data for this week
 
-    return cleanedData;
+    if (!cleanedData.collectionDate || !cleanedData.daysActive || cleanedData.daysActive === '0') return undefined; // no data for this week
+
+    const shouldDeleteSurvey = sixWeekData.DeleteSurvey === 'yes';
+    const isFinalCollection = sixWeekData.Is_Final_Collection === 'yes';
+
+    return {
+      ...cleanedData,
+      shouldInsert: !shouldDeleteSurvey && isFinalCollection, // only insert if data is good and final
+    };
   }).filter((doc) => !!doc); // remove all nulls
 };
 
@@ -73,51 +78,46 @@ export const survey123UnpackCreator = (cleanCsvOrJson, cleanBody) => (sixWeekDat
     const cleanedData = cleanBody(cleanCsvOrJson(convertedRawData));
 
     if (!cleanedData) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in csv');
-    if (!cleanedData.collectionDate || cleanedData.daysActive === '0') return undefined; // no data for this week
 
-    return cleanedData;
+    if (!cleanedData.collectionDate || !cleanedData.daysActive || cleanedData.daysActive === '0') return undefined; // no data for this week
+
+    const shouldDeleteSurvey = sixWeekData['Delete this survey?'] === 'yes';
+    const isFinalCollection = ['yes', '', null, undefined].includes(sixWeekData['Is this the Final Collection?']);
+
+    return {
+      ...cleanedData,
+      shouldInsert: !shouldDeleteSurvey && isFinalCollection, // only insert if data is good and final
+    };
   }).filter((doc) => !!doc); // remove all nulls
 };
 
 export const deleteInsert = (sixWeeksData) => {
   if (!sixWeeksData.length) return null;
 
-  const {
-    county,
-    rangerDistrict,
-    state,
-    trap,
-    year,
-  } = sixWeeksData[0];
+  const { globalID, shouldInsert } = sixWeeksData.find((d) => !!d);
 
-  if (!(year && state && (county || rangerDistrict))) {
+  if (!globalID) {
     throw newError(RESPONSE_TYPES.INTERNAL_ERROR,
-      'missing row identifier (year, state, county, ranger district, trap name) for survey123');
+      'missing row identifier (globalID) for survey123');
   }
 
-  const insertOps = sixWeeksData.map((weekData) => ({
+  const insertOps = shouldInsert ? sixWeeksData.map((weekData) => ({
     insertOne: {
       document: weekData,
     },
-  }));
+  })) : [];
 
   return [
     {
       deleteMany: { // first clear out all with same year, state, county, rd
-        filter: {
-          county,
-          rangerDistrict,
-          state,
-          trap,
-          year,
-        },
+        filter: { globalID },
       },
     },
     ...insertOps, // then insert new ones
   ];
 };
 
-export const csvUploadSurvey123Creator = (ModelName, cleanCsv, cleanBody, transform) => async (filename) => {
+export const csvUploadSurvey123Creator = (ModelName, cleanCsv, cleanBody, filter, transform) => async (filename) => {
   const filepath = path.resolve(__dirname, `../../${filename}`);
 
   const docs = [];
@@ -130,31 +130,24 @@ export const csvUploadSurvey123Creator = (ModelName, cleanCsv, cleanBody, transf
         try {
           // attempt to unpack all weeks 1-6 and push all
           const unpackedData = unpacker(data);
-          // apply transformation if it exists
-          docs.push(transform ? unpackedData.map(transform) : unpackedData);
+
+          // apply filter if it exists
+          if (!filter || filter(unpackedData)) {
+            // apply transformation if it exists
+            docs.push(transform ? unpackedData.map(transform) : unpackedData);
+          }
         } catch (error) {
           reject(error);
         }
       })
       .on('error', (err) => reject(err))
       .on('end', (rowCount) => {
-        const { deletes: deleteOp, inserts: insertOp } = docs.reduce(({ deletes, inserts }, currDoc) => {
-          const ops = deleteInsert(currDoc);
-          if (!ops) return { deletes, inserts };
+        // spread out the operation into sequential deletes and inserts
+        const bulkOp = docs
+          .flatMap(deleteInsert)
+          .filter((obj) => !!obj);
 
-          const [oneDelete, ...manyInserts] = ops;
-
-          return {
-            deletes: [...deletes, oneDelete],
-            inserts: [...inserts, ...manyInserts],
-          };
-        }, { deletes: [], inserts: [] });
-
-        ModelName.bulkWrite(deleteOp, { ordered: false })
-          .then((deleteRes) => {
-            return ModelName.bulkWrite(insertOp, { ordered: false })
-              .then((insertRes) => [deleteRes, insertRes]);
-          })
+        ModelName.bulkWrite(bulkOp, { ordered: true })
           .then((res) => {
             console.log(`successfully parsed ${rowCount} rows from csv upload`);
             resolve(res);
@@ -178,26 +171,13 @@ export const unsummarizedDataCsvUploadCreator = (ModelName, cleanCsv, cleanBody,
         if (!cleanedData) reject(newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in csv'));
 
         // apply filter
-        if (filter && filter(cleanedData)) {
+        if (!filter || filter(cleanedData)) {
           // apply transform
           const doc = transform ? transform(cleanedData) : cleanedData;
           inserts.push(doc);
 
-          const {
-            county,
-            rangerDistrict,
-            state,
-            trap,
-            year,
-          } = doc;
-
-          deletions.push({
-            county,
-            rangerDistrict,
-            state,
-            trap,
-            year,
-          });
+          const { globalID } = doc;
+          deletions.push({ globalID });
         }
       })
       .on('error', (err) => reject(err))
@@ -208,22 +188,10 @@ export const unsummarizedDataCsvUploadCreator = (ModelName, cleanCsv, cleanBody,
           },
         }));
 
-        const deleteOp = deletions.map(({
-          county,
-          rangerDistrict,
-          state,
-          trap,
-          year,
-        }) => ({
-          // clear out by county, rd, state, year
+        // clear out by globalID
+        const deleteOp = deletions.map(({ globalID }) => ({
           deleteMany: {
-            filter: {
-              county,
-              rangerDistrict,
-              state,
-              trap,
-              year,
-            },
+            filter: { globalID },
           },
         }));
 

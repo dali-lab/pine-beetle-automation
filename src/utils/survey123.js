@@ -94,14 +94,18 @@ export const survey123UnpackCreator = (cleanCsvOrJson, cleanBody) => (sixWeekDat
 export const deleteInsert = (sixWeeksData) => {
   if (!sixWeeksData.length) return null;
 
-  const { globalID, shouldInsert } = sixWeeksData.find((d) => !!d);
+  const { globalID, shouldInsert } = sixWeeksData.find((d) => !!d) || {};
 
   if (!globalID) {
     throw newError(RESPONSE_TYPES.INTERNAL_ERROR,
       'missing row identifier (globalID) for survey123');
   }
 
-  const insertOps = shouldInsert ? sixWeeksData.map((weekData) => ({
+  const numDaysActive = sixWeeksData.reduce((acc, curr) => (
+    acc + (curr.daysActive || 0)
+  ), 0);
+
+  const insertOps = shouldInsert && numDaysActive >= 12 ? sixWeeksData.map((weekData) => ({
     insertOne: {
       document: weekData,
     },
@@ -109,7 +113,7 @@ export const deleteInsert = (sixWeeksData) => {
 
   return [
     {
-      deleteMany: { // first clear out all with same year, state, county, rd
+      deleteMany: { // first clear out all with same globalid
         filter: { globalID },
       },
     },

@@ -1,6 +1,7 @@
 import ABBREV_TO_STATE from './abbrev-to-state.json';
 import CSV_TO_SPOTS from './csv-to-spots.json';
 import CSV_TO_UNSUMMARIZED from './csv-to-unsummarized.json';
+import RANGER_DISTRICT_NAME_MAPPING from './rd-name-mapping.json';
 import RESPONSE_CODES from './response-codes.json';
 import RESPONSE_TYPES from './response-types.json';
 
@@ -25,9 +26,10 @@ export {
   COLLECTION_NAMES,
   CSV_TO_SPOTS,
   CSV_TO_UNSUMMARIZED,
-  STATE_TO_ABBREV,
-  STATE_TO_ABBREV_COMBINED,
-  STATE_TO_ABBREV_NOSPACE,
+  RANGER_DISTRICT_NAME_MAPPING,
   RESPONSE_CODES,
   RESPONSE_TYPES,
+  STATE_TO_ABBREV_COMBINED,
+  STATE_TO_ABBREV_NOSPACE,
+  STATE_TO_ABBREV,
 };

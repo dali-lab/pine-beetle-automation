@@ -58,7 +58,6 @@ export const uploadSurvey123FromWebhook = async (rawData) => {
   const globalID = rawData.globalid.replace(/(\{|\})/g, '').toLowerCase();
 
   // either use deleteInsert or directly delete the data even if none of it is valid
-  // TODO: need to test this behavior
   const deleteInsertOp = deleteInsert(data) ?? [{ deleteMany: { filter: { globalID } } }];
 
   const [deleteOp, ...insertOp] = deleteInsertOp;

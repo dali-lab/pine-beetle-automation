@@ -66,7 +66,12 @@ export const uploadSurvey123FromWebhook = async (rawData) => {
   const deleteRes = await UnsummarizedTrappingModel.bulkWrite([deleteOp], { ordered: false });
   const insertRes = await UnsummarizedTrappingModel.bulkWrite(insertOp, { ordered: false });
 
-  const { state, year } = data.find((d) => !!d);
+  const { USA_State: stateName, Year } = rawData || {};
+
+  const state = STATE_TO_ABBREV_COMBINED[stateName];
+  const year = parseInt(Year, 10);
+
+  // run pipeline given state and year
   if (state && year) await runPipelineStateYear(state, year);
 
   return [deleteRes, insertRes];

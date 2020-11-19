@@ -34,7 +34,6 @@ survey123Router.route('/upload')
       console.log(errorMessage);
       res.status(status).send(errorResponse);
     } finally {
-      // TODO: this isn't working for some reason for long uploads
       // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
       setTimeout(() => {
         deleteFile(req.file.path);
@@ -42,7 +41,7 @@ survey123Router.route('/upload')
     }
   });
 
-survey123Router.route('/new')
+survey123Router.route('/webhook')
   .post(async (req, res) => {
     const {
       feature: {
@@ -59,12 +58,6 @@ survey123Router.route('/new')
       console.log(errorMessage);
       res.status(status).send(errorResponse);
     }
-  });
-
-survey123Router.route('/edit')
-  .post(async (_req, res) => {
-    // TODO: implement this
-    res.send(generateResponse(RESPONSE_TYPES.SUCCESS));
   });
 
 export default survey123Router;

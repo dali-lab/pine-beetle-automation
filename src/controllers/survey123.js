@@ -13,6 +13,7 @@ import {
   deleteInsert,
   getModelAttributes,
   survey123WebhookUnpackCreator,
+  transformSurvey123GlobalID,
 } from '../utils';
 
 const unsummarizedModelAttributes = getModelAttributes(UnsummarizedTrappingModel);
@@ -55,15 +56,13 @@ export const uploadSurvey123FromWebhook = async (rawData) => {
   const data = survey123WebhookUnpacker(rawData)
     .map(stateToAbbrevTransform);
 
-  const globalID = rawData.globalid.replace(/(\{|\})/g, '').toLowerCase();
+  // get globalID directly in case we need it below
+  const globalID = transformSurvey123GlobalID(rawData.globalid);
 
   // either use deleteInsert or directly delete the data even if none of it is valid
   const deleteInsertOp = deleteInsert(data) ?? [{ deleteMany: { filter: { globalID } } }];
 
-  const [deleteOp, ...insertOp] = deleteInsertOp;
-
-  const deleteRes = await UnsummarizedTrappingModel.bulkWrite([deleteOp], { ordered: false });
-  const insertRes = await UnsummarizedTrappingModel.bulkWrite(insertOp, { ordered: false });
+  const deleteInsertRes = await UnsummarizedTrappingModel.bulkWrite(deleteInsertOp, { ordered: true });
 
   const { USA_State: stateName, Year } = rawData || {};
 
@@ -73,5 +72,5 @@ export const uploadSurvey123FromWebhook = async (rawData) => {
   // run pipeline given state and year
   if (state && year) await runPipelineStateYear(state, year);
 
-  return [deleteRes, insertRes];
+  return deleteInsertRes;
 };

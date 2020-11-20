@@ -22,11 +22,9 @@ const mongooseOptions = {
   useUnifiedTopology: true,
 };
 
-mongoose.connect(mongoURI, mongooseOptions).then(() => {
-  console.log('connected to database');
-}).catch((err) => {
-  console.log('error: could not connect to db:', err);
-});
+mongoose.connect(mongoURI, mongooseOptions)
+  .then(() => console.log('connected to database'))
+  .catch((err) => console.log('error: could not connect to db:', err));
 
 // initialize
 const app = express();

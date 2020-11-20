@@ -111,6 +111,10 @@ export const survey123UnpackCreator = (cleanCsvOrJson, cleanBody) => (sixWeekDat
   }).filter((doc) => !!doc); // remove all nulls
 };
 
+/**
+ * transforms raw data into a delete operation and 0 or more insert operations for database write
+ * @param {Array} sixWeeksData up to 6 weeks of trapping data to add
+ */
 export const deleteInsert = (sixWeeksData) => {
   if (!sixWeeksData.length) return null;
 
@@ -125,6 +129,7 @@ export const deleteInsert = (sixWeeksData) => {
     acc + (curr.daysActive || 0)
   ), 0);
 
+  // only insert if data is valid and at least 12 days total active
   const insertOps = shouldInsert && numDaysActive >= 12 ? sixWeeksData.map((weekData) => ({
     insertOne: {
       document: weekData,
@@ -141,6 +146,17 @@ export const deleteInsert = (sixWeeksData) => {
   ];
 };
 
+/**
+* higher-order function that creates a csv uploader function for survey123-style data
+* @param {mongoose.Model} ModelName destination Model of upload
+* @param {function} cleanCsv function to cast csv to model schema
+* @param {function} cleanBody function to validate that all model schema parameters are present
+* @param {function} filter optional parameter to conditionally accept documents
+* @param {function} transform optional parameter to modify a document before insertion
+* @returns {(filename: String) => Promise}
+* @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
+* @throws other errors depending on what went wrong
+ */
 export const csvUploadSurvey123Creator = (ModelName, cleanCsv, cleanBody, filter, transform) => async (filename) => {
   const filepath = path.resolve(__dirname, `../../${filename}`);
 
@@ -181,6 +197,18 @@ export const csvUploadSurvey123Creator = (ModelName, cleanCsv, cleanBody, filter
   });
 };
 
+/**
+* @description higher-order function that creates a csv uploader function for unsummarized data
+* @param {mongoose.Model} ModelName destination Model of upload
+* @param {function} cleanCsv function to cast csv to model schema
+* @param {function} cleanBody function to validate that all model schema parameters are present
+* @param {function} filter optional parameter to conditionally accept documents
+* @param {function} transform optional parameter to modify a document before insertion
+* @param {string} filename csv filename on disk
+* @returns {(filename: String) => Promise}
+* @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
+* @throws other errors depending on what went wrong
+*/
 export const unsummarizedDataCsvUploadCreator = (ModelName, cleanCsv, cleanBody, filter, transform) => async (filename) => {
   const filepath = path.resolve(__dirname, `../../${filename}`);
 

@@ -1,1 +1,1 @@
-install.packages("njsonlite", dependencies = TRUE)
+install.packages("jsonlite", dependencies = TRUE)

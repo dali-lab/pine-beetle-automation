@@ -107,3 +107,6 @@ temp/
 # hide the secrets!
 .env
 .DS_Store
+
+# hide any local uploads/downloads
+uploads/

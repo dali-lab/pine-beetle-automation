@@ -1,4 +1,5 @@
-import { mergeSpots } from './spot-data';
+import { mergeSpots as mergeCountySpots } from './spot-data-county';
+import { mergeSpots as mergeRangerDistrictSpots } from './spot-data-rangerdistrict';
 
 import {
   deleteAll as countySummarizeDeleteAll,
@@ -45,12 +46,12 @@ export const runPipelineAll = async () => {
 
   // append spot data
   const spotAppendResult = await Promise.all([
-    mergeSpots('t2', 'county'),
-    mergeSpots('t1', 'county'),
-    mergeSpots('t0', 'county'),
-    mergeSpots('t2', 'rangerDistrict'),
-    mergeSpots('t1', 'rangerDistrict'),
-    mergeSpots('t0', 'rangerDistrict'),
+    mergeCountySpots('t2'),
+    mergeCountySpots('t1'),
+    mergeCountySpots('t0'),
+    mergeRangerDistrictSpots('t2'),
+    mergeRangerDistrictSpots('t1'),
+    mergeRangerDistrictSpots('t0'),
   ]);
 
   // generate predictions
@@ -92,12 +93,12 @@ export const runPipelineStateYear = async (state, rawYear = '0') => {
 
   // append spot data
   const spotAppendResult = await Promise.all([
-    mergeSpots('t2', 'county', year - 2, state),
-    mergeSpots('t1', 'county', year - 1, state),
-    mergeSpots('t0', 'county', year, state),
-    mergeSpots('t2', 'rangerDistrict', year - 2, state),
-    mergeSpots('t1', 'rangerDistrict', year - 1, state),
-    mergeSpots('t0', 'rangerDistrict', year, state),
+    mergeCountySpots('t2', year - 2, state),
+    mergeCountySpots('t1', year - 1, state),
+    mergeCountySpots('t0', year, state),
+    mergeRangerDistrictSpots('t2', year - 2, state),
+    mergeRangerDistrictSpots('t1', year - 1, state),
+    mergeRangerDistrictSpots('t0', year, state),
   ]);
 
   // generate predictions

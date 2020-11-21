@@ -136,11 +136,6 @@ export const matchState = (state) => [
  * @param {Number} endobrev mandatory to do both 0 and 1 for merge to work
  */
 const t0 = (location, outputCollection, endobrev) => [
-  // filter out docs that are recorded on the other geographical organization
-  // (RD for county, county for RD)
-  {
-    $match: { [location]: { $ne: null } },
-  },
   // fit the shape of data to only update spots, fix an arbitrary endobrev
   {
     $project: {
@@ -169,11 +164,6 @@ const t0 = (location, outputCollection, endobrev) => [
  * @param {Number} endobrev mandatory to do both 0 and 1 for merge to work
  */
 const t1 = (location, outputCollection, endobrev) => [
-  // filter out docs that are recorded on the other geographical organization
-  // (RD for county, county for RD)
-  {
-    $match: { [location]: { $ne: null } },
-  },
   // fit the shape of data to only update spots, fix an arbitrary endobrev
   {
     $project: {
@@ -202,11 +192,6 @@ const t1 = (location, outputCollection, endobrev) => [
  * @param {Number} endobrev mandatory to do both 0 and 1 for merge to work
  */
 const t2 = (location, outputCollection, endobrev) => [
-  // filter out docs that are recorded on the other geographical organization
-  // (RD for county, county for RD)
-  {
-    $match: { [location]: { $ne: null } },
-  },
   // fit the shape of data to only update spots, fix an arbitrary endobrev
   {
     $project: {

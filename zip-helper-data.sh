@@ -8,5 +8,5 @@ zip helper-data.zip \
     csv-to-unsummarized.json \
     state-nf-rd-mapping.json \
     state-nf-mapping.json \
-    rd-name-mapping.json
+    s123-rd-name-mapping.json
 cd ../../

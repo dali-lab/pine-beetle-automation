@@ -1,6 +1,8 @@
 import ABBREV_TO_STATE from './abbrev-to-state.json';
-import CSV_TO_SPOTS from './csv-to-spots.json';
+import CSV_TO_SPOTS_COUNTY from './csv-to-spots-county.json';
+import CSV_TO_SPOTS_RANGER_DISTRICT from './csv-to-spots-rangerdistrict.json';
 import CSV_TO_UNSUMMARIZED from './csv-to-unsummarized.json';
+import NATIONAL_FOREST_RANGER_DISTRICT_NAME_MAPPING from './nf-rd-mapping.json';
 import RANGER_DISTRICT_NAME_MAPPING from './rd-name-mapping.json';
 import RESPONSE_CODES from './response-codes.json';
 import RESPONSE_TYPES from './response-types.json';
@@ -24,8 +26,10 @@ const COLLECTION_NAMES = {
 export {
   ABBREV_TO_STATE,
   COLLECTION_NAMES,
-  CSV_TO_SPOTS,
+  CSV_TO_SPOTS_COUNTY,
+  CSV_TO_SPOTS_RANGER_DISTRICT,
   CSV_TO_UNSUMMARIZED,
+  NATIONAL_FOREST_RANGER_DISTRICT_NAME_MAPPING,
   RANGER_DISTRICT_NAME_MAPPING,
   RESPONSE_CODES,
   RESPONSE_TYPES,

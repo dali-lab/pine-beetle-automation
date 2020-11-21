@@ -9,7 +9,7 @@
     "dev": "nodemon src/index.js --exec babel-node",
     "start": "babel-node src/index.js",
     "clean": "rm -rf dist/",
-    "build": "yarn clean; babel src -d dist --copy-files --no-copy-ignored",
+    "build": "yarn clean; ./zip-helper-data.sh; babel src -d dist --copy-files --no-copy-ignored",
     "prod": "yarn build; node dist/index.js",
     "heroku-postbuild": "echo Skip build on Heroku"
   },

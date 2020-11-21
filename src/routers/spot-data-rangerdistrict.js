@@ -9,7 +9,7 @@ import {
 
 import { RESPONSE_TYPES } from '../constants';
 import { requireAuth } from '../middleware';
-import { SpotDataRangerDistrict } from '../controllers';
+import { SpotDataRangerDistrict, Pipeline } from '../controllers';
 
 const spotDataRangerDistrictRouter = Router();
 
@@ -56,6 +56,7 @@ spotDataRangerDistrictRouter.route('/upload')
 
     try {
       await SpotDataRangerDistrict.uploadCsv(req.file.path);
+      await Pipeline.runPipelineAll();
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, 'file uploaded successfully'));
     } catch (error) {

@@ -9,7 +9,7 @@ import {
 
 import { RESPONSE_TYPES } from '../constants';
 import { requireAuth } from '../middleware';
-import { SpotDataCounty } from '../controllers';
+import { SpotDataCounty, Pipeline } from '../controllers';
 
 const spotDataCountyRouter = Router();
 
@@ -56,6 +56,7 @@ spotDataCountyRouter.route('/upload')
 
     try {
       await SpotDataCounty.uploadCsv(req.file.path);
+      await Pipeline.runPipelineAll();
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, 'file uploaded successfully'));
     } catch (error) {

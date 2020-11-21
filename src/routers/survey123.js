@@ -10,8 +10,8 @@ import {
 import { RESPONSE_TYPES } from '../constants';
 
 import {
-  // UnsummarizedTrapping,
   Survey123,
+  Pipeline,
 } from '../controllers';
 
 const upload = multer({ dest: './uploads' });
@@ -27,6 +27,8 @@ survey123Router.route('/upload')
 
     try {
       await Survey123.uploadCsv(req.file.path);
+      await Pipeline.runPipelineAll();
+
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, 'file uploaded successfully'));
     } catch (error) {
       const errorResponse = generateErrorResponse(error);

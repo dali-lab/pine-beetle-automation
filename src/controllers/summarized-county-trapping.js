@@ -9,15 +9,46 @@ import {
   aggregationPipelineCreator,
   cleanBodyCreator,
   csvDownloadCreator,
+  csvUploadCreator,
+  getIndexes,
   getModelAttributes,
   matchStateYear,
   newError,
+  upsertOpCreator,
 } from '../utils';
 
 const modelAttributes = getModelAttributes(SummarizedCountyTrappingModel);
 
 // this is a function to clean req.body
 const cleanBody = cleanBodyCreator(modelAttributes);
+
+const upsertOp = upsertOpCreator(getIndexes(SummarizedCountyTrappingModel));
+
+// function for cleaning row of csv (will cast undefined to null for specified fields)
+const cleanCsv = (row) => ({
+  ...row,
+  cleridCount: row.cleridCount ?? null,
+  cleridPerDay: row.cleridPerDay ?? {},
+  spbCount: row.spbCount ?? null,
+  spbPerDay: row.spbPerDay ?? {},
+  totalTrappingDays: row.totalTrappingDays ?? null,
+  trapCount: row.trapCount ?? null,
+});
+
+/**
+ * @description uploads a csv to the summarized county collection
+ * @param {String} filename the csv filename on disk
+ * @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
+ * @throws other errors depending on what went wrong
+ */
+export const uploadCsv = csvUploadCreator(
+  SummarizedCountyTrappingModel,
+  cleanCsv,
+  cleanBody,
+  undefined,
+  undefined,
+  upsertOp,
+);
 
 /**
  * @description downloads a csv of the entire collection
@@ -94,10 +125,11 @@ export const deleteById = async (id) => {
 
 /**
  * @description Deletes all data in the collection
+ * @param {Object={}} [options] optional options object
  * @returns {Promise}
  */
-export const deleteAll = async () => {
-  return SummarizedCountyTrappingModel.deleteMany();
+export const deleteAll = async (options = {}) => {
+  return SummarizedCountyTrappingModel.deleteMany(options);
 };
 
 /**
@@ -107,6 +139,7 @@ export const deleteAll = async () => {
  * @returns {Promise}
  */
 export const deleteStateYear = async (state, year) => {
+  if (state === 2018) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'Cannot delete 2018 data');
   return SummarizedCountyTrappingModel.deleteMany({ state, year });
 };
 

@@ -110,3 +110,6 @@ temp/
 
 # hide any local uploads/downloads
 uploads/
+
+# hide helper data zip file
+src/constants/helper-data.zip

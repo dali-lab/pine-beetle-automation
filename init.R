@@ -1,1 +1,1 @@
-install.packages("pscl", dependencies = TRUE)
+install.packages("jsonlite", dependencies = TRUE)

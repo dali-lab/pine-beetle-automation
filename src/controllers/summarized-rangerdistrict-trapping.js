@@ -94,10 +94,11 @@ export const deleteById = async (id) => {
 
 /**
  * @description Deletes all data in the collection
+ * @param {Object={}} [options] optional options object
  * @returns {Promise}
  */
-export const deleteAll = async () => {
-  return SummarizedRangerDistrictTrappingModel.deleteMany();
+export const deleteAll = async (options = {}) => {
+  return SummarizedRangerDistrictTrappingModel.deleteMany(options);
 };
 
 /**
@@ -107,6 +108,7 @@ export const deleteAll = async () => {
  * @returns {Promise}
  */
 export const deleteStateYear = async (state, year) => {
+  if (state === 2018) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'Cannot delete 2018 data');
   return SummarizedRangerDistrictTrappingModel.deleteMany({ state, year });
 };
 

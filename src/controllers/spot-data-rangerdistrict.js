@@ -5,7 +5,7 @@ import { SpotDataRangerDistrictModel } from '../models';
 import {
   COLLECTION_NAMES,
   CSV_TO_SPOTS_RANGER_DISTRICT,
-  NATIONAL_FOREST_RANGER_DISTRICT_NAME_MAPPING,
+  STATE_NATIONAL_FOREST_RANGER_DISTRICT_NAME_MAPPING,
   RESPONSE_TYPES,
 } from '../constants';
 
@@ -31,7 +31,7 @@ const cleanBody = cleanBodyCreator(modelAttributes);
 // transforms row of rd spot data to our db format (ranger district name is combo of NF and NF_RD)
 const composedCleanCsv = compose(cleanCsvCreator(CSV_TO_SPOTS_RANGER_DISTRICT), (row) => ({
   ...row,
-  rangerDistrict: NATIONAL_FOREST_RANGER_DISTRICT_NAME_MAPPING[`${row.STATE}${row.NF}${row.NF_RD}`],
+  rangerDistrict: STATE_NATIONAL_FOREST_RANGER_DISTRICT_NAME_MAPPING[row.STATE]?.[row.NF]?.[row.NF_RD],
 }));
 
 // provides the upsert operation for csv uploading

@@ -29,11 +29,15 @@ import {
   generateAllPredictions as rangerDistrictGenerateAllPredictions,
 } from './rd-prediction';
 
+const ignore2018DataOptions = {
+  year: { $ne: 2018 },
+};
+
 export const runPipelineAll = async () => {
   // drop all summarized data and predictions
   const deleteResult = await Promise.all([
-    countySummarizeDeleteAll(),
-    rangerDistrictSummarizeDeleteAll(),
+    countySummarizeDeleteAll(ignore2018DataOptions),
+    rangerDistrictSummarizeDeleteAll(ignore2018DataOptions),
     countyPredictionDeleteAll(),
     rangerDistrictPredictionDeleteAll(),
   ]);

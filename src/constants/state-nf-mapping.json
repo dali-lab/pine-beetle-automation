@@ -1,0 +1,47 @@
+{
+    "AL": {
+        "Bankhead Ranger District": "Bankhead National Forest (Bankhead RD)",
+        "Oakmulgee Ranger District": "Talladega National Forest (Oakmulgee RD)",
+        "Shoal Creek Ranger District": "Talladega National Forest (Shoal Creek RD)",
+        "Talladega Ranger District": "Talladega National Forest (Talladega RD)",
+        "Tuskegee Ranger District": "Tuskegee National Forest (Tuskegee RD)"
+    },
+    "FL": {
+        "Osceola Ranger District": "Osceola National Forest (Osceola RD)",
+        "Wakulla Ranger District": "Apalachicola National Forest (Wakulla RD)",
+        "Apalachicola Ranger District": "Apalachicola National Forest (Apalachicola RD)",
+        "Lake George Ranger District": "Ocala National Forest (Lake George RD)",
+        "Seminole Ranger District": "Ocala National Forest (Seminole RD)"
+    },
+    "GA": {
+        "Chattooga River Ranger District": "Chattahoochee-Oconee National Forests (Chattooga RD)",
+        "Conasauga Ranger District": "Chattahoochee-Oconee National Forests (Conasauga RD)",
+        "Oconee Ranger District": "Chattahoochee-Oconee National Forests (Oconee RD)"
+    },
+    "MS": {
+        "Bienville Ranger District": "Bienville National Forest (Bienville RD)",
+        "De Soto Ranger District": "DeSoto National Forest (De Soto RD)",
+        "Holly Springs Ranger District": "Holly Springs National Forest  (Holly Springs RD)",
+        "Homochitto Ranger District": "Homochitto National Forest (Homochitto RD)",
+        "Tombigbee Ranger District": "Tombigbee National Forest (Tombigbee RD)"
+    },
+    "NC": {
+        "Croatan Ranger District": "Croatan National Forest (Croatan RD)",
+        "Cheoah Ranger District": "Nantahala National Forest (Cheoah RD)",
+        "Nantahala Ranger District": "Nantahala National Forest (Nantahala RD)",
+        "Tusquittee Ranger District": "Pisgah National Forest (Grandfather RD)"
+    },
+    "SC": {
+        "Andrew Pickens Ranger District": "Sumter National Forest (Andrew Pickens RD)",
+        "Enoree Ranger District": "Sumter National Forest (Enoree RD)",
+        "Wambaw/Witherbee Ranger District": "Francis Marion National Forest (Francis Marion RD)",
+        "Long Cane Ranger District": "Sumter National Forest (Long Cane RD)"
+    },
+    "TN": {
+        "Ocoee Ranger District": "Cherokee National Forest (Ocoee RD)",
+        "Mount Rogers National Recreation Area": "Cherokee National Forest (Watauga RD)"
+    },
+    "VA": {
+        "Mount Rogers National Recreation Area": "George Washington and Jefferson National Forest (Mount Rogers NRA)"
+    }
+}

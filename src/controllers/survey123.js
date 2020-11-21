@@ -1,5 +1,5 @@
 import { UnsummarizedTrappingModel } from '../models';
-import { runPipelineStateYear } from './pipeline';
+import { runPipelineAll } from './pipeline';
 
 import {
   CSV_TO_UNSUMMARIZED,
@@ -64,13 +64,8 @@ export const uploadSurvey123FromWebhook = async (rawData) => {
 
   const deleteInsertRes = await UnsummarizedTrappingModel.bulkWrite(deleteInsertOp, { ordered: true });
 
-  const { USA_State: stateName, Year } = rawData || {};
-
-  const state = STATE_TO_ABBREV_COMBINED[stateName];
-  const year = parseInt(Year, 10);
-
-  // run pipeline given state and year
-  if (state && year) await runPipelineStateYear(state, year);
+  // run entire pipeline
+  await runPipelineAll();
 
   return deleteInsertRes;
 };

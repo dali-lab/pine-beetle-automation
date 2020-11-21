@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import multer from 'multer';
 
 import {
   deleteFile,
@@ -11,6 +12,8 @@ import { requireAuth } from '../middleware';
 import { SummarizedRangerDistrictTrapping } from '../controllers';
 
 const summarizedRangerDistrictTrappingRouter = Router();
+
+const upload = multer({ dest: './uploads' });
 
 summarizedRangerDistrictTrappingRouter.route('/')
   .get(async (_req, res) => {
@@ -85,6 +88,30 @@ summarizedRangerDistrictTrappingRouter.route('/filter')
       const { error: errorMessage, status } = errorResponse;
       console.log(errorMessage);
       res.status(status).send(errorResponse);
+    }
+  });
+
+summarizedRangerDistrictTrappingRouter.route('/upload')
+  .post(upload.single('csv'), async (req, res) => {
+    if (!req.file) {
+      res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'missing file'));
+      return;
+    }
+
+    try {
+      await SummarizedRangerDistrictTrapping.uploadCsv(req.file.path);
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, 'file uploaded successfully'));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    } finally {
+      // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
+      setTimeout(() => {
+        deleteFile(req.file.path);
+      }, 0);
     }
   });
 

@@ -40,6 +40,16 @@ const SummarizedRangerDistrictTrappingSchema = new Schema({
     min: 0,
     type: Number,
   },
+  spotst1: {
+    default: null,
+    min: 0,
+    type: Number,
+  },
+  spotst2: {
+    default: null,
+    min: 0,
+    type: Number,
+  },
   state: {
     type: String,
   },

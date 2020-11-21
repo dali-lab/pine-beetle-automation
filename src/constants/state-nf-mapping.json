@@ -6,6 +6,15 @@
         "Talladega Ranger District": "Talladega National Forest (Talladega RD)",
         "Tuskegee Ranger District": "Tuskegee National Forest (Tuskegee RD)"
     },
+    "AR": {
+        "Caddo Ranger District": "Ouachita National Forest (Caddo RD)",
+        "Cold Springs Ranger District": "Ouachita National Forest (Cold Springs RD)",
+        "JWF Ranger District": "Ouachita National Forest (JWF RD)",
+        "Mena Ranger District": "Ouachita National Forest (Mena RD)",
+        "Oden Ranger District": "Ouachita National Forest (Oden RD)",
+        "Poteau Ranger District": "Ouachita National Forest (Poteau RD)",
+        "Womble Ranger District": "Ouachita National Forest (Womble RD)"
+    },
     "FL": {
         "Osceola Ranger District": "Osceola National Forest (Osceola RD)",
         "Wakulla Ranger District": "Apalachicola National Forest (Wakulla RD)",
@@ -18,30 +27,48 @@
         "Conasauga Ranger District": "Chattahoochee-Oconee National Forests (Conasauga RD)",
         "Oconee Ranger District": "Chattahoochee-Oconee National Forests (Oconee RD)"
     },
+    "LA": {
+        "Calcasieu Ranger District": "Kisatchie National Forest (Calcasieu RD)",
+        "Caney Ranger District": "Kisatchie National Forest (Caney RD)",
+        "Catahoula Ranger District": "Kisatchie National Forest (Catahoula RD)",
+        "Kisatchie Ranger District": "Kisatchie National Forest (Kisatchie RD)",
+        "Winn Ranger District": "Kisatchie National Forest (Winn RD)"
+    },
     "MS": {
         "Bienville Ranger District": "Bienville National Forest (Bienville RD)",
+        "Chickasawhay Ranger District": "Chickasawhay National Forest (Chickasawhay RD)",
         "De Soto Ranger District": "DeSoto National Forest (De Soto RD)",
         "Holly Springs Ranger District": "Holly Springs National Forest  (Holly Springs RD)",
         "Homochitto Ranger District": "Homochitto National Forest (Homochitto RD)",
         "Tombigbee Ranger District": "Tombigbee National Forest (Tombigbee RD)"
     },
     "NC": {
+        "Appalachian Ranger District": "Appalachian National Forest (Appalachian RD)",
         "Croatan Ranger District": "Croatan National Forest (Croatan RD)",
         "Cheoah Ranger District": "Nantahala National Forest (Cheoah RD)",
         "Nantahala Ranger District": "Nantahala National Forest (Nantahala RD)",
-        "Tusquittee Ranger District": "Pisgah National Forest (Grandfather RD)"
+        "Tusquittee Ranger District": "Pisgah National Forest (Grandfather RD)",
+        "Grandfather Ranger District": "Pisgah National Forest (Grandfather RD)",
+        "Uwharrie Ranger District": "Uwharrie National Forest (Uwharrie RD)"
     },
     "SC": {
         "Andrew Pickens Ranger District": "Sumter National Forest (Andrew Pickens RD)",
         "Enoree Ranger District": "Sumter National Forest (Enoree RD)",
         "Wambaw/Witherbee Ranger District": "Francis Marion National Forest (Francis Marion RD)",
-        "Long Cane Ranger District": "Sumter National Forest (Long Cane RD)"
+        "Long Cane Ranger District": "Sumter National Forest (Long Cane RD)",
+        "Francis Marion Ranger District": "Francis Marion National Forest (Francis Marion RD)"
     },
     "TN": {
         "Ocoee Ranger District": "Cherokee National Forest (Ocoee RD)",
         "Mount Rogers National Recreation Area": "Cherokee National Forest (Watauga RD)"
     },
+    "TX": {
+        "Angelina Ranger District": "Angelina National Forest (Angelina RD)",
+        "Davy Crockett Ranger District": "Davy Crockett National Forest (Davy Crockett RD)",
+        "Sabine Ranger District": "Sabine National Forest (Sabine RD)"
+    },
     "VA": {
-        "Mount Rogers National Recreation Area": "George Washington and Jefferson National Forest (Mount Rogers NRA)"
+        "Mount Rogers National Recreation Area": "George Washington and Jefferson National Forest (Mount Rogers NRA)",
+        "New Castle Ranger District": "George Washington and Jefferson National Forest (New Castle RD)"
     }
 }

@@ -9,15 +9,46 @@ import {
   aggregationPipelineCreator,
   cleanBodyCreator,
   csvDownloadCreator,
+  csvUploadCreator,
+  getIndexes,
   getModelAttributes,
   matchStateYear,
   newError,
+  upsertOpCreator,
 } from '../utils';
 
 const modelAttributes = getModelAttributes(SummarizedCountyTrappingModel);
 
 // this is a function to clean req.body
 const cleanBody = cleanBodyCreator(modelAttributes);
+
+const upsertOp = upsertOpCreator(getIndexes(SummarizedCountyTrappingModel));
+
+// function for cleaning row of csv (will cast undefined to null for specified fields)
+const cleanCsv = (row) => ({
+  ...row,
+  cleridCount: row.cleridCount ?? null,
+  cleridPerDay: row.cleridPerDay ?? {},
+  spbCount: row.spbCount ?? null,
+  spbPerDay: row.spbPerDay ?? {},
+  totalTrappingDays: row.totalTrappingDays ?? null,
+  trapCount: row.trapCount ?? null,
+});
+
+/**
+ * @description uploads a csv to the summarized county collection
+ * @param {String} filename the csv filename on disk
+ * @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
+ * @throws other errors depending on what went wrong
+ */
+export const uploadCsv = csvUploadCreator(
+  SummarizedCountyTrappingModel,
+  cleanCsv,
+  cleanBody,
+  undefined,
+  undefined,
+  upsertOp,
+);
 
 /**
  * @description downloads a csv of the entire collection

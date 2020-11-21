@@ -1,3 +1,5 @@
 #!/bin/bash
-rm -rf src/constants/helper-data.zip
-zip src/constants/helper-data.zip src/constants/abbrev-to-state.json src/constants/csv-to-spots-county.json src/constants/csv-to-spots-rangerdistrict.json src/constants/csv-to-unsummarized.json src/constants/nf-rd-mapping.json src/constants/rd-name-mapping.json
+cd src/constants
+rm -rf helper-data.zip
+zip helper-data.zip abbrev-to-state.json csv-to-spots-county.json csv-to-spots-rangerdistrict.json csv-to-unsummarized.json nf-rd-mapping.json rd-name-mapping.json
+cd ../../

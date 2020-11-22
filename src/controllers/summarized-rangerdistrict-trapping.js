@@ -34,6 +34,9 @@ const cleanCsv = (row) => ({
   cleridPerDay: row.cleridPerDay ?? {},
   spbCount: row.spbCount ?? null,
   spbPerDay: row.spbPerDay ?? {},
+  spots: null,
+  spotst1: null,
+  spotst2: null,
   totalTrappingDays: row.totalTrappingDays ?? null,
   trapCount: row.trapCount ?? null,
 });

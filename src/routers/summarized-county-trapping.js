@@ -9,7 +9,7 @@ import {
 
 import { RESPONSE_TYPES } from '../constants';
 import { requireAuth } from '../middleware';
-import { SummarizedCountyTrapping } from '../controllers';
+import { SummarizedCountyTrapping, Pipeline } from '../controllers';
 
 const summarizedCountyTrappingRouter = Router();
 
@@ -100,6 +100,7 @@ summarizedCountyTrappingRouter.route('/upload')
 
     try {
       const uploadResult = await SummarizedCountyTrapping.uploadCsv(req.file.path);
+      Pipeline.runPipelineAll();
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
         data: uploadResult,

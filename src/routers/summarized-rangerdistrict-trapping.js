@@ -99,9 +99,12 @@ summarizedRangerDistrictTrappingRouter.route('/upload')
     }
 
     try {
-      await SummarizedRangerDistrictTrapping.uploadCsv(req.file.path);
+      const uploadResult = await SummarizedRangerDistrictTrapping.uploadCsv(req.file.path);
 
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, 'file uploaded successfully'));
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
+        data: uploadResult,
+        message: 'file uploaded successfully',
+      }));
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;

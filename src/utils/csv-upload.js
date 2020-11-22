@@ -77,6 +77,7 @@ export const csvUploadCreator = (ModelName, cleanCsv, cleanBody, filter, transfo
   const filepath = path.resolve(__dirname, `../../${filename}`);
 
   const docs = [];
+  const filteredOutRows = [];
 
   return new Promise((resolve, reject) => {
     parseFile(filepath, { headers: true })
@@ -89,6 +90,8 @@ export const csvUploadCreator = (ModelName, cleanCsv, cleanBody, filter, transfo
         if (!filter || filter(cleanedData)) {
           // apply transformation if it exists
           docs.push(transform ? transform(cleanedData) : cleanedData);
+        } else {
+          filteredOutRows.push(data);
         }
       })
       .on('error', (err) => reject(err))
@@ -97,8 +100,14 @@ export const csvUploadCreator = (ModelName, cleanCsv, cleanBody, filter, transfo
         const upsertOp = docs.map(upsert);
         ModelName.bulkWrite(upsertOp)
           .then((res) => {
-            console.log(`successfully parsed ${rowCount} rows from csv upload`);
-            resolve(res);
+            const numRowsMessage = `successfully parsed ${rowCount} rows from csv upload`;
+            const numFilteredMessage = filteredOutRows.length > 0 ? `filtered out ${filteredOutRows.length} rows` : '';
+            console.log(`${numRowsMessage}. ${numFilteredMessage}`);
+
+            resolve({
+              bulkWriteResult: res,
+              filteredOutRows,
+            });
           })
           .catch((err) => reject(err));
       });

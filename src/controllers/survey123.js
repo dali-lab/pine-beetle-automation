@@ -65,7 +65,7 @@ export const uploadSurvey123FromWebhook = async (rawData) => {
   const deleteInsertRes = await UnsummarizedTrappingModel.bulkWrite(deleteInsertOp, { ordered: true });
 
   // run entire pipeline
-  await runPipelineAll();
+  runPipelineAll();
 
   return deleteInsertRes;
 };

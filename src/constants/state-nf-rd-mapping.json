@@ -32,7 +32,8 @@
         "Chattahoochee-Oconee National Forests": {
             "Chattooga River Ranger District": "Chattahoochee-Oconee National Forests (Chattooga RD)",
             "Conasauga Ranger District": "Chattahoochee-Oconee National Forests (Conasauga RD)",
-            "Oconee Ranger District": "Chattahoochee-Oconee National Forests (Oconee RD)"   
+            "Oconee Ranger District": "Chattahoochee-Oconee National Forests (Oconee RD)",
+            "Blue Ridge Ranger District": "Chattahoochee-Oconee National Forests (Blue Ridge RD)"
         }
     },
     "LA": {
@@ -56,12 +57,14 @@
     },
     "NC": {
         "National Forests in North Carolina": {
+            "Appalachian Ranger District": "Appalachian National Forest (Appalachian RD)",
             "Croatan Ranger District": "Croatan National Forest (Croatan RD)",
             "Cheoah Ranger District": "Nantahala National Forest (Cheoah RD)",
             "Nantahala Ranger District": "Nantahala National Forest (Nantahala RD)",
             "Tusquittee Ranger District": "Pisgah National Forest (Grandfather RD)",
             "Grandfather Ranger District": "Pisgah National Forest (Grandfather RD)",
-            "Uwharrie Ranger District": "Uwharrie National Forest (Uwharrie RD)"
+            "Uwharrie Ranger District": "Uwharrie National Forest (Uwharrie RD)",
+            "Pisgah Ranger District": "Pisgah National Forest (Pisgah RD)"
         }
     },
     "SC": {
@@ -75,7 +78,9 @@
     },
     "TN": {
         "Cherokee National Forest": {
-            "Ocoee Ranger District": "Cherokee National Forest (Ocoee RD)"
+            "Ocoee Ranger District": "Cherokee National Forest (Ocoee RD)",
+            "Tellico Ranger District": "Cherokee National Forest (Tellico RD)",
+            "Unaka Ranger District": "Cherokee National Forest (Unaka RD)"
         },
         "George Washington and Jefferson National Forest": {
             "Mount Rogers National Recreation Area": "Cherokee National Forest (Watauga RD)"

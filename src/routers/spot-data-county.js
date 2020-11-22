@@ -55,10 +55,13 @@ spotDataCountyRouter.route('/upload')
     }
 
     try {
-      await SpotDataCounty.uploadCsv(req.file.path);
-      await Pipeline.runPipelineAll();
+      const uploadResult = await SpotDataCounty.uploadCsv(req.file.path);
+      Pipeline.runPipelineAll();
 
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, 'file uploaded successfully'));
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
+        data: uploadResult,
+        message: 'file uploaded successfully',
+      }));
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;

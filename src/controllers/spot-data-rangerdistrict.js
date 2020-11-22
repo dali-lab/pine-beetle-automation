@@ -31,8 +31,10 @@ const cleanBody = cleanBodyCreator(modelAttributes);
 // transforms row of rd spot data to our db format (ranger district name is combo of NF and NF_RD)
 const composedCleanCsv = compose(cleanCsvCreator(CSV_TO_SPOTS_RANGER_DISTRICT), (row) => ({
   ...row,
-  rangerDistrict: STATE_NATIONAL_FOREST_RANGER_DISTRICT_NAME_MAPPING[row.STATE]?.[row.NF]?.[row.NF_RD],
+  rangerDistrict: STATE_NATIONAL_FOREST_RANGER_DISTRICT_NAME_MAPPING[row.STATE]?.[row.NF]?.[row.NF_RD] ?? null,
 }));
+
+const csvFilterNullRD = ({ rangerDistrict }) => rangerDistrict !== null;
 
 // provides the upsert operation for csv uploading
 const csvUpserter = upsertOpCreator(getIndexes(SpotDataRangerDistrictModel));
@@ -43,7 +45,7 @@ const csvUpserter = upsertOpCreator(getIndexes(SpotDataRangerDistrictModel));
  * @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
  * @throws other errors depending on what went wrong
  */
-export const uploadCsv = csvUploadCreator(SpotDataRangerDistrictModel, composedCleanCsv, cleanBody, null, null, csvUpserter);
+export const uploadCsv = csvUploadCreator(SpotDataRangerDistrictModel, composedCleanCsv, cleanBody, csvFilterNullRD, null, csvUpserter);
 
 /**
  * @description downloads a csv of the entire collection

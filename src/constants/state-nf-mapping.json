@@ -25,7 +25,8 @@
     "GA": {
         "Chattooga River Ranger District": "Chattahoochee-Oconee National Forests (Chattooga RD)",
         "Conasauga Ranger District": "Chattahoochee-Oconee National Forests (Conasauga RD)",
-        "Oconee Ranger District": "Chattahoochee-Oconee National Forests (Oconee RD)"
+        "Oconee Ranger District": "Chattahoochee-Oconee National Forests (Oconee RD)",
+        "Blue Ridge Ranger District": "Chattahoochee-Oconee National Forests (Blue Ridge RD)"
     },
     "LA": {
         "Calcasieu Ranger District": "Kisatchie National Forest (Calcasieu RD)",
@@ -49,7 +50,8 @@
         "Nantahala Ranger District": "Nantahala National Forest (Nantahala RD)",
         "Tusquittee Ranger District": "Pisgah National Forest (Grandfather RD)",
         "Grandfather Ranger District": "Pisgah National Forest (Grandfather RD)",
-        "Uwharrie Ranger District": "Uwharrie National Forest (Uwharrie RD)"
+        "Uwharrie Ranger District": "Uwharrie National Forest (Uwharrie RD)",
+        "Pisgah Ranger District": "Pisgah National Forest (Pisgah RD)"
     },
     "SC": {
         "Andrew Pickens Ranger District": "Sumter National Forest (Andrew Pickens RD)",
@@ -60,6 +62,8 @@
     },
     "TN": {
         "Ocoee Ranger District": "Cherokee National Forest (Ocoee RD)",
+        "Tellico Ranger District": "Cherokee National Forest (Tellico RD)",
+        "Unaka Ranger District": "Cherokee National Forest (Unaka RD)",
         "Mount Rogers National Recreation Area": "Cherokee National Forest (Watauga RD)"
     },
     "TX": {

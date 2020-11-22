@@ -183,14 +183,19 @@ export const csvUploadSurvey123Creator = (ModelName, cleanCsv, cleanBody, filter
       .on('error', (err) => reject(err))
       .on('end', (rowCount) => {
         // spread out the operation into sequential deletes and inserts
-        const bulkOp = docs
-          .flatMap(deleteInsert)
-          .filter((obj) => !!obj);
+        const bulkOp = docs.flatMap(deleteInsert).filter((obj) => !!obj);
 
-        ModelName.bulkWrite(bulkOp, { ordered: true })
-          .then((res) => {
+        const insertOp = bulkOp.filter(({ insertOne }) => !!insertOne);
+        const deleteOp = bulkOp.filter(({ deleteMany }) => !!deleteMany);
+
+        ModelName.bulkWrite(deleteOp, { ordered: false })
+          .then((deleteRes) => {
+            return ModelName.bulkWrite(insertOp, { ordered: false })
+              .then((insertRes) => [deleteRes, insertRes]);
+          })
+          .then((bothRes) => {
             console.log(`successfully parsed ${rowCount} rows from csv upload`);
-            resolve(res);
+            resolve(bothRes);
           })
           .catch((err) => reject(err));
       });

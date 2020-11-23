@@ -48,7 +48,7 @@ spotDataRangerDistrictRouter.route('/')
   });
 
 spotDataRangerDistrictRouter.route('/upload')
-  .post(upload.single('csv'), async (req, res) => {
+  .post(requireAuth, upload.single('csv'), async (req, res) => {
     if (!req.file) {
       res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'missing file'));
       return;

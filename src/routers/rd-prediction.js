@@ -86,7 +86,7 @@ RDPredictionRouter.route('/download')
   });
 
 RDPredictionRouter.route('/predict')
-  .get(async (req, res) => {
+  .get(requireAuth, async (req, res) => {
     try {
       const { state, year } = req.query;
       if (state && year) {

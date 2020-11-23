@@ -48,7 +48,7 @@ unsummarizedTrappingRouter.route('/')
   });
 
 unsummarizedTrappingRouter.route('/upload')
-  .post(upload.single('csv'), async (req, res) => {
+  .post(requireAuth, upload.single('csv'), async (req, res) => {
     if (!req.file) {
       res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'missing file'));
       return;
@@ -80,6 +80,8 @@ unsummarizedTrappingRouter.route('/download')
 
     try {
       filepath = await UnsummarizedTrapping.downloadCsv(req.query);
+      console.log(filepath);
+
       res.sendFile(filepath);
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
@@ -126,7 +128,7 @@ unsummarizedTrappingRouter.route('/:id')
     }
   })
 
-  .delete(requireAuth, (async (req, res) => { // delete a document by its unique id
+  .delete(requireAuth, async (req, res) => { // delete a document by its unique id
     try {
       const documents = await UnsummarizedTrapping.deleteById(req.params.id);
 
@@ -137,6 +139,6 @@ unsummarizedTrappingRouter.route('/:id')
       console.log(errorMessage);
       res.status(status).send(errorResponse);
     }
-  }));
+  });
 
 export default unsummarizedTrappingRouter;

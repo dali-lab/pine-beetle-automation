@@ -86,7 +86,7 @@ CountyPredictionRouter.route('/download')
   });
 
 CountyPredictionRouter.route('/predict')
-  .get(async (req, res) => {
+  .get(requireAuth, async (req, res) => {
     try {
       const { state, year } = req.query;
       if (state && year) {

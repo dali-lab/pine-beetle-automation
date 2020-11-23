@@ -48,7 +48,7 @@ spotDataCountyRouter.route('/')
   });
 
 spotDataCountyRouter.route('/upload')
-  .post(upload.single('csv'), async (req, res) => {
+  .post(requireAuth, upload.single('csv'), async (req, res) => {
     if (!req.file) {
       res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'missing file'));
       return;
@@ -81,7 +81,8 @@ spotDataCountyRouter.route('/download')
 
     try {
       filepath = await SpotDataCounty.downloadCsv(req.query);
-      res.sendFile(filepath);
+
+      res.attachment('spots-county.csv').sendFile(filepath);
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;
@@ -96,7 +97,7 @@ spotDataCountyRouter.route('/download')
   });
 
 spotDataCountyRouter.route('/merge/:timescale')
-  .get(async (req, res) => {
+  .get(requireAuth, async (req, res) => {
     try {
       const { timescale } = req.params;
       const { state, year } = req.query;

@@ -48,7 +48,7 @@ summarizedRangerDistrictTrappingRouter.route('/')
   });
 
 summarizedRangerDistrictTrappingRouter.route('/aggregate')
-  .get(async (req, res) => {
+  .get(requireAuth, async (req, res) => {
     try {
       const { state, year } = req.query;
       if (state && year) {
@@ -92,7 +92,7 @@ summarizedRangerDistrictTrappingRouter.route('/filter')
   });
 
 summarizedRangerDistrictTrappingRouter.route('/upload')
-  .post(upload.single('csv'), async (req, res) => {
+  .post(requireAuth, upload.single('csv'), async (req, res) => {
     if (!req.file) {
       res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'missing file'));
       return;
@@ -125,7 +125,8 @@ summarizedRangerDistrictTrappingRouter.route('/download')
 
     try {
       filepath = await SummarizedRangerDistrictTrapping.downloadCsv(req.query);
-      res.sendFile(filepath);
+
+      res.attachment('rangerdistrict-summarized.csv').sendFile(filepath);
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;

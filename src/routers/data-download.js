@@ -1,16 +1,15 @@
 import path from 'path';
 import { Router } from 'express';
 
-import {
-  generateErrorResponse,
-} from '../utils';
+import { generateErrorResponse } from '../utils';
 
 const dataDownloadRouter = Router();
 
 dataDownloadRouter.route('/old-data')
   .get(async (_req, res) => { // download 1988-2010 excel sheet
     try {
-      res.sendFile(path.resolve(__dirname, '../constants/trapping-prediction-data-1988-2010.xlsx'));
+      res.attachment('trapping-prediction-1988-2010.xlsx')
+        .sendFile(path.resolve(__dirname, '../constants/trapping-prediction-data-1988-2010.xlsx'));
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;
@@ -22,7 +21,8 @@ dataDownloadRouter.route('/old-data')
 dataDownloadRouter.route('/helper-data')
   .get(async (_req, res) => { // download all helper data
     try {
-      res.sendFile(path.resolve(__dirname, '../constants/helper-data.zip'));
+      res.attachment('helper-data.zip')
+        .sendFile(path.resolve(__dirname, '../constants/helper-data.zip'));
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;

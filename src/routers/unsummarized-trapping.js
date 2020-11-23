@@ -80,9 +80,8 @@ unsummarizedTrappingRouter.route('/download')
 
     try {
       filepath = await UnsummarizedTrapping.downloadCsv(req.query);
-      console.log(filepath);
 
-      res.sendFile(filepath);
+      res.attachment('unsummarized-trapping.csv').sendFile(filepath);
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;

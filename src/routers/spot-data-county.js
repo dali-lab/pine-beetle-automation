@@ -81,7 +81,8 @@ spotDataCountyRouter.route('/download')
 
     try {
       filepath = await SpotDataCounty.downloadCsv(req.query);
-      res.sendFile(filepath);
+
+      res.attachment('spots-county.csv').sendFile(filepath);
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;

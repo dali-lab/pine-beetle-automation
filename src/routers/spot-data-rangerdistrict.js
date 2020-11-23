@@ -81,7 +81,8 @@ spotDataRangerDistrictRouter.route('/download')
 
     try {
       filepath = await SpotDataRangerDistrict.downloadCsv(req.query);
-      res.sendFile(filepath);
+
+      res.attachment('spots-rangerdistrict.csv').sendFile(filepath);
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;

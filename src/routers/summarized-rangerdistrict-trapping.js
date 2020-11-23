@@ -125,7 +125,8 @@ summarizedRangerDistrictTrappingRouter.route('/download')
 
     try {
       filepath = await SummarizedRangerDistrictTrapping.downloadCsv(req.query);
-      res.sendFile(filepath);
+
+      res.attachment('rangerdistrict-summarized.csv').sendFile(filepath);
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;

@@ -125,7 +125,8 @@ summarizedCountyTrappingRouter.route('/download')
 
     try {
       filepath = await SummarizedCountyTrapping.downloadCsv(req.query);
-      res.sendFile(filepath);
+
+      res.attachment('county-summarized.csv').sendFile(filepath);
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;

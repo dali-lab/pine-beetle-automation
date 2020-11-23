@@ -71,7 +71,8 @@ CountyPredictionRouter.route('/download')
 
     try {
       filepath = await CountyPrediction.downloadCsv(req.query);
-      res.sendFile(filepath);
+
+      res.attachment('county-predictions.csv').sendFile(filepath);
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;

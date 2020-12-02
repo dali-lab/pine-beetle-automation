@@ -8,7 +8,7 @@
     "test": "eslint src",
     "dev": "./zip-helper-data.sh; nodemon src/index.js --exec babel-node",
     "start": "./zip-helper-data.sh; babel-node src/index.js",
-    "clean": "rm -rf dist/",
+    "clean": "rm -rf dist/; rm -rf uploads/*",
     "build": "yarn clean; ./zip-helper-data.sh; babel src -d dist --copy-files --no-copy-ignored",
     "prod": "yarn build; node dist/index.js",
     "heroku-postbuild": "echo Skip build on Heroku"

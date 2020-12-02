@@ -15,6 +15,19 @@ const ordinals = {
 
 const ordinalStrings = Object.entries(ordinals);
 
+/**
+ * transform a survey123 globalID to all lowercase and remove curly braces
+ * @param {String} rawGlobalID s123 format of '{ALLCAPSID}'
+ */
+export const transformSurvey123GlobalID = (rawGlobalID) => rawGlobalID.replace(/(\{|\})/g, '').toLowerCase();
+
+/**
+ * partially applied function creating an unpacker that takes 6 weeks of data and returns
+ * up to 6 rows of single-week data in canonical form (FROM WEBHOOK)
+ * @param {Function} cleanJson transformation from csv/json attribute names to our schema
+ * @param {Function} cleanBody ensures that all model fields are filled
+ * @returns {(sixWeekData: Object) => Array} the function that unpacks the data
+ */
 export const survey123WebhookUnpackCreator = (cleanJson, cleanBody) => (sixWeekData) => {
   return ordinalStrings.map(([weekNum]) => {
     // cast everything to the unrolled schema in our 2011-2017 csv format
@@ -27,7 +40,7 @@ export const survey123WebhookUnpackCreator = (cleanJson, cleanBody) => (sixWeekD
       'Date of initial bloom': sixWeekData.Initial_Bloom,
       endobrev: 1,
       FIPS: null,
-      GlobalID: sixWeekData.globalid.replace(/(\{|\})/g, '').toLowerCase(), // transform into regular form
+      GlobalID: transformSurvey123GlobalID(sixWeekData.globalid), // transform into regular form
       'National Forest (Ranger District)': sixWeekData.Nat_Forest_Ranger_Dist,
       Season: sixWeekData.Season,
       sirexLure: 'Y',
@@ -58,6 +71,13 @@ export const survey123WebhookUnpackCreator = (cleanJson, cleanBody) => (sixWeekD
   }).filter((doc) => !!doc); // remove all nulls
 };
 
+/**
+* partially applied function creating an unpacker that takes 6 weeks of data and returns
+* up to 6 rows of single-week data in canonical form (FROM CSV)
+* @param {Function} cleanCsvOrJson transformation from csv/json attribute names to our schema
+* @param {Function} cleanBody ensures that all model fields are filled
+* @returns {(sixWeekData: Object) => Array} the function that unpacks the data
+*/
 export const survey123UnpackCreator = (cleanCsvOrJson, cleanBody) => (sixWeekData) => {
   return ordinalStrings.map(([weekNum, weekOrdinal]) => {
     // cast everything to the unrolled schema in our 2011-2017 csv format
@@ -91,6 +111,10 @@ export const survey123UnpackCreator = (cleanCsvOrJson, cleanBody) => (sixWeekDat
   }).filter((doc) => !!doc); // remove all nulls
 };
 
+/**
+ * transforms raw data into a delete operation and 0 or more insert operations for database write
+ * @param {Array} sixWeeksData up to 6 weeks of trapping data to add
+ */
 export const deleteInsert = (sixWeeksData) => {
   if (!sixWeeksData.length) return null;
 
@@ -105,6 +129,7 @@ export const deleteInsert = (sixWeeksData) => {
     acc + (curr.daysActive || 0)
   ), 0);
 
+  // only insert if data is valid and at least 12 days total active
   const insertOps = shouldInsert && numDaysActive >= 12 ? sixWeeksData.map((weekData) => ({
     insertOne: {
       document: weekData,
@@ -121,6 +146,17 @@ export const deleteInsert = (sixWeeksData) => {
   ];
 };
 
+/**
+* higher-order function that creates a csv uploader function for survey123-style data
+* @param {mongoose.Model} ModelName destination Model of upload
+* @param {function} cleanCsv function to cast csv to model schema
+* @param {function} cleanBody function to validate that all model schema parameters are present
+* @param {function} filter optional parameter to conditionally accept documents
+* @param {function} transform optional parameter to modify a document before insertion
+* @returns {(filename: String) => Promise}
+* @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
+* @throws other errors depending on what went wrong
+ */
 export const csvUploadSurvey123Creator = (ModelName, cleanCsv, cleanBody, filter, transform) => async (filename) => {
   const filepath = path.resolve(__dirname, `../../${filename}`);
 
@@ -147,20 +183,37 @@ export const csvUploadSurvey123Creator = (ModelName, cleanCsv, cleanBody, filter
       .on('error', (err) => reject(err))
       .on('end', (rowCount) => {
         // spread out the operation into sequential deletes and inserts
-        const bulkOp = docs
-          .flatMap(deleteInsert)
-          .filter((obj) => !!obj);
+        const bulkOp = docs.flatMap(deleteInsert).filter((obj) => !!obj);
 
-        ModelName.bulkWrite(bulkOp, { ordered: true })
-          .then((res) => {
+        const insertOp = bulkOp.filter(({ insertOne }) => !!insertOne);
+        const deleteOp = bulkOp.filter(({ deleteMany }) => !!deleteMany);
+
+        ModelName.bulkWrite(deleteOp, { ordered: false })
+          .then((deleteRes) => {
+            return ModelName.bulkWrite(insertOp, { ordered: false })
+              .then((insertRes) => [deleteRes, insertRes]);
+          })
+          .then((bothRes) => {
             console.log(`successfully parsed ${rowCount} rows from csv upload`);
-            resolve(res);
+            resolve(bothRes);
           })
           .catch((err) => reject(err));
       });
   });
 };
 
+/**
+* @description higher-order function that creates a csv uploader function for unsummarized data
+* @param {mongoose.Model} ModelName destination Model of upload
+* @param {function} cleanCsv function to cast csv to model schema
+* @param {function} cleanBody function to validate that all model schema parameters are present
+* @param {function} filter optional parameter to conditionally accept documents
+* @param {function} transform optional parameter to modify a document before insertion
+* @param {string} filename csv filename on disk
+* @returns {(filename: String) => Promise}
+* @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
+* @throws other errors depending on what went wrong
+*/
 export const unsummarizedDataCsvUploadCreator = (ModelName, cleanCsv, cleanBody, filter, transform) => async (filename) => {
   const filepath = path.resolve(__dirname, `../../${filename}`);
 
@@ -204,9 +257,9 @@ export const unsummarizedDataCsvUploadCreator = (ModelName, cleanCsv, cleanBody,
             return ModelName.bulkWrite(insertOp, { ordered: false })
               .then((insertRes) => [deleteRes, insertRes]);
           })
-          .then((res) => {
+          .then((bothRes) => {
             console.log(`successfully parsed ${rowCount} rows from csv upload`);
-            resolve(res);
+            resolve(bothRes);
           })
           .catch((err) => reject(err));
       });

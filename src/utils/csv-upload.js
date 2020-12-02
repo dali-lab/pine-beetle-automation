@@ -77,6 +77,7 @@ export const csvUploadCreator = (ModelName, cleanCsv, cleanBody, filter, transfo
   const filepath = path.resolve(__dirname, `../../${filename}`);
 
   const docs = [];
+  const filteredOutRows = [];
 
   return new Promise((resolve, reject) => {
     parseFile(filepath, { headers: true })
@@ -89,6 +90,8 @@ export const csvUploadCreator = (ModelName, cleanCsv, cleanBody, filter, transfo
         if (!filter || filter(cleanedData)) {
           // apply transformation if it exists
           docs.push(transform ? transform(cleanedData) : cleanedData);
+        } else {
+          filteredOutRows.push(data);
         }
       })
       .on('error', (err) => reject(err))
@@ -97,8 +100,14 @@ export const csvUploadCreator = (ModelName, cleanCsv, cleanBody, filter, transfo
         const upsertOp = docs.map(upsert);
         ModelName.bulkWrite(upsertOp)
           .then((res) => {
-            console.log(`successfully parsed ${rowCount} rows from csv upload`);
-            resolve(res);
+            const numRowsMessage = `successfully parsed ${rowCount} rows from csv upload`;
+            const numFilteredMessage = filteredOutRows.length > 0 ? `filtered out ${filteredOutRows.length} rows` : '';
+            console.log(`${numRowsMessage}. ${numFilteredMessage}`);
+
+            resolve({
+              bulkWriteResult: res,
+              filteredOutRows,
+            });
           })
           .catch((err) => reject(err));
       });
@@ -109,7 +118,7 @@ export const csvUploadCreator = (ModelName, cleanCsv, cleanBody, filter, transfo
  * @description higher-order function that creates a csv downloader function
  * @param {mongoose.Model} ModelName destination Model of download
  * @param {Array<String>} fields model attributes in array (used for fields of the csv file)
- * @returns {Function} which when envoked, returns a filepath to a CSV of the collection contents
+ * @returns {(filters: Object) => Promise<String>} which when invoked, returns a filepath to a CSV of the collection contents
  * @throws RESPONSE_TYPES.INTERNAL_ERROR for trouble parsing
  */
 export const csvDownloadCreator = (ModelName, fields) => async (filters) => {
@@ -122,15 +131,16 @@ export const csvDownloadCreator = (ModelName, fields) => async (filters) => {
   } = filters;
 
   try {
-    // use compound key to sort before creating
     const query = ModelName.find();
 
+    // optional filters
     if (startYear) query.find({ year: { $gte: parseInt(startYear, 10) } });
     if (endYear) query.find({ year: { $lte: parseInt(endYear, 10) } });
     if (state) query.find({ state });
     if (county) query.find({ county });
     if (rangerDistrict) query.find({ rangerDistrict });
 
+    // use compound key to sort before sending the file
     const data = await query
       .sort(ModelName.schema.indexes()[0][0])
       .exec();

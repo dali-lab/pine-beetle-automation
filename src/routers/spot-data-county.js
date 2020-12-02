@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import multer from 'multer';
 
 import {
   deleteFile,
@@ -8,16 +9,18 @@ import {
 
 import { RESPONSE_TYPES } from '../constants';
 import { requireAuth } from '../middleware';
-import { CountyPrediction } from '../controllers';
+import { SpotDataCounty, Pipeline } from '../controllers';
 
-const CountyPredictionRouter = Router();
+const spotDataCountyRouter = Router();
 
-CountyPredictionRouter.route('/')
-  .get(async (_req, res) => {
+const upload = multer({ dest: './uploads' });
+
+spotDataCountyRouter.route('/')
+  .get(async (_req, res) => { // get all county spot data
     try {
-      const result = await CountyPrediction.getAll();
+      const documents = await SpotDataCounty.getAll();
 
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, documents));
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;
@@ -26,16 +29,16 @@ CountyPredictionRouter.route('/')
     }
   })
 
-  .post(requireAuth, async (req, res) => {
+  .post(requireAuth, async (req, res) => { // add a new document to collection
     try {
       if (!Object.keys(req.body).length) {
         res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'empty body'));
         return;
       }
 
-      const result = await CountyPrediction.insertOne(req.body);
+      const documents = await SpotDataCounty.insertOne(req.body);
 
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, documents));
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;
@@ -44,35 +47,42 @@ CountyPredictionRouter.route('/')
     }
   });
 
-CountyPredictionRouter.route('/filter')
-  .get(async (req, res) => {
-    const {
-      county,
-      endYear,
-      startYear,
-      state,
-    } = req.query;
+spotDataCountyRouter.route('/upload')
+  .post(requireAuth, upload.single('csv'), async (req, res) => {
+    if (!req.file) {
+      res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'missing file'));
+      return;
+    }
 
     try {
-      const result = await CountyPrediction.getByFilter(startYear, endYear, state, county);
+      const uploadResult = await SpotDataCounty.uploadCsv(req.file.path);
+      Pipeline.runPipelineAll();
 
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
+        data: uploadResult,
+        message: 'file uploaded successfully',
+      }));
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;
       console.log(errorMessage);
       res.status(status).send(errorResponse);
+    } finally {
+      // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
+      setTimeout(() => {
+        deleteFile(req.file.path);
+      }, 0);
     }
   });
 
-CountyPredictionRouter.route('/download')
+spotDataCountyRouter.route('/download')
   .get(async (req, res) => {
     let filepath;
 
     try {
-      filepath = await CountyPrediction.downloadCsv(req.query);
+      filepath = await SpotDataCounty.downloadCsv(req.query);
 
-      res.attachment('county-predictions.csv').sendFile(filepath);
+      res.attachment('spots-county.csv').sendFile(filepath);
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;
@@ -86,19 +96,25 @@ CountyPredictionRouter.route('/download')
     }
   });
 
-CountyPredictionRouter.route('/predict')
+spotDataCountyRouter.route('/merge/:timescale')
   .get(requireAuth, async (req, res) => {
     try {
+      const { timescale } = req.params;
       const { state, year } = req.query;
-      if (state && year) {
-        await CountyPrediction.generateStateYearPredictions(state, parseInt(year, 10));
-      } else {
-        await CountyPrediction.generateAllPredictions();
+
+      if (timescale !== 't0' && timescale !== 't1' && timescale !== 't2') {
+        res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'no timescale specified'));
+        return;
       }
 
-      const message = state && year
-        ? `predicted by county on ${state} for ${year}`
-        : 'predicted all by county';
+      if (state && !year) {
+        res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'need year for state'));
+        return;
+      }
+
+      await SpotDataCounty.mergeSpots(timescale, year && parseInt(year, 10), state);
+
+      const message = `merged county spots at timescale ${timescale} at year ${year} for state ${state}`;
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, message));
     } catch (error) {
@@ -109,13 +125,12 @@ CountyPredictionRouter.route('/predict')
     }
   });
 
-CountyPredictionRouter.route('/:id')
-  .get(async (req, res) => {
+spotDataCountyRouter.route('/:id')
+  .get(async (req, res) => { // get a document by its unique id
     try {
-      const { id } = req.params;
-      const result = await CountyPrediction.getById(id);
+      const documents = await SpotDataCounty.getById(req.params.id);
 
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, documents));
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;
@@ -124,18 +139,16 @@ CountyPredictionRouter.route('/:id')
     }
   })
 
-  .put(requireAuth, async (req, res) => {
+  .put(requireAuth, async (req, res) => { // modify a document by its unique id
     try {
-      const { id } = req.params;
-
       if (!Object.keys(req.body).length) {
         res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'empty body'));
         return;
       }
 
-      const result = await CountyPrediction.updateById(id, req.body);
+      const documents = await SpotDataCounty.updateById(req.params.id, req.body);
 
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, documents));
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;
@@ -144,18 +157,17 @@ CountyPredictionRouter.route('/:id')
     }
   })
 
-  .delete(requireAuth, async (req, res) => {
+  .delete(requireAuth, (async (req, res) => { // delete a document by its unique id
     try {
-      const { id } = req.params;
-      const result = await CountyPrediction.deleteById(id);
+      const documents = await SpotDataCounty.deleteById(req.params.id);
 
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, documents));
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;
       console.log(errorMessage);
       res.status(status).send(errorResponse);
     }
-  });
+  }));
 
-export default CountyPredictionRouter;
+export default spotDataCountyRouter;

@@ -71,7 +71,8 @@ RDPredictionRouter.route('/download')
 
     try {
       filepath = await RDPrediction.downloadCsv(req.query);
-      res.sendFile(filepath);
+
+      res.attachment('rangerdistrict-predictions.csv').sendFile(filepath);
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;
@@ -86,7 +87,7 @@ RDPredictionRouter.route('/download')
   });
 
 RDPredictionRouter.route('/predict')
-  .get(async (req, res) => {
+  .get(requireAuth, async (req, res) => {
     try {
       const { state, year } = req.query;
       if (state && year) {

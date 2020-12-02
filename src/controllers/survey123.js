@@ -1,5 +1,5 @@
 import { UnsummarizedTrappingModel } from '../models';
-import { runPipelineStateYear } from './pipeline';
+import { runPipelineAll } from './pipeline';
 
 import {
   CSV_TO_UNSUMMARIZED,
@@ -13,6 +13,7 @@ import {
   deleteInsert,
   getModelAttributes,
   survey123WebhookUnpackCreator,
+  transformSurvey123GlobalID,
 } from '../utils';
 
 const unsummarizedModelAttributes = getModelAttributes(UnsummarizedTrappingModel);
@@ -55,23 +56,16 @@ export const uploadSurvey123FromWebhook = async (rawData) => {
   const data = survey123WebhookUnpacker(rawData)
     .map(stateToAbbrevTransform);
 
-  const globalID = rawData.globalid.replace(/(\{|\})/g, '').toLowerCase();
+  // get globalID directly in case we need it below
+  const globalID = transformSurvey123GlobalID(rawData.globalid);
 
   // either use deleteInsert or directly delete the data even if none of it is valid
   const deleteInsertOp = deleteInsert(data) ?? [{ deleteMany: { filter: { globalID } } }];
 
-  const [deleteOp, ...insertOp] = deleteInsertOp;
+  const deleteInsertRes = await UnsummarizedTrappingModel.bulkWrite(deleteInsertOp, { ordered: true });
 
-  const deleteRes = await UnsummarizedTrappingModel.bulkWrite([deleteOp], { ordered: false });
-  const insertRes = await UnsummarizedTrappingModel.bulkWrite(insertOp, { ordered: false });
+  // run entire pipeline
+  runPipelineAll();
 
-  const { USA_State: stateName, Year } = rawData || {};
-
-  const state = STATE_TO_ABBREV_COMBINED[stateName];
-  const year = parseInt(Year, 10);
-
-  // run pipeline given state and year
-  if (state && year) await runPipelineStateYear(state, year);
-
-  return [deleteRes, insertRes];
+  return deleteInsertRes;
 };

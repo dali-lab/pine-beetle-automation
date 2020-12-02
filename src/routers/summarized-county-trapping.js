@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import multer from 'multer';
 
 import {
   deleteFile,
@@ -8,9 +9,11 @@ import {
 
 import { RESPONSE_TYPES } from '../constants';
 import { requireAuth } from '../middleware';
-import { SummarizedCountyTrapping } from '../controllers';
+import { SummarizedCountyTrapping, Pipeline } from '../controllers';
 
 const summarizedCountyTrappingRouter = Router();
+
+const upload = multer({ dest: './uploads' });
 
 summarizedCountyTrappingRouter.route('/')
   .get(async (_req, res) => {
@@ -66,7 +69,7 @@ summarizedCountyTrappingRouter.route('/filter')
   });
 
 summarizedCountyTrappingRouter.route('/aggregate')
-  .get(async (req, res) => {
+  .get(requireAuth, async (req, res) => {
     try {
       const { state, year } = req.query;
       if (state && year) {
@@ -88,13 +91,42 @@ summarizedCountyTrappingRouter.route('/aggregate')
     }
   });
 
+summarizedCountyTrappingRouter.route('/upload')
+  .post(requireAuth, upload.single('csv'), async (req, res) => {
+    if (!req.file) {
+      res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'missing file'));
+      return;
+    }
+
+    try {
+      const uploadResult = await SummarizedCountyTrapping.uploadCsv(req.file.path);
+      Pipeline.runPipelineAll();
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
+        data: uploadResult,
+        message: 'file uploaded successfully',
+      }));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    } finally {
+      // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
+      setTimeout(() => {
+        deleteFile(req.file.path);
+      }, 0);
+    }
+  });
+
 summarizedCountyTrappingRouter.route('/download')
   .get(async (req, res) => {
     let filepath;
 
     try {
       filepath = await SummarizedCountyTrapping.downloadCsv(req.query);
-      res.sendFile(filepath);
+
+      res.attachment('county-summarized.csv').sendFile(filepath);
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;

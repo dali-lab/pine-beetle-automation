@@ -48,16 +48,19 @@ unsummarizedTrappingRouter.route('/')
   });
 
 unsummarizedTrappingRouter.route('/upload')
-  .post(upload.single('csv'), async (req, res) => {
+  .post(requireAuth, upload.single('csv'), async (req, res) => {
     if (!req.file) {
       res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'missing file'));
       return;
     }
 
     try {
-      await UnsummarizedTrapping.uploadCsv(req.file.path);
+      const uploadResult = await UnsummarizedTrapping.uploadCsv(req.file.path);
 
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, 'file uploaded successfully'));
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
+        data: uploadResult,
+        message: 'file uploaded successfully',
+      }));
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;
@@ -77,7 +80,8 @@ unsummarizedTrappingRouter.route('/download')
 
     try {
       filepath = await UnsummarizedTrapping.downloadCsv(req.query);
-      res.sendFile(filepath);
+
+      res.attachment('unsummarized-trapping.csv').sendFile(filepath);
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;
@@ -123,7 +127,7 @@ unsummarizedTrappingRouter.route('/:id')
     }
   })
 
-  .delete(requireAuth, (async (req, res) => { // delete a document by its unique id
+  .delete(requireAuth, async (req, res) => { // delete a document by its unique id
     try {
       const documents = await UnsummarizedTrapping.deleteById(req.params.id);
 
@@ -134,6 +138,6 @@ unsummarizedTrappingRouter.route('/:id')
       console.log(errorMessage);
       res.status(status).send(errorResponse);
     }
-  }));
+  });
 
 export default unsummarizedTrappingRouter;

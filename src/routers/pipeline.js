@@ -1,14 +1,15 @@
 import { Router } from 'express';
 
-import { RESPONSE_TYPES } from '../constants';
 import { generateResponse, generateErrorResponse } from '../utils';
 
+import { requireAuth } from '../middleware';
+import { RESPONSE_TYPES } from '../constants';
 import { Pipeline } from '../controllers';
 
 const pipelineRouter = Router();
 
 pipelineRouter.route('/')
-  .get(async (req, res) => {
+  .get(requireAuth, async (req, res) => {
     const { state, year } = req.query;
 
     try {

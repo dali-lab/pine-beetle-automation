@@ -70,7 +70,7 @@ unsummarizedTrappingRouter.route('/upload')
       // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
       setTimeout(() => {
         deleteFile(req.file.path);
-      }, 0);
+      }, 1000 * 10);
     }
   });
 
@@ -90,7 +90,7 @@ unsummarizedTrappingRouter.route('/download')
       // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
       setTimeout(() => {
         deleteFile(filepath, true);
-      }, 0);
+      }, 1000 * 10);
     }
   });
 

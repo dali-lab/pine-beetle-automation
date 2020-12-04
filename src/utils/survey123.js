@@ -126,15 +126,17 @@ export const deleteInsert = (sixWeeksData) => {
   }
 
   const numDaysActive = sixWeeksData.reduce((acc, curr) => (
-    acc + (curr.daysActive || 0)
+    acc + (parseInt(curr.daysActive, 10) || 0)
   ), 0);
 
-  // only insert if data is valid and at least 12 days total active
-  const insertOps = shouldInsert && numDaysActive >= 12 ? sixWeeksData.map((weekData) => ({
-    insertOne: {
-      document: weekData,
-    },
-  })) : [];
+  // only insert if data is valid and between 12 and 60 days total active
+  const insertOps = shouldInsert && numDaysActive >= 12 && numDaysActive <= 60
+    ? sixWeeksData.map((weekData) => ({
+      insertOne: {
+        document: weekData,
+      },
+    }))
+    : [];
 
   return [
     {

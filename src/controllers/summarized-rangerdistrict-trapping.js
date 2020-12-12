@@ -1,3 +1,5 @@
+import compose from 'compose-function';
+
 import {
   SummarizedRangerDistrictTrappingModel,
   UnsummarizedTrappingModel,
@@ -47,6 +49,14 @@ const rangerDistrictNameTransform = (row) => ({
   rangerDistrict: STATE_RANGER_DISTRICT_NAME_MAPPING[row.state]?.[row.rangerDistrict],
 });
 
+const nullTransform = (doc) => ({
+  ...doc,
+  cleridPer2Weeks: doc.cleridPer2Weeks !== '' ? doc.cleridPer2Weeks : null,
+  spbPer2Weeks: doc.spbPer2Weeks !== '' ? doc.spbPer2Weeks : null,
+});
+
+const rdAndNullTransform = compose(rangerDistrictNameTransform, nullTransform);
+
 /**
  * @description uploads a csv to the summarized ranger district collection
  * @param {String} filename the csv filename on disk
@@ -58,7 +68,7 @@ export const uploadCsv = csvUploadCreator(
   cleanCsv,
   cleanBody,
   undefined,
-  rangerDistrictNameTransform,
+  rdAndNullTransform,
   upsertOp,
 );
 

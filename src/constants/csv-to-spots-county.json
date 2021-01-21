@@ -1,7 +1,5 @@
 {
     "county_parish": "county",
-    "fips": "fips",
-    "hostAc": "hostAc",
     "spots": "spots",
     "state": "state",
     "year": "year"

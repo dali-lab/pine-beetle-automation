@@ -6,12 +6,6 @@ const SpotDataCountySchema = new Schema({
   county: {
     type: String,
   },
-  fips: {
-    type: Number,
-  },
-  hostAc: {
-    type: Number,
-  },
   spots: {
     default: null,
     min: 0,

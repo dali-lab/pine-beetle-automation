@@ -1,6 +1,6 @@
 {
     "rangerDistrict": "rangerDistrict",
-    "TOTAL SPOTS": "spots",
-    "STATE": "state",
-    "YEAR": "year"
+    "spots": "spots",
+    "state": "state",
+    "year": "year"
 }

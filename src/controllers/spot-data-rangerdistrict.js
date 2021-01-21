@@ -31,7 +31,7 @@ const cleanBody = cleanBodyCreator(modelAttributes);
 // transforms row of rd spot data to our db format (ranger district name is combo of NF and NF_RD)
 const composedCleanCsv = compose(cleanCsvCreator(CSV_TO_SPOTS_RANGER_DISTRICT), (row) => ({
   ...row,
-  rangerDistrict: STATE_NATIONAL_FOREST_RANGER_DISTRICT_NAME_MAPPING[row.STATE]?.[row.NF]?.[row.NF_RD] ?? null,
+  rangerDistrict: STATE_NATIONAL_FOREST_RANGER_DISTRICT_NAME_MAPPING[row.state]?.[row.NF]?.[row.NF_RD] ?? null,
 }));
 
 const csvFilterNullRD = ({ rangerDistrict }) => rangerDistrict !== null;

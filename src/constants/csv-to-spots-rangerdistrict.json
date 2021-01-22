@@ -1,5 +1,6 @@
 {
-    "rangerDistrict": "rangerDistrict",
+    "NF": "NF",
+    "NF_RD": "NF_RD",
     "spots": "spots",
     "state": "state",
     "year": "year"

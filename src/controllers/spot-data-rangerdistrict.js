@@ -28,11 +28,14 @@ const modelAttributes = getModelAttributes(SpotDataRangerDistrictModel);
 // this is a function to clean req.body
 const cleanBody = cleanBodyCreator(modelAttributes);
 
-// transforms row of rd spot data to our db format (ranger district name is combo of NF and NF_RD)
-const composedCleanCsv = compose(cleanCsvCreator(CSV_TO_SPOTS_RANGER_DISTRICT), (row) => ({
+// pre-transforms NF/NFRD to RD as final stage of composedCleanCsv below
+const preTransformNFRD = (row) => ({
   ...row,
   rangerDistrict: STATE_NATIONAL_FOREST_RANGER_DISTRICT_NAME_MAPPING[row.state]?.[row.NF]?.[row.NF_RD] ?? null,
-}));
+});
+
+// evaluates right to left: (f o g)(x) = f(g(x))
+const composedCleanCsv = compose(preTransformNFRD, cleanCsvCreator(CSV_TO_SPOTS_RANGER_DISTRICT));
 
 const csvFilterNullRD = ({ rangerDistrict }) => rangerDistrict !== null;
 

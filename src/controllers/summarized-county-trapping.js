@@ -38,6 +38,12 @@ const cleanCsv = (row) => ({
   trapCount: row.trapCount ?? null,
 });
 
+const nullTransform = (doc) => ({
+  ...doc,
+  cleridPer2Weeks: doc.cleridPer2Weeks !== '' ? doc.cleridPer2Weeks : null,
+  spbPer2Weeks: doc.spbPer2Weeks !== '' ? doc.spbPer2Weeks : null,
+});
+
 /**
  * @description uploads a csv to the summarized county collection
  * @param {String} filename the csv filename on disk
@@ -49,7 +55,7 @@ export const uploadCsv = csvUploadCreator(
   cleanCsv,
   cleanBody,
   undefined,
-  undefined,
+  nullTransform,
   upsertOp,
 );
 

@@ -72,12 +72,17 @@ export const uploadCsv = csvUploadCreator(
   upsertOp,
 );
 
+const downloadFieldsToOmit = ['cleridCount', 'cleridPerDay', 'spbCount', 'spbPerDay'];
+
 /**
  * @description downloads a csv of the entire collection
  * @throws RESPONSE_TYPES.INTERNAL_ERROR for problem parsing CSV
  * @returns {String} path to CSV file
  */
-export const downloadCsv = csvDownloadCreator(SummarizedRangerDistrictTrappingModel, modelAttributes);
+export const downloadCsv = csvDownloadCreator(
+  SummarizedRangerDistrictTrappingModel,
+  modelAttributes.filter((a) => !downloadFieldsToOmit.includes(a)),
+);
 
 /**
  * @description Fetches one year's data from the summarized ranger district collection.

@@ -118,10 +118,11 @@ export const csvUploadCreator = (ModelName, cleanCsv, cleanBody, filter, transfo
  * @description higher-order function that creates a csv downloader function
  * @param {mongoose.Model} ModelName destination Model of download
  * @param {Array<String>} fields model attributes in array (used for fields of the csv file)
+ * @param {Boolean} containsPredictionData flag for if prediction field should be spread to columns
  * @returns {(filters: Object) => Promise<String>} which when invoked, returns a filepath to a CSV of the collection contents
  * @throws RESPONSE_TYPES.INTERNAL_ERROR for trouble parsing
  */
-export const csvDownloadCreator = (ModelName, fields) => async (filters) => {
+export const csvDownloadCreator = (ModelName, fields, containsPredictionData = false) => async (filters) => {
   const {
     county,
     endYear,
@@ -141,11 +142,24 @@ export const csvDownloadCreator = (ModelName, fields) => async (filters) => {
     if (rangerDistrict) query.find({ rangerDistrict });
 
     // use compound key to sort before sending the file
-    const data = await query
+    let data = await query
       .sort(ModelName.schema.indexes()[0][0])
       .exec();
 
-    const csv = parse(data, { fields });
+    // spread the predictions object to individual columns
+    if (containsPredictionData) {
+      data = data.map((obj) => ({
+        ...obj._doc,
+        ...obj.prediction,
+      }));
+    }
+
+    const csv = parse(data, {
+      fields: containsPredictionData
+        ? [...fields, ...Object.keys(data[0]?.prediction || {})]
+        : fields,
+    });
+
     const filepath = path.resolve(__dirname, `../../uploads/${Math.random().toString(36).substring(7)}.csv`);
 
     fs.writeFileSync(filepath, csv);

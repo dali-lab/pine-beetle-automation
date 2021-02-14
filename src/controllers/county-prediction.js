@@ -21,12 +21,18 @@ const modelAttributes = getModelAttributes(CountyPredictionModel);
 // this is a function to clean req.body
 const cleanBody = cleanBodyCreator(modelAttributes);
 
+const downloadFieldsToOmit = ['cleridPerDay', 'spbPerDay', 'prediction'];
+
 /**
  * @description downloads a csv of the entire collection
  * @throws RESPONSE_TYPES.INTERNAL_ERROR for problem parsing CSV
  * @returns {String} path to CSV file
  */
-export const downloadCsv = csvDownloadCreator(CountyPredictionModel, modelAttributes);
+export const downloadCsv = csvDownloadCreator(
+  CountyPredictionModel,
+  modelAttributes.filter((a) => !downloadFieldsToOmit.includes(a)),
+  true,
+);
 
 // upsert transform
 const upsertOp = upsertOpCreator(getIndexes(CountyPredictionModel));

@@ -48,7 +48,8 @@
         "Croatan Ranger District": "Croatan National Forest (Croatan RD)",
         "Cheoah Ranger District": "Nantahala National Forest (Cheoah RD)",
         "Nantahala Ranger District": "Nantahala National Forest (Nantahala RD)",
-        "Tusquittee Ranger District": "Pisgah National Forest (Grandfather RD)",
+        "Tusquittee Ranger District": "Nantahala National Forest (Tusquitee RD)",
+        "Tusquitee Ranger District": "Nantahala National Forest (Tusquitee RD)",
         "Grandfather Ranger District": "Pisgah National Forest (Grandfather RD)",
         "Uwharrie Ranger District": "Uwharrie National Forest (Uwharrie RD)",
         "Pisgah Ranger District": "Pisgah National Forest (Pisgah RD)"
@@ -63,8 +64,7 @@
     "TN": {
         "Ocoee Ranger District": "Cherokee National Forest (Ocoee RD)",
         "Tellico Ranger District": "Cherokee National Forest (Tellico RD)",
-        "Unaka Ranger District": "Cherokee National Forest (Unaka RD)",
-        "Mount Rogers National Recreation Area": "Cherokee National Forest (Watauga RD)"
+        "Unaka Ranger District": "Cherokee National Forest (Unaka RD)"
     },
     "TX": {
         "Angelina Ranger District": "Angelina National Forest (Angelina RD)",

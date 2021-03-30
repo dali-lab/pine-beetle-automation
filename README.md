@@ -1,22 +1,85 @@
 # Project Pine Beetle Automation Server
 
-Automation server for creating pipeline between ArcGIS and MongoDB. Also used to run R model and perform (almost) all database writes.
+This is a Node/Express server for data storage, aggregation, and analysis for Project Pine Beetle.
 
-This differs from the main server at [https://github.com/dali-lab/pine-beetle-backend](https://github.com/dali-lab/pine-beetle-backend) in that this is mostly for data and resource-intensive work. The other server is used for read operations from the frontend.
+## Project Overview
 
-## Installation
+Project Pine Beetle is a web application that visualizes data on Southern Pine Beetle outbreaks in 16 states across the US. This tool uses a predictive model to predict future outbreaks and movements of Southern Pine Beetles.
 
-Clone the repo and run `yarn install` in the main directory.
+On the frontend, this application provides valuable information for USFS researchers and state forest rangers to see information related to past outbreaks and predictions about future outbreaks. This application also provides information to the general public about threats facing their communities.
 
-Run `yarn start` to run the server, `yarn dev` to run in dev mode (with live changes from `nodemon`). Run `yarn build` to package the app.
+On the backend, this application aggregates data collected from USFS and state forest rangers on outbreaks and beetle counts, then uses those values to display historical data and future predictions. The predictive model used to generate predictions is written in R. All data is stored in a MongoDB database, allowing for easy pre and post-processing. Using an Express server, all calculations are made in JavaScript (outside of the predictive model and Mongo summarization/aggregation algorithms), and all data is stored in JSON format.
 
-Note: make sure to implement the correct `.env` file located in the DALI Pine Beetle slack channel.
+Project Pine Beetle is a collaboration between Professor Matt Ayres of Dartmouth College, Professor Carissa Aoki of Bates College, the United States Forest Service (USFS), and the Dartmouth Applied Learning and Innovation (DALI) Lab.
 
-## Server Capabilities
+## Architecture
 
-System is linked with ArcGIS System and automatically adds trapping record when a survey result is submitted.
-Gathering required data for the trappings table (clerids and SPB per/day average).
-Performing calculations on the obtained information.
-Verifying connection with MongoDB by uploading test information.
+We have two backend servers that are used for handling various functionality. Our [main backend server](https://github.com/dali-lab/pine-beetle-backend) is used to perform CRUD operations with the database. It also handles all authentication processes. The frontend sends most requests to this server. Our [automation server](https://github.com/dali-lab/pine-beetle-automation) is used for aggregating data from the USFS and restructuring it to our data format. Data comes from the USFS via several webhooks from [Survey123](https://survey123.arcgis.com/). See each of these repositories for more information.
+
+## Setup
+
+You must have [Node](https://nodejs.org) and [yarn](https://yarnpkg.com/) installed to run this project.
+
+1. Clone the repository
+2. `yarn install`
+3. Add a `.env` file and paste in the necessary contents (see Handoff Document for this)
+4. `yarn dev` to run in the local development environment
+
+## API Documentation
 
 **See all server routes [here](./docs/ROUTES.md)**.
+
+## Repository Structure
+
+```
+src/
+	constants/						[all constants and mapping files]
+	controllers/                    [controllers to execute CRUD logic and aggregation/prediction wrappers]
+	middleware/                     [Express middleware shared between multiple routes (only auth at the moment)]
+    models/                         [Mongoose models for database]
+    r-scripts/                      [statistical models written in R to calculate predictions]
+    routers/                        [Express routers to handle route logic]
+	utils/							[various shared logic components e.g. csv parsing, MongoDB aggregation, prediction calculation]
+	index.js                        [script to start the node servere
+docs/                               [documentation on route API and specific processes]
+.babelrc							[babel setup]
+.eslintrc							[eslint setup]
+init.R                              [R script to install jsonlite package during deployment]
+package.json						[package]
+Procfile                            [Heroku file to configure server deployment]
+```
+
+## Design Philosophy and Principles
+
+To be added.
+
+## Code Style
+
+We use async/await for all asynchronous functions.
+
+We use higher-order functions with dependency injection for behaviors repeated across several kinds of data.
+
+## Deployment
+
+Continuous deployment is setup with Heroku.
+
+Merging a PR to the `dev` branch will trigger a new build in the dev environment. When the build passes, an update will be released at [https://pine-beetle-prediction-dev.herokuapp.com](https://pine-beetle-prediction-dev.herokuapp.com).
+
+Merging a PR to the `release` branch will trigger a new build in the production environment. When the build passes, an update will be released at [https://pine-beetle-prediction.herokuapp.com](https://pine-beetle-prediction.herokuapp.com).
+
+Pull requests should always be first merged into the `dev` branch so they are staged in the development environment. After smoke testing the changes in the development environment, developers can then choose to release those changes into production by generating a `DEV TO RELEASE` pull request from the `dev` branch to the `release` branch. One this single PR is merged into `release`, the changes will be built into the production environment and will be accessible at the release API.
+
+## Contributors
+
+- Jeff Liu
+- Thomas Monfre
+- Angela Zhang
+
+### Past Project Members
+
+- Nathan Schneider
+- John McCambridge
+- Madeline Hess
+- Isabel Hurley
+- Anuj Varma
+- Emma Langfitt

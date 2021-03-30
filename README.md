@@ -33,16 +33,16 @@ You must have [Node](https://nodejs.org) and [yarn](https://yarnpkg.com/) instal
 
 ```
 src/
-	constants/						[all constants and mapping files]
+	constants/                      [all constants and mapping files]
 	controllers/                    [controllers to execute CRUD logic and aggregation/prediction wrappers]
-	middleware/                     [Express middleware shared between multiple routes (only auth at the moment)]
+    middleware/                     [Express middleware shared between multiple routes (only auth at the moment)]
     models/                         [Mongoose models for database]
     r-scripts/                      [statistical models written in R to calculate predictions]
     routers/                        [Express routers to handle route logic]
-	utils/							[various shared logic components e.g. csv parsing, MongoDB aggregation, prediction calculation]
-	index.js                        [script to start the node servere
+    utils/                          [various shared logic components e.g. csv parsing, MongoDB aggregation, prediction calculation]
+    index.js                        [script to start the node servere
 docs/                               [documentation on route API and specific processes]
-.babelrc							[babel setup]
+.babelrc                            [babel setup]
 .eslintrc							[eslint setup]
 init.R                              [R script to install jsonlite package during deployment]
 package.json						[package]

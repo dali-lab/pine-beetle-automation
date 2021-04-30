@@ -37,7 +37,7 @@ const preTransformNFRD = (row) => ({
 // evaluates right to left: (f o g)(x) = f(g(x))
 const composedCleanCsv = compose(preTransformNFRD, cleanCsvCreator(CSV_TO_SPOTS_RANGER_DISTRICT));
 
-const csvFilterNullRD = ({ rangerDistrict }) => rangerDistrict !== null;
+const blankDataFilter = (doc) => doc?.rangerDistrict && doc?.state && doc?.year;
 
 // provides the upsert operation for csv uploading
 const csvUpserter = upsertOpCreator(getIndexes(SpotDataRangerDistrictModel));
@@ -48,7 +48,14 @@ const csvUpserter = upsertOpCreator(getIndexes(SpotDataRangerDistrictModel));
  * @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
  * @throws other errors depending on what went wrong
  */
-export const uploadCsv = csvUploadCreator(SpotDataRangerDistrictModel, composedCleanCsv, cleanBody, csvFilterNullRD, null, csvUpserter);
+export const uploadCsv = csvUploadCreator(
+  SpotDataRangerDistrictModel,
+  composedCleanCsv,
+  cleanBody,
+  blankDataFilter,
+  null,
+  csvUpserter,
+);
 
 /**
  * @description downloads a csv of the entire collection

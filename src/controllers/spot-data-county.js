@@ -30,13 +30,22 @@ const cleanCsv = cleanCsvCreator(CSV_TO_SPOTS_COUNTY);
 // provides the upsert operation for csv uploading
 const csvUpserter = upsertOpCreator(getIndexes(SpotDataCountyModel));
 
+const blankDataFilter = (doc) => doc?.county && doc?.state && doc?.year;
+
 /**
  * @description uploads a csv to the spot data county collection
  * @param {String} filename the csv filename on disk
  * @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
  * @throws other errors depending on what went wrong
  */
-export const uploadCsv = csvUploadCreator(SpotDataCountyModel, cleanCsv, cleanBody, null, null, csvUpserter);
+export const uploadCsv = csvUploadCreator(
+  SpotDataCountyModel,
+  cleanCsv,
+  cleanBody,
+  blankDataFilter,
+  null,
+  csvUpserter,
+);
 
 /**
  * @description downloads a csv of the entire collection

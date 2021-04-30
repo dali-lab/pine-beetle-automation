@@ -129,6 +129,15 @@ export const matchState = (state) => [
 // internal helper function to 'invert' the location (unused rn)
 // const getOtherLocation = (location) => (location === 'county' ? 'rangerDistrict' : 'county');
 
+// protect against badly formatted data for spot merging
+const mergeGuard = (location) => ({
+  $match: {
+    year: { $ne: 0 },
+    state: { $ne: null },
+    [location]: { $ne: null },
+  },
+});
+
 /**
  * @description builds pipeline to append same year spot data
  * @param {String} location the geographic grouping county/rd to work on
@@ -136,6 +145,7 @@ export const matchState = (state) => [
  * @param {Number} endobrev mandatory to do both 0 and 1 for merge to work
  */
 const t0 = (location, outputCollection, endobrev) => [
+  mergeGuard(location),
   // fit the shape of data to only update spots, fix an arbitrary endobrev
   {
     $project: {
@@ -164,6 +174,7 @@ const t0 = (location, outputCollection, endobrev) => [
  * @param {Number} endobrev mandatory to do both 0 and 1 for merge to work
  */
 const t1 = (location, outputCollection, endobrev) => [
+  mergeGuard(location),
   // fit the shape of data to only update spots, fix an arbitrary endobrev
   {
     $project: {
@@ -192,6 +203,7 @@ const t1 = (location, outputCollection, endobrev) => [
  * @param {Number} endobrev mandatory to do both 0 and 1 for merge to work
  */
 const t2 = (location, outputCollection, endobrev) => [
+  mergeGuard(location),
   // fit the shape of data to only update spots, fix an arbitrary endobrev
   {
     $project: {

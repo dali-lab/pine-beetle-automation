@@ -26,7 +26,8 @@
         "Chattooga River Ranger District": "Chattahoochee-Oconee National Forests (Chattooga RD)",
         "Conasauga Ranger District": "Chattahoochee-Oconee National Forests (Conasauga RD)",
         "Oconee Ranger District": "Chattahoochee-Oconee National Forests (Oconee RD)",
-        "Blue Ridge Ranger District": "Chattahoochee-Oconee National Forests (Blue Ridge RD)"
+        "Blue Ridge Ranger District": "Chattahoochee-Oconee National Forests (Blue Ridge RD)",
+        "Tallulah Ranger District": "Chattahoochee-Oconee National Forests (Tallulah RD)"
     },
     "LA": {
         "Calcasieu Ranger District": "Kisatchie National Forest (Calcasieu RD)",
@@ -44,7 +45,7 @@
         "Tombigbee Ranger District": "Tombigbee National Forest (Tombigbee RD)"
     },
     "NC": {
-        "Appalachian Ranger District": "Appalachian National Forest (Appalachian RD)",
+        "Appalachain Ranger District": "Pisgah National Forest (Appalachain RD)",
         "Croatan Ranger District": "Croatan National Forest (Croatan RD)",
         "Cheoah Ranger District": "Nantahala National Forest (Cheoah RD)",
         "Nantahala Ranger District": "Nantahala National Forest (Nantahala RD)",
@@ -54,25 +55,32 @@
         "Uwharrie Ranger District": "Uwharrie National Forest (Uwharrie RD)",
         "Pisgah Ranger District": "Pisgah National Forest (Pisgah RD)"
     },
+    "OK": {
+        "Oklahoma Ranger District": "Ouachita National Forest (Oklahoma RD)",
+        "Tiak Ranger District": "Ouachita National Forest (Tiak RD)"
+    },        
     "SC": {
         "Andrew Pickens Ranger District": "Sumter National Forest (Andrew Pickens RD)",
         "Enoree Ranger District": "Sumter National Forest (Enoree RD)",
-        "Wambaw/Witherbee Ranger District": "Francis Marion National Forest (Francis Marion RD)",
+        "Wambaw/Witherbee Ranger District": "Francis Marion National Forest (Wambaw and Witherbee RD)",
         "Long Cane Ranger District": "Sumter National Forest (Long Cane RD)",
         "Francis Marion Ranger District": "Francis Marion National Forest (Francis Marion RD)"
     },
     "TN": {
         "Ocoee Ranger District": "Cherokee National Forest (Ocoee RD)",
         "Tellico Ranger District": "Cherokee National Forest (Tellico RD)",
-        "Unaka Ranger District": "Cherokee National Forest (Unaka RD)"
+        "Unaka Ranger District": "Cherokee National Forest (Unaka RD)",
+        "Watauga Ranger District": "Cherokee National Forest (Watauga RD)"
     },
     "TX": {
         "Angelina Ranger District": "Angelina National Forest (Angelina RD)",
         "Davy Crockett Ranger District": "Davy Crockett National Forest (Davy Crockett RD)",
-        "Sabine Ranger District": "Sabine National Forest (Sabine RD)"
+        "Sabine Ranger District": "Sabine National Forest (Sabine RD)",
+        "Sam Houston Ranger District": "Sam Houston National Forest (Sam Houston RD)"
     },
     "VA": {
         "Mount Rogers National Recreation Area": "George Washington and Jefferson National Forest (Mount Rogers NRA)",
-        "New Castle Ranger District": "George Washington and Jefferson National Forest (New Castle RD)"
+        "New Castle Ranger District": "George Washington and Jefferson National Forest (New Castle RD)",
+        "Eastern Divide Ranger District": "George Washington and Jefferson National Forest (Eastern Divide RD)"
     }
 }

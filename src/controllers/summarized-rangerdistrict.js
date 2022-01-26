@@ -1,6 +1,6 @@
 import {
   SummarizedRangerDistrictModel,
-  // UnsummarizedTrappingModel,
+  UnsummarizedTrappingModel,
 } from '../models';
 
 import {
@@ -9,7 +9,7 @@ import {
 } from '../constants';
 
 import {
-  // aggregationPipelineCreator,
+  trappingAggregationPipelineCreator,
   cleanBodyCreator,
   csvDownloadCreator,
   csvUploadCreator,
@@ -45,12 +45,6 @@ const cleanCsv = (row) => {
   };
 };
 
-// // transform ranger district name
-// const rangerDistrictNameTransform = (row) => ({
-//   ...row,
-//   rangerDistrict: STATE_RANGER_DISTRICT_NAME_MAPPING[row.state]?.[row.rangerDistrict],
-// });
-
 /**
  * @description uploads a csv to the summarized ranger district collection
  * @param {String} filename the csv filename on disk
@@ -66,7 +60,7 @@ export const uploadCsv = csvUploadCreator(
   upsertOp,
 );
 
-const downloadFieldsToOmit = ['cleridCount', 'cleridPerDay', 'spbCount', 'spbPerDay'];
+const downloadFieldsToOmit = ['cleridPerDay', 'spbPerDay'];
 
 /**
  * @description downloads a csv of the entire collection
@@ -166,11 +160,12 @@ export const deleteStateYear = async (state, year) => {
 
 /**
  * @description Summarizes all trapping data at the ranger district level. Will overwrite all entries in this collection.
+ * @param {Object} filter mongo query filter for subsetting data
  */
-export const summarizeAll = async () => {
-  // return UnsummarizedTrappingModel.aggregate([
-  //   ...aggregationPipelineCreator('rangerDistrict', 'summarizedrangerdistricttrappings'),
-  // ]).exec();
+export const summarizeAll = async (filter) => {
+  return UnsummarizedTrappingModel.aggregate([
+    ...trappingAggregationPipelineCreator('rangerDistrict', 'summarizedrangerdistricts', filter),
+  ]).exec();
 };
 
 /**

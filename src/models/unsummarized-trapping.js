@@ -47,7 +47,7 @@ const UnsummarizedTrappingSchema = new Schema({
     min: 0,
     type: Number,
   },
-  fips: {
+  FIPS: {
     type: Number,
   },
   globalID: {

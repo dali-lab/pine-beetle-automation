@@ -5,7 +5,7 @@
     "Date of Collection": "collectionDate",
     "Date of initial bloom": "bloomDate",
     "endobrev": "endobrev",
-    "FIPS": "fips",
+    "FIPS": "FIPS",
     "GlobalID": "globalID",
     "National Forest (Ranger District)": "rangerDistrict",
     "Season": "season",

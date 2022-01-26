@@ -23,7 +23,7 @@ import {
 } from './requests';
 
 import {
-  aggregationPipelineCreator,
+  trappingAggregationPipelineCreator,
   predictionFetchCreator,
   matchState,
   matchStateYear,
@@ -41,7 +41,7 @@ import {
 } from './survey123';
 
 export {
-  aggregationPipelineCreator,
+  trappingAggregationPipelineCreator,
   cleanBodyCreator,
   cleanCsvCreator,
   csvDownloadCreator,

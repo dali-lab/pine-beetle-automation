@@ -1,12 +1,12 @@
 import {
   SummarizedCountyModel,
-  // UnsummarizedTrappingModel,
+  UnsummarizedTrappingModel,
 } from '../models';
 
 import { RESPONSE_TYPES } from '../constants';
 
 import {
-  // aggregationPipelineCreator,
+  trappingAggregationPipelineCreator,
   cleanBodyCreator,
   csvDownloadCreator,
   csvUploadCreator,
@@ -157,11 +157,12 @@ export const deleteStateYear = async (state, year) => {
 
 /**
  * @description Summarizes all trapping data at the county level. Will overwrite all entries in this collection.
+ * @param {Object} filter mongo query filter for subsetting data
  */
-export const summarizeAll = async () => {
-  // return UnsummarizedTrappingModel.aggregate([
-  //   ...aggregationPipelineCreator('county', 'summarizedcountytrappings'),
-  // ]).exec();
+export const summarizeAll = async (filter) => {
+  return UnsummarizedTrappingModel.aggregate([
+    ...trappingAggregationPipelineCreator('county', 'summarizedcounties', filter),
+  ]).exec();
 };
 
 /**

@@ -47,6 +47,28 @@ unsummarizedTrappingRouter.route('/')
     }
   });
 
+unsummarizedTrappingRouter.route('/filter')
+  .get(async (req, res) => {
+    const {
+      county,
+      endYear,
+      rangerDistrict,
+      startYear,
+      state,
+    } = req.query;
+
+    try {
+      const result = await UnsummarizedTrapping.getByFilter(startYear, endYear, state, county, rangerDistrict);
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    }
+  });
+
 unsummarizedTrappingRouter.route('/upload')
   .post(requireAuth, upload.single('csv'), async (req, res) => {
     if (!req.file) {

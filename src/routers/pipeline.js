@@ -11,12 +11,16 @@ const pipelineRouter = Router();
 pipelineRouter.route('/')
   .get(requireAuth, async (req, res) => {
     const { state, year } = req.query;
+    let result;
 
     try {
-      if (state && year) await Pipeline.runPipelineStateYear(state, year);
-      else await Pipeline.runPipelineAll();
+      if (state && year) {
+        result = await Pipeline.runPipelineStateYear(state, year);
+      } else {
+        result = await Pipeline.runPipelineAll();
+      }
 
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS));
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;

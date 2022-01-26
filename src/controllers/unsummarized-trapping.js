@@ -84,6 +84,26 @@ export const getAll = async () => {
 };
 
 /**
+ * Fetches summarized county trapping data depending on a filter.
+ * @param {Number} startYear the earliest year to return, inclusive
+ * @param {Number} endYear the latest year to return, inclusive
+ * @param {String} state the state to return
+ * @param {String} county the county to return
+ * @param {String} rangerDistrict the ranger district to return
+ */
+export const getByFilter = async (startYear, endYear, state, county, rangerDistrict) => {
+  const query = UnsummarizedTrappingModel.find();
+
+  if (startYear) query.find({ year: { $gte: startYear } });
+  if (endYear) query.find({ year: { $lte: endYear } });
+  if (state) query.find({ state });
+  if (county) query.find({ county });
+  if (rangerDistrict) query.find({ rangerDistrict });
+
+  return query.exec();
+};
+
+/**
  * @description Inserts one week's data into the unsummarized collection.
  * @param {Object} body request body to be cleaned and added
  * @returns {Promise<UnsummarizedTrappingModel>}

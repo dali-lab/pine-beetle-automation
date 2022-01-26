@@ -7,6 +7,14 @@ import { newError } from './responses';
 import { RESPONSE_TYPES } from '../constants';
 
 /**
+ * @description returns provided value if is a number, else returns fallback
+ * @param {number} value numerical value to test
+ * @param {any} [fallback=null] value to return if provided value is not a number
+ * @returns value
+ */
+export const validateNumberEntry = (value, fallback = null) => (value === undefined || value === null || value === '' ? fallback : value);
+
+/**
  * @description higher-order function that creates a csv caster function
  * @param {Object} row csv row of data
  * @param {Object} payload data or error info to send

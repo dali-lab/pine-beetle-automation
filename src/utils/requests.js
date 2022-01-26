@@ -19,3 +19,13 @@ export const getModelAttributes = (ModelName) => (
   Object.keys(ModelName.schema.paths)
     .filter((attr) => attr !== '_id' && attr !== '__v')
 );
+
+/**
+ * helper function to get the numeric model attributes of any mode
+ * @param {mongoose.Model) ModelName the model to extract from
+ * @returns {Array<String>} the attribute names
+ */
+export const getModelNumericAttributes = (ModelName) => {
+  return Object.keys(ModelName.schema.paths)
+    .filter((attr) => attr !== '_id' && attr !== '__v' && ModelName.schema.paths[attr].instance === 'Number');
+};

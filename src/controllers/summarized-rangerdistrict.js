@@ -1,5 +1,3 @@
-// import compose from 'compose-function';
-
 import {
   SummarizedRangerDistrictModel,
   // UnsummarizedTrappingModel,
@@ -17,45 +15,41 @@ import {
   csvUploadCreator,
   getIndexes,
   getModelAttributes,
+  getModelNumericAttributes,
   // matchStateYear,
   newError,
   upsertOpCreator,
+  validateNumberEntry,
 } from '../utils';
 
 const modelAttributes = getModelAttributes(SummarizedRangerDistrictModel);
+const numericModelAttributes = getModelNumericAttributes(SummarizedRangerDistrictModel);
 
 // this is a function to clean req.body
 const cleanBody = cleanBodyCreator(modelAttributes);
 
 const upsertOp = upsertOpCreator(getIndexes(SummarizedRangerDistrictModel));
 
-// function for cleaning row of csv (will cast undefined to null for specified fields)
-const cleanCsv = (row) => ({
-  ...row,
-  cleridCount: row.cleridCount ?? null,
-  cleridPerDay: row.cleridPerDay ?? {},
-  spbCount: row.spbCount ?? null,
-  spbPerDay: row.spbPerDay ?? {},
-  spots: null,
-  spotst1: null,
-  spotst2: null,
-  totalTrappingDays: row.totalTrappingDays ?? null,
-  trapCount: row.trapCount ?? null,
-});
+// function for cleaning row of csv (will cast undefined or empty string to null for specified fields)
+const cleanCsv = (row) => {
+  const cleanedNumericValues = numericModelAttributes.reduce((acc, curr) => ({
+    ...acc,
+    [curr]: validateNumberEntry(row[curr]),
+  }), {});
+
+  return {
+    ...row,
+    ...cleanedNumericValues,
+    cleridPerDay: row.cleridPerDay ?? {},
+    spbPerDay: row.spbPerDay ?? {},
+  };
+};
 
 // // transform ranger district name
 // const rangerDistrictNameTransform = (row) => ({
 //   ...row,
 //   rangerDistrict: STATE_RANGER_DISTRICT_NAME_MAPPING[row.state]?.[row.rangerDistrict],
 // });
-
-const nullTransform = (doc) => ({
-  ...doc,
-  cleridPer2Weeks: doc.cleridPer2Weeks !== '' ? doc.cleridPer2Weeks : null,
-  spbPer2Weeks: doc.spbPer2Weeks !== '' ? doc.spbPer2Weeks : null,
-});
-
-// const rdAndNullTransform = compose(rangerDistrictNameTransform, nullTransform);
 
 /**
  * @description uploads a csv to the summarized ranger district collection
@@ -68,7 +62,7 @@ export const uploadCsv = csvUploadCreator(
   cleanCsv,
   cleanBody,
   undefined,
-  nullTransform, // rdAndNullTransform,
+  undefined,
   upsertOp,
 );
 

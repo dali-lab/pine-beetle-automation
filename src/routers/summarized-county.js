@@ -45,6 +45,19 @@ summarizedCountyRouter.route('/')
       console.log(errorMessage);
       res.status(status).send(errorResponse);
     }
+  })
+
+  .delete(requireAuth, async (req, res) => {
+    try {
+      const result = await SummarizedCounty.deleteAll();
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    }
   });
 
 summarizedCountyRouter.route('/filter')

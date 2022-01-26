@@ -45,6 +45,19 @@ summarizedRangerDistrictRouter.route('/')
       console.log(errorMessage);
       res.status(status).send(errorResponse);
     }
+  })
+
+  .delete(requireAuth, async (req, res) => {
+    try {
+      const result = await SummarizedRangerDistrict.deleteAll();
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    }
   });
 
 summarizedRangerDistrictRouter.route('/aggregate')

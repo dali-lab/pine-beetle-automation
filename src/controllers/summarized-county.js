@@ -12,37 +12,35 @@ import {
   csvUploadCreator,
   getIndexes,
   getModelAttributes,
+  getModelNumericAttributes,
   // matchStateYear,
   newError,
   upsertOpCreator,
+  validateNumberEntry,
 } from '../utils';
 
 const modelAttributes = getModelAttributes(SummarizedCountyModel);
+const numericModelAttributes = getModelNumericAttributes(SummarizedCountyModel);
 
 // this is a function to clean req.body
 const cleanBody = cleanBodyCreator(modelAttributes);
 
 const upsertOp = upsertOpCreator(getIndexes(SummarizedCountyModel));
 
-// function for cleaning row of csv (will cast undefined to null for specified fields)
-const cleanCsv = (row) => ({
-  ...row,
-  cleridCount: row.cleridCount ?? null,
-  cleridPerDay: row.cleridPerDay ?? {},
-  spbCount: row.spbCount ?? null,
-  spbPerDay: row.spbPerDay ?? {},
-  spots: null,
-  spotst1: null,
-  spotst2: null,
-  totalTrappingDays: row.totalTrappingDays ?? null,
-  trapCount: row.trapCount ?? null,
-});
+// function for cleaning row of csv (will cast undefined or empty string to null for specified fields)
+const cleanCsv = (row) => {
+  const cleanedNumericValues = numericModelAttributes.reduce((acc, curr) => ({
+    ...acc,
+    [curr]: validateNumberEntry(row[curr]),
+  }), {});
 
-const nullTransform = (doc) => ({
-  ...doc,
-  cleridPer2Weeks: doc.cleridPer2Weeks !== '' ? doc.cleridPer2Weeks : null,
-  spbPer2Weeks: doc.spbPer2Weeks !== '' ? doc.spbPer2Weeks : null,
-});
+  return {
+    ...row,
+    ...cleanedNumericValues,
+    cleridPerDay: row.cleridPerDay ?? {},
+    spbPerDay: row.spbPerDay ?? {},
+  };
+};
 
 /**
  * @description uploads a csv to the summarized county collection
@@ -55,7 +53,7 @@ export const uploadCsv = csvUploadCreator(
   cleanCsv,
   cleanBody,
   undefined,
-  nullTransform,
+  undefined,
   upsertOp,
 );
 

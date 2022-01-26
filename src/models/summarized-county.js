@@ -99,31 +99,31 @@ const SummarizedCountySchema = new Schema({
     type: Number,
   },
   pi: { // model output: parameter estimated by model
-
+    type: Number,
   },
   mu: { // model output: parameter estimated by model
-
+    type: Number,
   },
   expSpotsIfOutbreak: { // model output: expected number of spots if there is an outbreak (outbreak defined as any spots)
-
+    type: Number,
   },
   probSpotsGT0: { // model output: probability of >0 spots in year/state/county
-
+    type: Number,
   },
   probSpotsGT20: { // model output: probability of >20 spots in year/state/county
-
+    type: Number,
   },
   probSpotsGT50: { // model output: probability of >50 spots in year/state/county
-
+    type: Number,
   },
   probSpotsGT150: { // model output: probability of >150 spots in year/state/county
-
+    type: Number,
   },
   probSpotsGT400: { // model output: probability of >400 spots in year/state/county
-
+    type: Number,
   },
   probSpotsGT1000: { // model output: probability of >1000 spots in year/state/county
-
+    type: Number,
   },
   'ln(spbPer2Weeks+1)': { // model output: natural logarithm of (spbPer2Weeks + 1), used for averaging trap captures across locations or years
     type: Number,
@@ -137,13 +137,13 @@ const SummarizedCountySchema = new Schema({
   'logit(Prob>50)': { // model output: logit transformation of probSpotsGT50, used for averaging of predicted probabilities across locations or years
     type: Number,
   },
-  'pred.Spots.logUnits': { // model output: predicted number of spots in units of natural logarithm
+  predSpotslogUnits: { // model output: predicted number of spots in units of natural logarithm
     type: Number,
   },
-  'pred.Spots.origUnits': { // model output: back-transformation of predicted spots (e^(pred.Spots.logUnits) - 1)
+  predSpotsorigUnits: { // model output: back-transformation of predicted spots (e^(pred.Spots.logUnits) - 1)
     type: Number,
   },
-  'residualSpots.logUnits': { // model output: difference between observed and predicted number of spots (ln(spotst0 + 1) - pred.Spots.logUnits)
+  residualSpotslogUnits: { // model output: difference between observed and predicted number of spots (ln(spotst0 + 1) - pred.Spots.logUnits)
     type: Number,
   },
 });

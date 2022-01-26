@@ -5,6 +5,7 @@ import {
   deleteFile,
   getIndexes,
   upsertOpCreator,
+  validateNumberEntry,
 } from './csv-upload';
 
 import {
@@ -18,6 +19,7 @@ import { predictionGeneratorCreator } from './predictions';
 import {
   cleanBodyCreator,
   getModelAttributes,
+  getModelNumericAttributes,
 } from './requests';
 
 import {
@@ -51,6 +53,7 @@ export {
   generateResponse,
   getIndexes,
   getModelAttributes,
+  getModelNumericAttributes,
   matchState,
   matchStateYear,
   matchYear,
@@ -63,4 +66,5 @@ export {
   transformSurvey123GlobalID,
   unsummarizedDataCsvUploadCreator,
   upsertOpCreator,
+  validateNumberEntry,
 };

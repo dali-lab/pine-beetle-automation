@@ -1,33 +1,33 @@
-import compose from 'compose-function';
+// import compose from 'compose-function';
 
 import {
-  SummarizedRangerDistrictTrappingModel,
-  UnsummarizedTrappingModel,
+  SummarizedRangerDistrictModel,
+  // UnsummarizedTrappingModel,
 } from '../models';
 
 import {
   RESPONSE_TYPES,
-  STATE_RANGER_DISTRICT_NAME_MAPPING,
+  // STATE_RANGER_DISTRICT_NAME_MAPPING,
 } from '../constants';
 
 import {
-  aggregationPipelineCreator,
+  // aggregationPipelineCreator,
   cleanBodyCreator,
   csvDownloadCreator,
   csvUploadCreator,
   getIndexes,
   getModelAttributes,
-  matchStateYear,
+  // matchStateYear,
   newError,
   upsertOpCreator,
 } from '../utils';
 
-const modelAttributes = getModelAttributes(SummarizedRangerDistrictTrappingModel);
+const modelAttributes = getModelAttributes(SummarizedRangerDistrictModel);
 
 // this is a function to clean req.body
 const cleanBody = cleanBodyCreator(modelAttributes);
 
-const upsertOp = upsertOpCreator(getIndexes(SummarizedRangerDistrictTrappingModel));
+const upsertOp = upsertOpCreator(getIndexes(SummarizedRangerDistrictModel));
 
 // function for cleaning row of csv (will cast undefined to null for specified fields)
 const cleanCsv = (row) => ({
@@ -43,11 +43,11 @@ const cleanCsv = (row) => ({
   trapCount: row.trapCount ?? null,
 });
 
-// transform ranger district name
-const rangerDistrictNameTransform = (row) => ({
-  ...row,
-  rangerDistrict: STATE_RANGER_DISTRICT_NAME_MAPPING[row.state]?.[row.rangerDistrict],
-});
+// // transform ranger district name
+// const rangerDistrictNameTransform = (row) => ({
+//   ...row,
+//   rangerDistrict: STATE_RANGER_DISTRICT_NAME_MAPPING[row.state]?.[row.rangerDistrict],
+// });
 
 const nullTransform = (doc) => ({
   ...doc,
@@ -55,7 +55,7 @@ const nullTransform = (doc) => ({
   spbPer2Weeks: doc.spbPer2Weeks !== '' ? doc.spbPer2Weeks : null,
 });
 
-const rdAndNullTransform = compose(rangerDistrictNameTransform, nullTransform);
+// const rdAndNullTransform = compose(rangerDistrictNameTransform, nullTransform);
 
 /**
  * @description uploads a csv to the summarized ranger district collection
@@ -64,11 +64,11 @@ const rdAndNullTransform = compose(rangerDistrictNameTransform, nullTransform);
  * @throws other errors depending on what went wrong
  */
 export const uploadCsv = csvUploadCreator(
-  SummarizedRangerDistrictTrappingModel,
+  SummarizedRangerDistrictModel,
   cleanCsv,
   cleanBody,
   undefined,
-  rdAndNullTransform,
+  nullTransform, // rdAndNullTransform,
   upsertOp,
 );
 
@@ -80,41 +80,41 @@ const downloadFieldsToOmit = ['cleridCount', 'cleridPerDay', 'spbCount', 'spbPer
  * @returns {String} path to CSV file
  */
 export const downloadCsv = csvDownloadCreator(
-  SummarizedRangerDistrictTrappingModel,
+  SummarizedRangerDistrictModel,
   modelAttributes.filter((a) => !downloadFieldsToOmit.includes(a)),
 );
 
 /**
  * @description Fetches one year's data from the summarized ranger district collection.
  * @param {String} id ID of the document wanted
- * @returns {Promise<SummarizedRangerDistrictTrappingModel>} the document in question
+ * @returns {Promise<SummarizedRangerDistrictModel>} the document in question
  * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
  */
 export const getById = async (id) => {
-  const doc = await SummarizedRangerDistrictTrappingModel.findById(id);
+  const doc = await SummarizedRangerDistrictModel.findById(id);
   if (!doc) throw newError(RESPONSE_TYPES.NOT_FOUND, 'ID not found');
   return doc;
 };
 
 /**
  * @description Fetches all data from the summarized ranger district collection.
- * @returns {Promise<[SummarizedRangerDistrictTrappingModel]>} all docs
+ * @returns {Promise<[SummarizedRangerDistrictModel]>} all docs
  */
 export const getAll = async () => {
-  return SummarizedRangerDistrictTrappingModel.find();
+  return SummarizedRangerDistrictModel.find();
 };
 
 /**
  * @description Inserts one year's data into the summarized ranger district collection.
  * @param {Object} body request body to be cleaned and added
- * @returns {Promise<SummarizedRangerDistrictTrappingModel>}
+ * @returns {Promise<SummarizedRangerDistrictModel>}
  * @throws RESPONSE_TYPES.BAD_REQUEST if missing input
  */
 export const insertOne = async (body) => {
   const cleanedBody = cleanBody(body);
   if (!cleanedBody) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
 
-  const newDoc = new SummarizedRangerDistrictTrappingModel(cleanedBody);
+  const newDoc = new SummarizedRangerDistrictModel(cleanedBody);
   return newDoc.save();
 };
 
@@ -122,7 +122,7 @@ export const insertOne = async (body) => {
  * @description Updates one year's data in the summarized ranger district collection.
  * @param {String} id ID of the document to update
  * @param {Object} body request body to be cleaned and added
- * @returns {Promise<SummarizedRangerDistrictTrappingModel>} updated doc
+ * @returns {Promise<SummarizedRangerDistrictModel>} updated doc
  * @throws RESPONSE_TYPES.BAD_REQUEST if missing input
  * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
  */
@@ -130,7 +130,7 @@ export const updateById = async (id, body) => {
   const cleanedBody = cleanBody(body);
   if (!cleanedBody) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
 
-  const updatedDoc = await SummarizedRangerDistrictTrappingModel.findByIdAndUpdate(id, cleanBody, {
+  const updatedDoc = await SummarizedRangerDistrictModel.findByIdAndUpdate(id, cleanBody, {
     new: true,
     omitUndefined: true,
   });
@@ -141,11 +141,11 @@ export const updateById = async (id, body) => {
 /**
  * @description Deletes one year's data in the summarized ranger district collection.
  * @param {String} id ID of the document to delete
- * @returns {Promise<SummarizedRangerDistrictTrappingModel>} deleted doc
+ * @returns {Promise<SummarizedRangerDistrictModel>} deleted doc
  * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
  */
 export const deleteById = async (id) => {
-  const deletedDoc = await SummarizedRangerDistrictTrappingModel.findByIdAndDelete(id);
+  const deletedDoc = await SummarizedRangerDistrictModel.findByIdAndDelete(id);
   if (!deletedDoc) throw newError(RESPONSE_TYPES.NOT_FOUND, 'ID not found');
   return deletedDoc;
 };
@@ -156,7 +156,7 @@ export const deleteById = async (id) => {
  * @returns {Promise}
  */
 export const deleteAll = async (options = {}) => {
-  return SummarizedRangerDistrictTrappingModel.deleteMany(options);
+  return SummarizedRangerDistrictModel.deleteMany(options);
 };
 
 /**
@@ -167,16 +167,16 @@ export const deleteAll = async (options = {}) => {
  */
 export const deleteStateYear = async (state, year) => {
   if (state === 2018) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'Cannot delete 2018 data');
-  return SummarizedRangerDistrictTrappingModel.deleteMany({ state, year });
+  return SummarizedRangerDistrictModel.deleteMany({ state, year });
 };
 
 /**
  * @description Summarizes all trapping data at the ranger district level. Will overwrite all entries in this collection.
  */
 export const summarizeAll = async () => {
-  return UnsummarizedTrappingModel.aggregate([
-    ...aggregationPipelineCreator('rangerDistrict', 'summarizedrangerdistricttrappings'),
-  ]).exec();
+  // return UnsummarizedTrappingModel.aggregate([
+  //   ...aggregationPipelineCreator('rangerDistrict', 'summarizedrangerdistricttrappings'),
+  // ]).exec();
 };
 
 /**
@@ -186,10 +186,10 @@ export const summarizeAll = async () => {
  * @param {Number} year the year to summarize
  */
 export const summarizeStateYear = async (state, year) => {
-  return UnsummarizedTrappingModel.aggregate([
-    ...matchStateYear(state, year),
-    ...aggregationPipelineCreator('rangerDistrict', 'summarizedrangerdistricttrappings'),
-  ]).exec();
+  // return UnsummarizedTrappingModel.aggregate([
+  //   ...matchStateYear(state, year),
+  //   ...aggregationPipelineCreator('rangerDistrict', 'summarizedrangerdistricttrappings'),
+  // ]).exec();
 };
 
 /**
@@ -200,7 +200,7 @@ export const summarizeStateYear = async (state, year) => {
  * @param {String} ranger district the county to return
  */
 export const getByFilter = async (startYear, endYear, state, rangerDistrict) => {
-  const query = SummarizedRangerDistrictTrappingModel.find();
+  const query = SummarizedRangerDistrictModel.find();
 
   if (startYear) query.find({ year: { $gte: startYear } });
   if (endYear) query.find({ year: { $lte: endYear } });

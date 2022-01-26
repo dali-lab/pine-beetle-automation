@@ -1,28 +1,28 @@
 import {
-  SummarizedCountyTrappingModel,
-  UnsummarizedTrappingModel,
+  SummarizedCountyModel,
+  // UnsummarizedTrappingModel,
 } from '../models';
 
 import { RESPONSE_TYPES } from '../constants';
 
 import {
-  aggregationPipelineCreator,
+  // aggregationPipelineCreator,
   cleanBodyCreator,
   csvDownloadCreator,
   csvUploadCreator,
   getIndexes,
   getModelAttributes,
-  matchStateYear,
+  // matchStateYear,
   newError,
   upsertOpCreator,
 } from '../utils';
 
-const modelAttributes = getModelAttributes(SummarizedCountyTrappingModel);
+const modelAttributes = getModelAttributes(SummarizedCountyModel);
 
 // this is a function to clean req.body
 const cleanBody = cleanBodyCreator(modelAttributes);
 
-const upsertOp = upsertOpCreator(getIndexes(SummarizedCountyTrappingModel));
+const upsertOp = upsertOpCreator(getIndexes(SummarizedCountyModel));
 
 // function for cleaning row of csv (will cast undefined to null for specified fields)
 const cleanCsv = (row) => ({
@@ -51,7 +51,7 @@ const nullTransform = (doc) => ({
  * @throws other errors depending on what went wrong
  */
 export const uploadCsv = csvUploadCreator(
-  SummarizedCountyTrappingModel,
+  SummarizedCountyModel,
   cleanCsv,
   cleanBody,
   undefined,
@@ -59,7 +59,7 @@ export const uploadCsv = csvUploadCreator(
   upsertOp,
 );
 
-const downloadFieldsToOmit = ['cleridCount', 'cleridPerDay', 'spbCount', 'spbPerDay'];
+const downloadFieldsToOmit = ['cleridPerDay', 'spbPerDay'];
 
 /**
  * @description downloads a csv of the entire collection
@@ -67,41 +67,41 @@ const downloadFieldsToOmit = ['cleridCount', 'cleridPerDay', 'spbCount', 'spbPer
  * @returns {String} path to CSV file
  */
 export const downloadCsv = csvDownloadCreator(
-  SummarizedCountyTrappingModel,
+  SummarizedCountyModel,
   modelAttributes.filter((a) => !downloadFieldsToOmit.includes(a)),
 );
 
 /**
  * @description Fetches one year's data from the summarized county collection.
  * @param {String} id ID of the document wanted
- * @returns {Promise<SummarizedCountyTrappingModel>} the document in question
+ * @returns {Promise<SummarizedCountyModel>} the document in question
  * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
  */
 export const getById = async (id) => {
-  const doc = await SummarizedCountyTrappingModel.findById(id);
+  const doc = await SummarizedCountyModel.findById(id);
   if (!doc) throw newError(RESPONSE_TYPES.NOT_FOUND, 'ID not found');
   return doc;
 };
 
 /**
  * @description Fetches all data from the summarized county collection.
- * @returns {Promise<[SummarizedCountyTrappingModel]>} all docs
+ * @returns {Promise<[SummarizedCountyModel]>} all docs
  */
 export const getAll = async () => {
-  return SummarizedCountyTrappingModel.find();
+  return SummarizedCountyModel.find();
 };
 
 /**
  * @description Inserts one year's data into the summarized county collection.
  * @param {Object} body request body to be cleaned and added
- * @returns {Promise<SummarizedCountyTrappingModel>}
+ * @returns {Promise<SummarizedCountyModel>}
  * @throws RESPONSE_TYPES.BAD_REQUEST if missing input
  */
 export const insertOne = async (body) => {
   const cleanedBody = cleanBody(body);
   if (!cleanedBody) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
 
-  const newDoc = new SummarizedCountyTrappingModel(cleanedBody);
+  const newDoc = new SummarizedCountyModel(cleanedBody);
   return newDoc.save();
 };
 
@@ -109,7 +109,7 @@ export const insertOne = async (body) => {
  * @description Updates one year's data in the summarized county collection.
  * @param {String} id ID of the document to update
  * @param {Object} body request body to be cleaned and added
- * @returns {Promise<SummarizedCountyTrappingModel>} updated doc
+ * @returns {Promise<SummarizedCountyModel>} updated doc
  * @throws RESPONSE_TYPES.BAD_REQUEST if missing input
  * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
  */
@@ -117,7 +117,7 @@ export const updateById = async (id, body) => {
   const cleanedBody = cleanBody(body);
   if (!cleanedBody) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
 
-  const updatedDoc = await SummarizedCountyTrappingModel.findByIdAndUpdate(id, cleanBody, {
+  const updatedDoc = await SummarizedCountyModel.findByIdAndUpdate(id, cleanBody, {
     new: true,
     omitUndefined: true,
   });
@@ -128,11 +128,11 @@ export const updateById = async (id, body) => {
 /**
  * @description Deletes one year's data in the summarized county collection.
  * @param {String} id ID of the document to delete
- * @returns {Promise<SummarizedCountyTrappingModel>} deleted doc
+ * @returns {Promise<SummarizedCountyModel>} deleted doc
  * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
  */
 export const deleteById = async (id) => {
-  const deletedDoc = await SummarizedCountyTrappingModel.findByIdAndDelete(id);
+  const deletedDoc = await SummarizedCountyModel.findByIdAndDelete(id);
   if (!deletedDoc) throw newError(RESPONSE_TYPES.NOT_FOUND, 'ID not found');
   return deletedDoc;
 };
@@ -143,7 +143,7 @@ export const deleteById = async (id) => {
  * @returns {Promise}
  */
 export const deleteAll = async (options = {}) => {
-  return SummarizedCountyTrappingModel.deleteMany(options);
+  return SummarizedCountyModel.deleteMany(options);
 };
 
 /**
@@ -154,16 +154,16 @@ export const deleteAll = async (options = {}) => {
  */
 export const deleteStateYear = async (state, year) => {
   if (state === 2018) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'Cannot delete 2018 data');
-  return SummarizedCountyTrappingModel.deleteMany({ state, year });
+  return SummarizedCountyModel.deleteMany({ state, year });
 };
 
 /**
  * @description Summarizes all trapping data at the county level. Will overwrite all entries in this collection.
  */
 export const summarizeAll = async () => {
-  return UnsummarizedTrappingModel.aggregate([
-    ...aggregationPipelineCreator('county', 'summarizedcountytrappings'),
-  ]).exec();
+  // return UnsummarizedTrappingModel.aggregate([
+  //   ...aggregationPipelineCreator('county', 'summarizedcountytrappings'),
+  // ]).exec();
 };
 
 /**
@@ -173,10 +173,10 @@ export const summarizeAll = async () => {
  * @param {Number} year the year to summarize
  */
 export const summarizeStateYear = async (state, year) => {
-  return UnsummarizedTrappingModel.aggregate([
-    ...matchStateYear(state, year),
-    ...aggregationPipelineCreator('county', 'summarizedcountytrappings'),
-  ]).exec();
+  // return UnsummarizedTrappingModel.aggregate([
+  //   ...matchStateYear(state, year),
+  //   ...aggregationPipelineCreator('county', 'summarizedcountytrappings'),
+  // ]).exec();
 };
 
 /**
@@ -187,7 +187,7 @@ export const summarizeStateYear = async (state, year) => {
  * @param {String} county the county to return
  */
 export const getByFilter = async (startYear, endYear, state, county) => {
-  const query = SummarizedCountyTrappingModel.find();
+  const query = SummarizedCountyModel.find();
 
   if (startYear) query.find({ year: { $gte: startYear } });
   if (endYear) query.find({ year: { $lte: endYear } });

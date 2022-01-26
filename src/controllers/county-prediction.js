@@ -1,163 +1,79 @@
-/* eslint-disable no-restricted-globals */
-import { CountyPredictionModel, SummarizedCountyTrappingModel } from '../models';
-import * as rModel from './r-model';
+// /* eslint-disable no-restricted-globals */
+// import * as rModel from './r-model';
 
-import { RESPONSE_TYPES } from '../constants';
+// import {
+//   getIndexes,
+//   predictionFetchCreator,
+//   predictionGeneratorCreator,
+//   matchStateYear,
+//   upsertOpCreator,
+// } from '../utils';
 
-import {
-  cleanBodyCreator,
-  csvDownloadCreator,
-  getIndexes,
-  getModelAttributes,
-  predictionFetchCreator,
-  predictionGeneratorCreator,
-  matchStateYear,
-  newError,
-  upsertOpCreator,
-} from '../utils';
+// // upsert transform
+// const upsertOp = upsertOpCreator(getIndexes(CountyPredictionModel));
 
-const modelAttributes = getModelAttributes(CountyPredictionModel);
+// /**
+//    * @description generates all predictions for the county level data.
+//    * @param {Array<SummarizedCountyTrappingModel> sourceTrappingData the array of data to generate predictions over
+//    * @param {Array<SummarizedCountyTrappingModel> t1TrappingData the array of data to do reverse year lookups on
+//    * @returns {Promise<[CountyPredictionModel]>} all docs
+//    */
+// const predictionGenerator = predictionGeneratorCreator('county', rModel.runModel, CountyPredictionModel, upsertOp);
 
-// this is a function to clean req.body
-const cleanBody = cleanBodyCreator(modelAttributes);
+// /**
+//  * @description generates all preds on county level
+//  */
+// export const generateAllPredictions = async () => {
+//   const allTrappingData = await SummarizedCountyTrappingModel.aggregate([
+//     ...predictionFetchCreator('county'),
+//   ]).exec();
 
-const downloadFieldsToOmit = ['cleridPerDay', 'spbPerDay', 'prediction'];
+//   return predictionGenerator(allTrappingData, allTrappingData);
+// };
 
-/**
- * @description downloads a csv of the entire collection
- * @throws RESPONSE_TYPES.INTERNAL_ERROR for problem parsing CSV
- * @returns {String} path to CSV file
- */
-export const downloadCsv = csvDownloadCreator(
-  CountyPredictionModel,
-  modelAttributes.filter((a) => !downloadFieldsToOmit.includes(a)),
-  true,
-);
+// /**
+//  * @description generates predictions by county on a state and year
+//  * @param {String} state the state abbreviation
+//  * @param {String} year the year abbreviation
+//  */
+// export const generateStateYearPredictions = async (state, year) => {
+//   const sourcePromise = SummarizedCountyTrappingModel.aggregate([
+//     ...matchStateYear(state, year),
+//     ...predictionFetchCreator('county'),
+//   ]).exec();
 
-// upsert transform
-const upsertOp = upsertOpCreator(getIndexes(CountyPredictionModel));
+//   const t1Promise = SummarizedCountyTrappingModel.aggregate([
+//     ...matchStateYear(state, year - 1),
+//     ...predictionFetchCreator('county'),
+//   ]).exec();
 
-/**
- * @description Fetches one year's data from the county prediction collection.
- * @param {String} id ID of the document wanted
- * @returns {Promise<CountyPredictionModel>} the document in question
- * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
- */
-export const getById = async (id) => {
-  const doc = await CountyPredictionModel.findById(id);
-  if (!doc) throw newError(RESPONSE_TYPES.NOT_FOUND, 'ID not found');
-  return doc;
-};
+//   const sourceTrappingData = await sourcePromise;
+//   const t1TrappingData = await t1Promise;
 
-/**
-   * @description Fetches all data from the county prediction collection.
-   * @returns {Promise<[CountyPredictionModel]>} all docs
-   */
-export const getAll = async () => {
-  return CountyPredictionModel.find();
-};
+//   return predictionGenerator(sourceTrappingData, t1TrappingData);
+// };
 
-/**
-   * @description Inserts one year's data into the county prediction collection.
-   * @param {Object} body request body to be cleaned and added
-   * @returns {Promise<CountyPredictionModel>}
-   * @throws RESPONSE_TYPES.BAD_REQUEST if missing input
-   */
-export const insertOne = async (body) => {
-  const cleanedBody = cleanBody(body);
-  if (!cleanedBody) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
+// // from router (only relevant thing to keep):
 
-  const newDoc = new CountyPredictionModel(body);
-  return newDoc.save();
-};
+// CountyPredictionRouter.route('/predict')
+//   .get(requireAuth, async (req, res) => {
+//     try {
+//       const { state, year } = req.query;
+//       if (state && year) {
+//         await CountyPrediction.generateStateYearPredictions(state, parseInt(year, 10));
+//       } else {
+//         await CountyPrediction.generateAllPredictions();
+//       }
 
-/**
-   * @description Updates one year's data in the county prediction collection.
-   * @param {String} id ID of the document to update
-   * @param {Object} body request body to be cleaned and added
-   * @returns {Promise<CountyPredictionModel>}
-   * @throws RESPONSE_TYPES.BAD_REQUEST if missing input
-   * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
-   */
-export const updateById = async (id, body) => {
-  const cleanedBody = cleanBody(body);
-  if (!cleanedBody) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
+//       const message = state && year
+//         ? `predicted by county on ${state} for ${year}`
+//         : 'predicted all by county';
 
-  const updatedDoc = await CountyPredictionModel.findByIdAndUpdate(id, body, {
-    new: true,
-    omitUndefined: true,
-  });
-  if (!updatedDoc) throw newError(RESPONSE_TYPES.NOT_FOUND, 'ID not found');
-  return updatedDoc;
-};
-
-/**
-   * @description Deletes one year's data in the county prediction collection.
-   * @param {String} id ID of the document to delete
-   * @returns {Promise<CountyPredictionModel>}
-   * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
-   */
-export const deleteById = async (id) => {
-  const deletedDoc = await CountyPredictionModel.findByIdAndDelete(id);
-  if (!deletedDoc) throw newError(RESPONSE_TYPES.NOT_FOUND, 'ID not found');
-  return deletedDoc;
-};
-
-/**
- * @description Deletes all data in the collection
- * @returns {Promise}
- */
-export const deleteAll = async () => {
-  return CountyPredictionModel.deleteMany();
-};
-
-/**
- * @description Deletes all data in the collection
- * @param {String} state state name
- * @param {Number} year year
- * @returns {Promise}
- */
-export const deleteStateYear = async (state, year) => {
-  return CountyPredictionModel.deleteMany({ state, year });
-};
-
-/**
-   * @description generates all predictions for the county level data.
-   * @param {Array<SummarizedCountyTrappingModel> sourceTrappingData the array of data to generate predictions over
-   * @param {Array<SummarizedCountyTrappingModel> t1TrappingData the array of data to do reverse year lookups on
-   * @returns {Promise<[CountyPredictionModel]>} all docs
-   */
-const predictionGenerator = predictionGeneratorCreator('county', rModel.runModel, CountyPredictionModel, upsertOp);
-
-/**
- * @description generates all preds on county level
- */
-export const generateAllPredictions = async () => {
-  const allTrappingData = await SummarizedCountyTrappingModel.aggregate([
-    ...predictionFetchCreator('county'),
-  ]).exec();
-
-  return predictionGenerator(allTrappingData, allTrappingData);
-};
-
-/**
- * @description generates predictions by county on a state and year
- * @param {String} state the state abbreviation
- * @param {String} year the year abbreviation
- */
-export const generateStateYearPredictions = async (state, year) => {
-  const sourcePromise = SummarizedCountyTrappingModel.aggregate([
-    ...matchStateYear(state, year),
-    ...predictionFetchCreator('county'),
-  ]).exec();
-
-  const t1Promise = SummarizedCountyTrappingModel.aggregate([
-    ...matchStateYear(state, year - 1),
-    ...predictionFetchCreator('county'),
-  ]).exec();
-
-  const sourceTrappingData = await sourcePromise;
-  const t1TrappingData = await t1Promise;
-
-  return predictionGenerator(sourceTrappingData, t1TrappingData);
-};
+//       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, message));
+//     } catch (error) {
+//       const errorResponse = generateErrorResponse(error);
+//       const { error: errorMessage, status } = errorResponse;
+//       console.log(errorMessage);
+//       res.status(status).send(errorResponse);
+//     }
+//   });

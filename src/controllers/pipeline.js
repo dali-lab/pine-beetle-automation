@@ -3,28 +3,28 @@ import {
   deleteStateYear as countySummarizeDeleteStateYear,
   summarizeAll as countySummarizeAll,
   summarizeStateYear as countySummarizeStateYear,
-} from './summarized-county-trapping';
+} from './summarized-county';
 
 import {
   deleteAll as rangerDistrictSummarizeDeleteAll,
   deleteStateYear as rangerDistrictSummarizeDeleteStateYear,
   summarizeAll as rangerDistrictSummarizeAll,
   summarizeStateYear as rangerDistrictSummarizeStateYear,
-} from './summarized-rangerdistrict-trapping';
+} from './summarized-rangerdistrict';
 
-import {
-  deleteAll as countyPredictionDeleteAll,
-  deleteStateYear as countyPredictionDeleteStateYear,
-  generateStateYearPredictions as countyGenerateStateYearPredictions,
-  generateAllPredictions as countyGenerateAllPredictions,
-} from './county-prediction';
+// import {
+//   deleteAll as countyPredictionDeleteAll,
+//   deleteStateYear as countyPredictionDeleteStateYear,
+//   generateStateYearPredictions as countyGenerateStateYearPredictions,
+//   generateAllPredictions as countyGenerateAllPredictions,
+// } from './county-prediction';
 
-import {
-  deleteAll as rangerDistrictPredictionDeleteAll,
-  deleteStateYear as rangerDistrictPredictionDeleteStateYear,
-  generateStateYearPredictions as rangerDistrictGenerateStateYearPredictions,
-  generateAllPredictions as rangerDistrictGenerateAllPredictions,
-} from './rd-prediction';
+// import {
+//   deleteAll as rangerDistrictPredictionDeleteAll,
+//   deleteStateYear as rangerDistrictPredictionDeleteStateYear,
+//   generateStateYearPredictions as rangerDistrictGenerateStateYearPredictions,
+//   generateAllPredictions as rangerDistrictGenerateAllPredictions,
+// } from './rd-prediction';
 
 const ignore2018DataOptions = {
   year: { $ne: 2018 },
@@ -38,8 +38,8 @@ export const runPipelineAll = async () => {
     const deleteResult = await Promise.all([
       countySummarizeDeleteAll(ignore2018DataOptions),
       rangerDistrictSummarizeDeleteAll(ignore2018DataOptions),
-      countyPredictionDeleteAll(),
-      rangerDistrictPredictionDeleteAll(),
+      // countyPredictionDeleteAll(),
+      // rangerDistrictPredictionDeleteAll(),
     ]);
 
     // summarize county and ranger district data
@@ -60,8 +60,8 @@ export const runPipelineAll = async () => {
 
     // generate predictions
     const predictionResult = await Promise.all([
-      countyGenerateAllPredictions(),
-      rangerDistrictGenerateAllPredictions(),
+      // countyGenerateAllPredictions(),
+      // rangerDistrictGenerateAllPredictions(),
     ]);
 
     console.log('FINISHED RUNNING PIPELINE');
@@ -95,8 +95,8 @@ export const runPipelineStateYear = async (state, rawYear = '0') => {
     const deleteResult = await Promise.all([
       countySummarizeDeleteStateYear(state, year),
       rangerDistrictSummarizeDeleteStateYear(state, year),
-      countyPredictionDeleteStateYear(state, year),
-      rangerDistrictPredictionDeleteStateYear(state, year),
+      // countyPredictionDeleteStateYear(state, year),
+      // rangerDistrictPredictionDeleteStateYear(state, year),
     ]);
 
     // summarize county and ranger district data
@@ -117,8 +117,8 @@ export const runPipelineStateYear = async (state, rawYear = '0') => {
 
     // generate predictions
     const predictionResult = await Promise.all([
-      countyGenerateStateYearPredictions(state, year),
-      rangerDistrictGenerateStateYearPredictions(state, year),
+      // countyGenerateStateYearPredictions(state, year),
+      // rangerDistrictGenerateStateYearPredictions(state, year),
     ]);
 
     console.log(`FINISHED RUNNING PIPELINE ON STATE ${state}, YEAR ${year}`);

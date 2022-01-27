@@ -14,8 +14,6 @@ import {
   newError,
 } from './responses';
 
-import { predictionGeneratorCreator } from './predictions';
-
 import {
   cleanBodyCreator,
   getModelAttributes,
@@ -23,10 +21,11 @@ import {
 } from './requests';
 
 import {
-  trappingAggregationPipelineCreator,
-  offsetYearPassCreator,
   indicatorGeneratorCreator,
-} from './mongo';
+  offsetYearPassCreator,
+  predictionGeneratorCreator,
+  trappingAggregationPipelineCreator,
+} from './pipeline';
 
 import {
   csvUploadSurvey123Creator,

@@ -1,3 +1,5 @@
+import * as rModel from './r-model';
+
 import {
   SummarizedCountyModel,
   UnsummarizedTrappingModel,
@@ -15,6 +17,7 @@ import {
   indicatorGeneratorCreator,
   newError,
   offsetYearPassCreator,
+  predictionGeneratorCreator,
   trappingAggregationPipelineCreator,
   upsertOpCreator,
   validateNumberEntry,
@@ -226,6 +229,12 @@ export const yearT1Pass = (filter) => {
 
 /**
  * @description function for setting indicator variables in model
- * @returns {(filter: Object) => Promise} async function receiving filter to generate indicators
+ * @returns {(filter: Object) => Promise} async function receiving filter for data subsetting
  */
 export const indicatorPass = indicatorGeneratorCreator('county', SummarizedCountyModel, upsertOp);
+
+/**
+   * @description generates all predictions for the county level data
+   * @returns {(filter: Object) => Promise} async function receiving filter for data subsetting
+   */
+export const generateAllPredictions = predictionGeneratorCreator('county', rModel.runModel, SummarizedCountyModel, upsertOp);

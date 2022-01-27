@@ -5,6 +5,7 @@ import {
   yearT1Pass as countyYearT1Pass,
   yearT2Pass as countyYearT2Pass,
   indicatorPass as countyIndicatorPass,
+  generateAllPredictions as countyGenerateAllPredictions,
 } from './summarized-county';
 
 import {
@@ -12,17 +13,8 @@ import {
   yearT1Pass as rangerDistrictYearT1Pass,
   yearT2Pass as rangerDistrictYearT2Pass,
   indicatorPass as rangerDistrictIndicatorPass,
+  generateAllPredictions as rangerDistrictGenerateAllPredictions,
 } from './summarized-rangerdistrict';
-
-// import {
-//   generateStateYearPredictions as countyGenerateStateYearPredictions,
-//   generateAllPredictions as countyGenerateAllPredictions,
-// } from './county-prediction';
-
-// import {
-//   generateStateYearPredictions as rangerDistrictGenerateStateYearPredictions,
-//   generateAllPredictions as rangerDistrictGenerateAllPredictions,
-// } from './rd-prediction';
 
 // year before which we want to leave the data unmodified
 const CUTOFF_YEAR = 2021;
@@ -69,8 +61,8 @@ export const runPipelineAll = async () => {
 
     // generate predictions
     const predictionResult = await Promise.all([
-      // countyGenerateAllPredictions(),
-      // rangerDistrictGenerateAllPredictions(),
+      countyGenerateAllPredictions(yearT0Filter),
+      rangerDistrictGenerateAllPredictions(yearT0Filter),
     ]);
 
     console.log('FINISHED RUNNING PIPELINE');

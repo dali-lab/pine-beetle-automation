@@ -1,3 +1,4 @@
+/* eslint-disable new-cap */
 /* eslint-disable import/prefer-default-export */
 /* eslint-disable sort-keys */
 /**
@@ -249,74 +250,101 @@ export const indicatorGeneratorCreator = (location, Model, upsertOp) => async (f
   return Model.bulkWrite(writeOp);
 };
 
-// /**
-//  * fetches from the specified model for predictions, filters out duplicate endo/non endo entries
-//  * @param {String} location county or rangerDistrict
-//  */
-// export const predictionFetchCreator = (location) => [
-//   // sort in order so endobrev goes 0,1
-//   {
-//     $sort: {
-//       year: 1,
-//       state: 1,
-//       [location]: 1,
-//       endobrev: 1,
-//     },
-//   },
-//   // filter out duplicate endobrev
-//   {
-//     $group: {
-//       _id: {
-//         [location]: `$${location}`,
-//         state: '$state',
-//         year: '$year',
-//       },
-//       cleridPerDay: {
-//         $last: '$cleridPerDay',
-//       },
-//       cleridsPer2Weeks: {
-//         $last: '$cleridsPer2Weeks',
-//       },
-//       endobrev: {
-//         $last: '$endobrev',
-//       },
-//       spbPerDay: {
-//         $last: '$spbPerDay',
-//       },
-//       spbPer2Weeks: {
-//         $last: '$spbPer2Weeks',
-//       },
-//       spots: {
-//         $last: '$spots',
-//       },
-//       spotst1: {
-//         $last: '$spotst1',
-//       },
-//       spotst2: {
-//         $last: '$spotst2',
-//       },
-//       trapCount: {
-//         $last: '$trapCount',
-//       },
-//     },
-//   },
-//   // reformat and return data
-//   {
-//     $project: {
-//       _id: 0,
-//       cleridPerDay: 1,
-//       cleridsPer2Weeks: 1,
-//       county: '$_id.county',
-//       endobrev: 1,
-//       [location]: `$_id.${location}`,
-//       spbPerDay: 1,
-//       spbPer2Weeks: 1,
-//       spots: 1,
-//       spotst1: 1,
-//       spotst2: 1,
-//       state: '$_id.state',
-//       trapCount: 1,
-//       year: '$_id.year',
-//     },
-//   },
-// ];
+/**
+ * higher-order function to create a prediction generator
+ * @param {String} location either 'county' or 'rangerDistrict'
+ * @param {Function} ScriptRunner service to execute the model running
+ * @param {mongoose.Model} Model destination model to write to
+ * @param {Function} upsertOp an upsert operation to do bulkwrites with
+ * @returns {(filter: Object) => Promise}
+ */
+export const predictionGeneratorCreator = (location, ScriptRunner, Model, upsertOp) => async (filter = {}) => {
+  const data = await Model.find({
+    ...filter,
+    isValidForPrediction: 1,
+  });
+
+  const rawInputs = data.map((doc) => {
+    const {
+      cleridst1,
+      endobrev,
+      spbPer2Weeks: SPB,
+      spotst1,
+      spotst2,
+      state,
+      year,
+      [location]: loc,
+    } = doc;
+
+    if (SPB === null || Number.isNaN(SPB) || Number.isNaN(cleridst1)
+    || spotst1 === null || Number.isNaN(spotst1) || spotst2 === null || Number.isNaN(spotst2)
+    || endobrev === null || Number.isNaN(endobrev)) {
+      return null;
+    }
+
+    const allValidInput = [SPB, cleridst1, spotst1, spotst2, endobrev].reduce((acc, curr) => (
+      acc && (curr === null || curr >= 0)
+    ), true);
+
+    if (!allValidInput) {
+      return null;
+    }
+
+    return {
+      state,
+      year,
+      [location]: loc,
+      endobrev,
+      SPB,
+      spotst1,
+      spotst2,
+      cleridst1,
+    };
+  });
+
+  // remove missing entries
+  const inputs = rawInputs.filter((obj) => !!obj);
+  const allPredictions = await ScriptRunner(inputs);
+
+  // reformat and insert corresponding predictions object at the same index
+  const updatedData = inputs.map((doc, index) => {
+    const {
+      endobrev,
+      state,
+      year,
+      [location]: loc,
+    } = doc;
+
+    const {
+      'Exp spots if outbreak': expSpotsIfOutbreak,
+      mu,
+      pi,
+      'prob.Spots>0': probSpotsGT0,
+      'prob.Spots>19': probSpotsGT20,
+      'prob.Spots>53': probSpotsGT50,
+      'prob.Spots>147': probSpotsGT150,
+      'prob.Spots>402': probSpotsGT400,
+      'prob.Spots>1095': probSpotsGT1000,
+    } = allPredictions[index];
+
+    return {
+      endobrev,
+      state,
+      year,
+      [location]: loc,
+      pi,
+      mu,
+      expSpotsIfOutbreak,
+      probSpotsGT0,
+      probSpotsGT1000,
+      probSpotsGT150,
+      probSpotsGT20,
+      probSpotsGT400,
+      probSpotsGT50,
+    };
+  });
+
+  // upsert results into db
+  const writeOp = updatedData.map(upsertOp);
+  return Model.bulkWrite(writeOp);
+};

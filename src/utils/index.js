@@ -25,6 +25,7 @@ import {
 import {
   trappingAggregationPipelineCreator,
   offsetYearPassCreator,
+  indicatorGeneratorCreator,
 } from './mongo';
 
 import {
@@ -49,6 +50,7 @@ export {
   getIndexes,
   getModelAttributes,
   getModelNumericAttributes,
+  indicatorGeneratorCreator,
   newError,
   offsetYearPassCreator,
   predictionGeneratorCreator,

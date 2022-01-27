@@ -12,6 +12,7 @@ import {
   getIndexes,
   getModelAttributes,
   getModelNumericAttributes,
+  indicatorGeneratorCreator,
   newError,
   offsetYearPassCreator,
   trappingAggregationPipelineCreator,
@@ -222,3 +223,9 @@ export const yearT1Pass = (filter) => {
 
   return Promise.all([endoPipeline, noEndoPipeline]);
 };
+
+/**
+ * @description function for setting indicator variables in model
+ * @returns {(filter: Object) => Promise} async function receiving filter to generate indicators
+ */
+export const indicatorPass = indicatorGeneratorCreator('county', SummarizedCountyModel, upsertOp);

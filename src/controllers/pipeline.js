@@ -4,12 +4,14 @@ import {
   summarizeAll as countySummarizeAll,
   yearT1Pass as countyYearT1Pass,
   yearT2Pass as countyYearT2Pass,
+  indicatorPass as countyIndicatorPass,
 } from './summarized-county';
 
 import {
   summarizeAll as rangerDistrictSummarizeAll,
   yearT1Pass as rangerDistrictYearT1Pass,
   yearT2Pass as rangerDistrictYearT2Pass,
+  indicatorPass as rangerDistrictIndicatorPass,
 } from './summarized-rangerdistrict';
 
 // import {
@@ -59,15 +61,11 @@ export const runPipelineAll = async () => {
       rangerDistrictYearT1Pass(yearT1Filter),
     ]);
 
-    // append spot data
-    // const spotAppendResult = await Promise.all([
-    //   mergeCountySpots('t2'),
-    //   mergeCountySpots('t1'),
-    //   mergeCountySpots('t0'),
-    //   mergeRangerDistrictSpots('t2'),
-    //   mergeRangerDistrictSpots('t1'),
-    //   mergeRangerDistrictSpots('t0'),
-    // ]);
+    // set indicator variables
+    const indicatorPassResult = await Promise.all([
+      countyIndicatorPass(yearT0Filter),
+      rangerDistrictIndicatorPass(yearT0Filter),
+    ]);
 
     // generate predictions
     const predictionResult = await Promise.all([
@@ -82,6 +80,7 @@ export const runPipelineAll = async () => {
       yearT2PassResult,
       yearT1PassResult,
       predictionResult,
+      indicatorPassResult,
     };
   } catch (error) {
     console.log('ERROR RUNNING PIPELINE');

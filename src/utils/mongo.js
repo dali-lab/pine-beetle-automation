@@ -205,6 +205,50 @@ export const offsetYearPassCreator = (timescale) => {
   }
 };
 
+/**
+ * @description higher-order function for generating indicator variables
+ * @param {String} location either 'county' or 'rangerDistrict'
+ * @param {mongoose.Model} Model destination model to write to
+ * @param {Function} upsertOp an upsert operation to do bulkwrites with
+ * @returns {(filter: Object) => Promise}
+ */
+export const indicatorGeneratorCreator = (location, Model, upsertOp) => async (filter = {}) => {
+  const data = await Model.find(filter);
+
+  const indicators = data.map((doc) => {
+    const {
+      endobrev,
+      spbPer2Weeks,
+      spotst0,
+      spotst1,
+      spotst2,
+      state,
+      year,
+      [location]: loc,
+    } = doc;
+
+    const hasSPBTrapping = spbPer2Weeks !== null;
+    const isValidForPrediction = hasSPBTrapping && spotst1 !== null && spotst2 !== null;
+    const hasSpotst0 = spotst0 !== null;
+    const hasPredictionAndOutcome = isValidForPrediction && hasSpotst0;
+
+    return {
+      year,
+      state,
+      [location]: loc,
+      endobrev,
+      hasSPBTrapping: +hasSPBTrapping, // convert boolean to 1 or 0
+      isValidForPrediction: +isValidForPrediction, // convert boolean to 1 or 0
+      hasSpotst0: +hasSpotst0, // convert boolean to 1 or 0
+      hasPredictionAndOutcome: +hasPredictionAndOutcome, // convert boolean to 1 or 0
+    };
+  });
+
+  // upsert results into db
+  const writeOp = indicators.map(upsertOp);
+  return Model.bulkWrite(writeOp);
+};
+
 // /**
 //  * fetches from the specified model for predictions, filters out duplicate endo/non endo entries
 //  * @param {String} location county or rangerDistrict

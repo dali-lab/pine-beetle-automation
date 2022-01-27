@@ -27,53 +27,14 @@ import {
 
 const modelAttributes = getModelAttributes(SummarizedRangerDistrictModel);
 const numericModelAttributes = getModelNumericAttributes(SummarizedRangerDistrictModel);
+const spotAttributes = ['state', 'rangerDistrict', 'year', 'spotst0'];
+const downloadFieldsToOmit = ['cleridPerDay', 'spbPerDay'];
 
 // this is a function to clean req.body
 const cleanBody = cleanBodyCreator(modelAttributes);
 
+// generic upsert operator for this model
 const upsertOp = upsertOpCreator(getIndexes(SummarizedRangerDistrictModel));
-
-// function for cleaning row of csv (will cast undefined or empty string to null for specified fields)
-const cleanCsv = (row) => {
-  const cleanedNumericValues = numericModelAttributes.reduce((acc, curr) => ({
-    ...acc,
-    [curr]: validateNumberEntry(row[curr]),
-  }), {});
-
-  return {
-    ...row,
-    ...cleanedNumericValues,
-    cleridPerDay: row.cleridPerDay ?? {},
-    spbPerDay: row.spbPerDay ?? {},
-  };
-};
-
-/**
- * @description uploads a csv to the summarized ranger district collection
- * @param {String} filename the csv filename on disk
- * @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
- * @throws other errors depending on what went wrong
- */
-export const uploadCsv = csvUploadCreator(
-  SummarizedRangerDistrictModel,
-  cleanCsv,
-  cleanBody,
-  undefined,
-  undefined,
-  upsertOp,
-);
-
-const downloadFieldsToOmit = ['cleridPerDay', 'spbPerDay'];
-
-/**
- * @description downloads a csv of the entire collection
- * @throws RESPONSE_TYPES.INTERNAL_ERROR for problem parsing CSV
- * @returns {String} path to CSV file
- */
-export const downloadCsv = csvDownloadCreator(
-  SummarizedRangerDistrictModel,
-  modelAttributes.filter((a) => !downloadFieldsToOmit.includes(a)),
-);
 
 /**
  * @description Fetches one year's data from the summarized ranger district collection.
@@ -136,10 +97,7 @@ export const insertOne = async (body) => {
  * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
  */
 export const updateById = async (id, body) => {
-  const cleanedBody = cleanBody(body);
-  if (!cleanedBody) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
-
-  const updatedDoc = await SummarizedRangerDistrictModel.findByIdAndUpdate(id, cleanBody, {
+  const updatedDoc = await SummarizedRangerDistrictModel.findByIdAndUpdate(id, body, {
     new: true,
     omitUndefined: true,
   });
@@ -178,6 +136,80 @@ export const deleteStateYear = async (state, year) => {
   if (state === 2018) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'Cannot delete 2018 data');
   return SummarizedRangerDistrictModel.deleteMany({ state, year });
 };
+
+/**
+ * @description downloads a csv of the entire collection
+ * @throws RESPONSE_TYPES.INTERNAL_ERROR for problem parsing CSV
+ * @returns {String} path to CSV file
+ */
+export const downloadCsv = csvDownloadCreator(
+  SummarizedRangerDistrictModel,
+  modelAttributes.filter((a) => !downloadFieldsToOmit.includes(a)),
+);
+
+// function for cleaning row of csv (will cast undefined or empty string to null for specified fields)
+const cleanCsv = (row) => {
+  const cleanedNumericValues = numericModelAttributes.reduce((acc, curr) => ({
+    ...acc,
+    [curr]: validateNumberEntry(row[curr]),
+  }), {});
+
+  return {
+    ...row,
+    ...cleanedNumericValues,
+    cleridPerDay: row.cleridPerDay ?? {},
+    spbPerDay: row.spbPerDay ?? {},
+  };
+};
+
+/**
+ * @description uploads a csv to the summarized ranger district collection
+ * @param {String} filename the csv filename on disk
+ * @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
+ * @throws other errors depending on what went wrong
+ */
+export const uploadCsv = csvUploadCreator(
+  SummarizedRangerDistrictModel,
+  cleanCsv,
+  cleanBody,
+  undefined,
+  undefined,
+  upsertOp,
+);
+
+/**
+ * @description cleans row of CSV for spot upload, casts undefined or empty string to null
+ * @param {Object} row object representing a row of data for this model
+ * @returns {Object} cleaned row
+ */
+const cleanSpotsCsv = (row) => {
+  const {
+    rangerDistrict,
+    spotst0,
+    state,
+    year,
+  } = row;
+
+  return {
+    rangerDistrict,
+    spotst0: validateNumberEntry(spotst0),
+    state,
+    year,
+  };
+};
+
+/**
+ * @description uploads spot data on county level
+ * @returns {(filename: String) => Promise} async function receiving filter for data subsetting
+ */
+export const uploadSpotsCsv = csvUploadCreator(
+  SummarizedRangerDistrictModel,
+  cleanSpotsCsv,
+  cleanBodyCreator(spotAttributes),
+  undefined,
+  undefined,
+  upsertOpCreator(['state', 'year', 'rangerDistrict']),
+);
 
 /**
  * @description Summarizes all trapping data at the ranger district level. Will overwrite all entries in this collection.

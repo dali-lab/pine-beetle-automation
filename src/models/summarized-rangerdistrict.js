@@ -1,4 +1,3 @@
-/* eslint-disable sort-keys */
 import mongoose, { Schema } from 'mongoose';
 
 // rangerdistrict-level summarized data aggregated by year

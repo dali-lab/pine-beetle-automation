@@ -1,4 +1,3 @@
-/* eslint-disable sort-keys */
 /* eslint-disable import/prefer-default-export */
 import {
   summarizeAll as countySummarizeAll,

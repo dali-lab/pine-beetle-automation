@@ -1,6 +1,5 @@
 /* eslint-disable new-cap */
 /* eslint-disable import/prefer-default-export */
-/* eslint-disable sort-keys */
 /**
  * @description creates a custom aggregation pipeline for either county or RD
  * @param {String} location either 'county' or 'rangerDistrict'

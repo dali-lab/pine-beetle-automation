@@ -1,4 +1,3 @@
-/* eslint-disable sort-keys */
 import mongoose, { Schema } from 'mongoose';
 import numeral from 'numeral';
 

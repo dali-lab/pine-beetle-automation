@@ -84,7 +84,7 @@ const SummarizedRangerDistrictSchema = new Schema({
     default: null,
     type: Object,
   },
-  cleridPer2Weeks: { // number  of clerids collected per trap per 14 days (cleridCount / totalTrappingDays * 14)
+  cleridsPer2Weeks: { // number  of clerids collected per trap per 14 days (cleridCount / totalTrappingDays * 14)
     default: null,
     min: 0,
     type: Number,
@@ -94,7 +94,7 @@ const SummarizedRangerDistrictSchema = new Schema({
     default: null,
     type: Object,
   },
-  cleridst1: { // cleridsPerDay in this state/county in year - 1
+  cleridst1: { // cleridsPer2Weeks in this state/county in year - 1
     default: null,
     min: 0,
     type: Number,

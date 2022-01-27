@@ -24,11 +24,7 @@ import {
 
 import {
   trappingAggregationPipelineCreator,
-  predictionFetchCreator,
-  matchState,
-  matchStateYear,
-  matchYear,
-  mergeSpotDataCreator,
+  offsetYearPassCreator,
 } from './mongo';
 
 import {
@@ -41,7 +37,6 @@ import {
 } from './survey123';
 
 export {
-  trappingAggregationPipelineCreator,
   cleanBodyCreator,
   cleanCsvCreator,
   csvDownloadCreator,
@@ -54,16 +49,13 @@ export {
   getIndexes,
   getModelAttributes,
   getModelNumericAttributes,
-  matchState,
-  matchStateYear,
-  matchYear,
-  mergeSpotDataCreator,
   newError,
-  predictionFetchCreator,
+  offsetYearPassCreator,
   predictionGeneratorCreator,
   survey123UnpackCreator,
   survey123WebhookUnpackCreator,
   transformSurvey123GlobalID,
+  trappingAggregationPipelineCreator,
   unsummarizedDataCsvUploadCreator,
   upsertOpCreator,
   validateNumberEntry,

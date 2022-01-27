@@ -148,3 +148,13 @@ export const deleteById = async (id) => {
   if (!deletedDoc) throw newError(RESPONSE_TYPES.NOT_FOUND, 'ID not found');
   return deletedDoc;
 };
+
+/**
+ * @description Deletes all data in the unsummarized collection.
+ * @param {Object={}} [options] optional options object
+ * @returns {Promise<UnsummarizedTrappingModel>}
+ * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
+ */
+export const deleteAll = async (options) => {
+  return UnsummarizedTrappingModel.deleteMany(options);
+};

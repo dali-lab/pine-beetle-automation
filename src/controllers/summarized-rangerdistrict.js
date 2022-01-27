@@ -5,19 +5,18 @@ import {
 
 import {
   RESPONSE_TYPES,
-  // STATE_RANGER_DISTRICT_NAME_MAPPING,
 } from '../constants';
 
 import {
-  trappingAggregationPipelineCreator,
   cleanBodyCreator,
   csvDownloadCreator,
   csvUploadCreator,
   getIndexes,
   getModelAttributes,
   getModelNumericAttributes,
-  // matchStateYear,
   newError,
+  offsetYearPassCreator,
+  trappingAggregationPipelineCreator,
   upsertOpCreator,
   validateNumberEntry,
 } from '../utils';
@@ -90,6 +89,24 @@ export const getById = async (id) => {
  */
 export const getAll = async () => {
   return SummarizedRangerDistrictModel.find();
+};
+
+/**
+ * Fetches summarized ranger district trapping data depending on a filter.
+ * @param {Number} startYear the earliest year to return, inclusive
+ * @param {Number} endYear the latest year to return, inclusive
+ * @param {String} state the state to return
+ * @param {String} ranger district the county to return
+ */
+export const getByFilter = async (startYear, endYear, state, rangerDistrict) => {
+  const query = SummarizedRangerDistrictModel.find();
+
+  if (startYear) query.find({ year: { $gte: startYear } });
+  if (endYear) query.find({ year: { $lte: endYear } });
+  if (state) query.find({ state });
+  if (rangerDistrict) query.find({ rangerDistrict });
+
+  return query.exec();
 };
 
 /**
@@ -169,32 +186,41 @@ export const summarizeAll = async (filter) => {
 };
 
 /**
- * @description Summarizes all trapping data at the ranger district level for a given state and year.
- * Should be triggered by Survey123 data indicating a state has finished collection for a year.
- * @param {String} state the state to summarize
- * @param {Number} year the year to summarize
+ * @description cycles through year-2 data to set spotst2
+ * @param {Object} filter mongo query filter for subsetting data
  */
-export const summarizeStateYear = async (state, year) => {
-  // return UnsummarizedTrappingModel.aggregate([
-  //   ...matchStateYear(state, year),
-  //   ...aggregationPipelineCreator('rangerDistrict', 'summarizedrangerdistricttrappings'),
-  // ]).exec();
+export const yearT2Pass = (filter) => {
+  // running two pipelines split on endobrev value to accomodate the db collection index
+  // data from 2021 onwards will not have split endobrev values for a state/year/rangerDistrict
+  // therefore, we need to run these separately to accomodate the db index, but it makes no difference in the data outcome
+
+  const endoPipeline = SummarizedRangerDistrictModel.aggregate([
+    ...offsetYearPassCreator('t2')('rangerDistrict', 'summarizedrangerdistricts', filter, 1),
+  ]).exec();
+
+  const noEndoPipeline = SummarizedRangerDistrictModel.aggregate([
+    ...offsetYearPassCreator('t2')('rangerDistrict', 'summarizedrangerdistricts', filter, 0),
+  ]).exec();
+
+  return Promise.all([endoPipeline, noEndoPipeline]);
 };
 
 /**
- * Fetches summarized ranger district trapping data depending on a filter.
- * @param {Number} startYear the earliest year to return, inclusive
- * @param {Number} endYear the latest year to return, inclusive
- * @param {String} state the state to return
- * @param {String} ranger district the county to return
+ * @description cycles through year-1 data to set spotst1 & cleridst1
+ * @param {Object} filter mongo query filter for subsetting data
  */
-export const getByFilter = async (startYear, endYear, state, rangerDistrict) => {
-  const query = SummarizedRangerDistrictModel.find();
+export const yearT1Pass = (filter) => {
+  // running two pipelines split on endobrev value to accomodate the db collection index
+  // data from 2021 onwards will not have split endobrev values for a state/year/rangerDistrict
+  // therefore, we need to run these separately to accomodate the db index, but it makes no difference in the data outcome
 
-  if (startYear) query.find({ year: { $gte: startYear } });
-  if (endYear) query.find({ year: { $lte: endYear } });
-  if (state) query.find({ state });
-  if (rangerDistrict) query.find({ rangerDistrict });
+  const endoPipeline = SummarizedRangerDistrictModel.aggregate([
+    ...offsetYearPassCreator('t1')('rangerDistrict', 'summarizedrangerdistricts', filter, 1),
+  ]).exec();
 
-  return query.exec();
+  const noEndoPipeline = SummarizedRangerDistrictModel.aggregate([
+    ...offsetYearPassCreator('t1')('rangerDistrict', 'summarizedrangerdistricts', filter, 0),
+  ]).exec();
+
+  return Promise.all([endoPipeline, noEndoPipeline]);
 };

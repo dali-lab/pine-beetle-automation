@@ -6,15 +6,15 @@ import {
 import { RESPONSE_TYPES } from '../constants';
 
 import {
-  trappingAggregationPipelineCreator,
   cleanBodyCreator,
   csvDownloadCreator,
   csvUploadCreator,
   getIndexes,
   getModelAttributes,
   getModelNumericAttributes,
-  // matchStateYear,
   newError,
+  offsetYearPassCreator,
+  trappingAggregationPipelineCreator,
   upsertOpCreator,
   validateNumberEntry,
 } from '../utils';
@@ -87,6 +87,24 @@ export const getById = async (id) => {
  */
 export const getAll = async () => {
   return SummarizedCountyModel.find();
+};
+
+/**
+ * Fetches summarized county trapping data depending on a filter.
+ * @param {Number} startYear the earliest year to return, inclusive
+ * @param {Number} endYear the latest year to return, inclusive
+ * @param {String} state the state to return
+ * @param {String} county the county to return
+ */
+export const getByFilter = async (startYear, endYear, state, county) => {
+  const query = SummarizedCountyModel.find();
+
+  if (startYear) query.find({ year: { $gte: startYear } });
+  if (endYear) query.find({ year: { $lte: endYear } });
+  if (state) query.find({ state });
+  if (county) query.find({ county });
+
+  return query.exec();
 };
 
 /**
@@ -166,32 +184,41 @@ export const summarizeAll = async (filter) => {
 };
 
 /**
- * @description Summarizes all trapping data at the county level for a given state and year.
- * Should be triggered by Survey123 data indicating a state has finished collection for a year.
- * @param {String} state the state to summarize
- * @param {Number} year the year to summarize
+ * @description cycles through year-2 data to set spotst2
+ * @param {Object} filter mongo query filter for subsetting data
  */
-export const summarizeStateYear = async (state, year) => {
-  // return UnsummarizedTrappingModel.aggregate([
-  //   ...matchStateYear(state, year),
-  //   ...aggregationPipelineCreator('county', 'summarizedcountytrappings'),
-  // ]).exec();
+export const yearT2Pass = async (filter) => {
+  // running two pipelines split on endobrev value to accomodate the db collection index
+  // data from 2021 onwards will not have split endobrev values for a state/year/county
+  // therefore, we need to run these separately to accomodate the db index, but it makes no difference in the data outcome
+
+  const endoPipeline = SummarizedCountyModel.aggregate([
+    ...offsetYearPassCreator('t2')('county', 'summarizedcounties', filter, 1),
+  ]).exec();
+
+  const noEndoPipeline = SummarizedCountyModel.aggregate([
+    ...offsetYearPassCreator('t2')('county', 'summarizedcounties', filter, 0),
+  ]).exec();
+
+  return Promise.all([endoPipeline, noEndoPipeline]);
 };
 
 /**
- * Fetches summarized county trapping data depending on a filter.
- * @param {Number} startYear the earliest year to return, inclusive
- * @param {Number} endYear the latest year to return, inclusive
- * @param {String} state the state to return
- * @param {String} county the county to return
+ * @description cycles through year-1 data to set spotst1 & cleridst1
+ * @param {Object} filter mongo query filter for subsetting data
  */
-export const getByFilter = async (startYear, endYear, state, county) => {
-  const query = SummarizedCountyModel.find();
+export const yearT1Pass = (filter) => {
+  // running two pipelines split on endobrev value to accomodate the db collection index
+  // data from 2021 onwards will not have split endobrev values for a state/year/county
+  // therefore, we need to run these separately to accomodate the db index, but it makes no difference in the data outcome
 
-  if (startYear) query.find({ year: { $gte: startYear } });
-  if (endYear) query.find({ year: { $lte: endYear } });
-  if (state) query.find({ state });
-  if (county) query.find({ county });
+  const endoPipeline = SummarizedCountyModel.aggregate([
+    ...offsetYearPassCreator('t1')('county', 'summarizedcounties', filter, 1),
+  ]).exec();
 
-  return query.exec();
+  const noEndoPipeline = SummarizedCountyModel.aggregate([
+    ...offsetYearPassCreator('t1')('county', 'summarizedcounties', filter, 0),
+  ]).exec();
+
+  return Promise.all([endoPipeline, noEndoPipeline]);
 };

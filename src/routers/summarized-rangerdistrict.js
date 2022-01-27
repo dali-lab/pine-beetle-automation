@@ -60,30 +60,6 @@ summarizedRangerDistrictRouter.route('/')
     }
   });
 
-summarizedRangerDistrictRouter.route('/aggregate')
-  .get(requireAuth, async (req, res) => {
-    try {
-      const { state, year } = req.query;
-
-      if (state && year) {
-        await SummarizedRangerDistrict.summarizeStateYear(state, parseInt(year, 10));
-      } else {
-        await SummarizedRangerDistrict.summarizeAll();
-      }
-
-      const message = state && year
-        ? `summarized by ranger district on ${state} for ${year}`
-        : 'summarized all by ranger district';
-
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, message));
-    } catch (error) {
-      const errorResponse = generateErrorResponse(error);
-      const { error: errorMessage, status } = errorResponse;
-      console.log(errorMessage);
-      res.status(status).send(errorResponse);
-    }
-  });
-
 summarizedRangerDistrictRouter.route('/filter')
   .get(async (req, res) => {
     const {

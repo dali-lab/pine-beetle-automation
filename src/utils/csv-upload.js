@@ -139,33 +139,40 @@ export const csvUploadCreator = (ModelName, cleanCsv, cleanBody, filter, transfo
 export const spotCSVUploadCreator = (ModelName, cleanCsv, cleanBody, filter, transform, upsert, location) => async (filename) => {
   const filepath = path.resolve(__dirname, `../../${filename}`);
 
-  const docs = [];
+  const promises = [];
   const filteredOutRows = [];
 
   return new Promise((resolve, reject) => {
     parseFile(filepath, { headers: true })
-      .on('data', async (data) => {
-        // cast the csv fields to our schema
-        let cleanedData = cleanBody(cleanCsv(data));
-        if (!cleanedData) reject(newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in csv'));
+      .on('data', (data) => {
+        promises.push(new Promise((docResolve, docReject) => {
+          // cast the csv fields to our schema
+          let cleanedData = cleanBody(cleanCsv(data));
+          if (!cleanedData) reject(newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in csv'));
 
-        // explicitly look up and set endobrev value for this document
-        const { state, year, [location]: loc } = cleanedData;
-        const matchingDoc = await ModelName.findOne({ state, year, [location]: loc });
-        const endobrev = matchingDoc?.endobrev || null;
+          // explicitly look up and set endobrev value for this document
+          const { state, year, [location]: loc } = cleanedData;
 
-        cleanedData = { ...cleanedData, endobrev };
+          ModelName.findOne({ state, year, [location]: loc })
+            .then((matchingDoc) => {
+              const endobrev = matchingDoc?.endobrev || null;
+              cleanedData = { ...cleanedData, endobrev };
 
-        // apply filter if it exists
-        if (!filter || filter(cleanedData)) {
-          // apply transformation if it exists
-          docs.push(transform ? transform(cleanedData) : cleanedData);
-        } else {
-          filteredOutRows.push(data);
-        }
+              // apply filter if it exists
+              if (!filter || filter(cleanedData)) {
+                // apply transformation if it exists
+                docResolve(transform ? transform(cleanedData) : cleanedData);
+              } else {
+                filteredOutRows.push(cleanedData);
+                docResolve();
+              }
+            }).catch(docReject);
+        }));
       })
       .on('error', (err) => reject(err))
-      .on('end', (rowCount) => {
+      .on('end', async (rowCount) => {
+        const docs = await Promise.all(promises);
+
         // apply another transformation to prepare for upserting
         const upsertOp = docs.map(upsert);
         ModelName.bulkWrite(upsertOp)

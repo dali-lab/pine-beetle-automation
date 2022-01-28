@@ -15,23 +15,20 @@ import {
   generateAllPredictions as rangerDistrictGenerateAllPredictions,
 } from './summarized-rangerdistrict';
 
-// year before which we want to leave the data unmodified
-const CUTOFF_YEAR = 2021;
+// start year that we should modify data (allows us to leave all 2020 and prior data alone)
+const DEFAULT_CUTOFF_YEAR = 2021;
 
-const yearT0Filter = {
-  year: { $gte: CUTOFF_YEAR },
-};
-
-const yearT1Filter = {
-  year: { $gte: CUTOFF_YEAR - 1 },
-};
-
-const yearT2Filter = {
-  year: { $gte: CUTOFF_YEAR - 2 },
-};
-
-export const runPipelineAll = async () => {
+/**
+ * @description runs the entire pipeline (summarize data, generate predictions)
+ * @param {Number} [cutoffYear=2021] start year that data should be modified for
+ * @returns {Promise<Object>} result of each operation
+ */
+export const runPipelineAll = async (cutoffYear = DEFAULT_CUTOFF_YEAR) => {
   console.log('RUNNING PIPELINE');
+
+  const yearT0Filter = { year: { $gte: cutoffYear } };
+  const yearT1Filter = { year: { $gte: cutoffYear - 1 } };
+  const yearT2Filter = { year: { $gte: cutoffYear - 2 } };
 
   try {
     // summarize county and ranger district data
@@ -70,8 +67,8 @@ export const runPipelineAll = async () => {
       summarizeResult,
       yearT2PassResult,
       yearT1PassResult,
-      predictionResult,
       indicatorPassResult,
+      predictionResult,
     };
   } catch (error) {
     console.log('ERROR RUNNING PIPELINE');

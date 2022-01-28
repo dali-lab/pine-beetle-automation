@@ -18,6 +18,7 @@ import {
   newError,
   offsetYearPassCreator,
   predictionGeneratorCreator,
+  spotCSVUploadCreator,
   trappingAggregationPipelineCreator,
   upsertOpCreator,
   validateNumberEntry,
@@ -204,13 +205,14 @@ const cleanSpotsCsv = (row) => {
  * @description uploads spot data on county level
  * @returns {(filename: String) => Promise} async function receiving filter for data subsetting
  */
-export const uploadSpotsCsv = csvUploadCreator(
+export const uploadSpotsCsv = spotCSVUploadCreator(
   SummarizedCountyModel,
   cleanSpotsCsv,
   cleanBodyCreator(spotAttributes),
   undefined,
   undefined,
-  upsertOpCreator(['state', 'year', 'county']),
+  upsertOp,
+  'county',
 );
 
 /**

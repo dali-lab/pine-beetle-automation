@@ -275,19 +275,13 @@ export const predictionGeneratorCreator = (location, ScriptRunner, Model, upsert
       [location]: loc,
     } = doc;
 
-    if (SPB === null || Number.isNaN(SPB) || Number.isNaN(cleridst1)
-    || spotst1 === null || Number.isNaN(spotst1) || spotst2 === null || Number.isNaN(spotst2)
-    || endobrev === null || Number.isNaN(endobrev)) {
-      return null;
-    }
+    const inputValues = [SPB, cleridst1, spotst1, spotst2, endobrev];
 
-    const allValidInput = [SPB, cleridst1, spotst1, spotst2, endobrev].reduce((acc, curr) => (
+    const allValidInput = inputValues.reduce((acc, curr) => (
       acc && (curr === null || curr >= 0)
     ), true);
 
-    if (!allValidInput) {
-      return null;
-    }
+    if (!allValidInput) return null;
 
     return {
       state,
@@ -315,15 +309,15 @@ export const predictionGeneratorCreator = (location, ScriptRunner, Model, upsert
     } = doc;
 
     const {
-      'Exp spots if outbreak': expSpotsIfOutbreak,
+      expSpotsIfOutbreak,
       mu,
       pi,
-      'prob.Spots>0': probSpotsGT0,
-      'prob.Spots>19': probSpotsGT20,
-      'prob.Spots>53': probSpotsGT50,
-      'prob.Spots>147': probSpotsGT150,
-      'prob.Spots>402': probSpotsGT400,
-      'prob.Spots>1095': probSpotsGT1000,
+      probSpotsGT0,
+      probSpotsGT20,
+      probSpotsGT50,
+      probSpotsGT150,
+      probSpotsGT400,
+      probSpotsGT1000,
     } = allPredictions[index];
 
     return {

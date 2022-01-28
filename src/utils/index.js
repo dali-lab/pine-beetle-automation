@@ -4,6 +4,7 @@ import {
   csvUploadCreator,
   deleteFile,
   getIndexes,
+  spotCSVUploadCreator,
   upsertOpCreator,
   validateNumberEntry,
 } from './csv-upload';
@@ -53,6 +54,7 @@ export {
   newError,
   offsetYearPassCreator,
   predictionGeneratorCreator,
+  spotCSVUploadCreator,
   survey123UnpackCreator,
   survey123WebhookUnpackCreator,
   transformSurvey123GlobalID,

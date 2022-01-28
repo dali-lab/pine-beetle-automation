@@ -10,16 +10,10 @@ const pipelineRouter = Router();
 
 pipelineRouter.route('/')
   .get(requireAuth, async (req, res) => {
-    const { state, year } = req.query;
-    let result;
+    const { cutoffYear } = req.query;
 
     try {
-      if (state && year) {
-        result = await Pipeline.runPipelineStateYear(state, year);
-      } else {
-        result = await Pipeline.runPipelineAll();
-      }
-
+      const result = await Pipeline.runPipelineAll(parseInt(cutoffYear, 10) || undefined);
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
       const errorResponse = generateErrorResponse(error);

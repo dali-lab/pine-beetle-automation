@@ -123,6 +123,68 @@ export const csvUploadCreator = (ModelName, cleanCsv, cleanBody, filter, transfo
 };
 
 /**
+ * @description higher-order function that creates a spot csv uploader function
+ * @param {mongoose.Model} ModelName destination Model of upload
+ * @param {function} cleanCsv function to cast csv to model schema
+ * @param {function} cleanBody function to validate that all model schema parameters are present
+ * @param {function} filter optional parameter to conditionally accept documents
+ * @param {function} transform optional parameter to modify a document before insertion
+ * @param {function} upsertOp the correct upsert technique to use based on index filters
+ * @param {String} location either 'county' or 'rangerDistrict'
+ * @param {string} filename csv filename on disk
+ * @returns {(filename: String) => Promise}
+ * @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
+ * @throws other errors depending on what went wrong
+ */
+export const spotCSVUploadCreator = (ModelName, cleanCsv, cleanBody, filter, transform, upsert, location) => async (filename) => {
+  const filepath = path.resolve(__dirname, `../../${filename}`);
+
+  const docs = [];
+  const filteredOutRows = [];
+
+  return new Promise((resolve, reject) => {
+    parseFile(filepath, { headers: true })
+      .on('data', async (data) => {
+        // cast the csv fields to our schema
+        let cleanedData = cleanBody(cleanCsv(data));
+        if (!cleanedData) reject(newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in csv'));
+
+        // explicitly look up and set endobrev value for this document
+        const { state, year, [location]: loc } = cleanedData;
+        const matchingDoc = await ModelName.findOne({ state, year, [location]: loc });
+        const endobrev = matchingDoc?.endobrev || null;
+
+        cleanedData = { ...cleanedData, endobrev };
+
+        // apply filter if it exists
+        if (!filter || filter(cleanedData)) {
+          // apply transformation if it exists
+          docs.push(transform ? transform(cleanedData) : cleanedData);
+        } else {
+          filteredOutRows.push(data);
+        }
+      })
+      .on('error', (err) => reject(err))
+      .on('end', (rowCount) => {
+        // apply another transformation to prepare for upserting
+        const upsertOp = docs.map(upsert);
+        ModelName.bulkWrite(upsertOp)
+          .then((res) => {
+            const numRowsMessage = `successfully parsed ${rowCount} rows from csv upload`;
+            const numFilteredMessage = filteredOutRows.length > 0 ? `filtered out ${filteredOutRows.length} rows` : '';
+            console.log(`${numRowsMessage}. ${numFilteredMessage}`);
+
+            resolve({
+              bulkWriteResult: res,
+              filteredOutRows,
+            });
+          })
+          .catch((err) => reject(err));
+      });
+  });
+};
+
+/**
  * @description higher-order function that creates a csv downloader function
  * @param {mongoose.Model} ModelName destination Model of download
  * @param {Array<String>} fields model attributes in array (used for fields of the csv file)

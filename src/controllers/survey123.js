@@ -7,10 +7,10 @@ import {
 } from '../constants';
 
 import {
-  cleanBodyCreator,
   cleanCsvCreator,
   csvUploadSurvey123Creator,
   deleteInsert,
+  extractObjectFieldsCreator,
   getModelAttributes,
   survey123WebhookUnpackCreator,
   transformSurvey123GlobalID,
@@ -18,13 +18,17 @@ import {
 
 const unsummarizedModelAttributes = getModelAttributes(UnsummarizedTrappingModel);
 
-// ensures all attributes present
-const cleanBody = cleanBodyCreator(unsummarizedModelAttributes);
+/**
+ * @description checks that any provided object contains all the model attributes, and filters out any other values
+ * @param {Object} obj an object to check
+ * @returns {Object|false} the filtered object containing only the model attributes if the provided object contains them, else false
+ */
+const extractModelAttributes = extractObjectFieldsCreator(unsummarizedModelAttributes);
 
 // casts either csv or json data to model schema
 const cleanCsvOrJson = cleanCsvCreator(CSV_TO_UNSUMMARIZED);
 
-const survey123WebhookUnpacker = survey123WebhookUnpackCreator(cleanCsvOrJson, cleanBody);
+const survey123WebhookUnpacker = survey123WebhookUnpackCreator(cleanCsvOrJson, extractModelAttributes);
 
 const stateToAbbrevTransform = (document) => {
   return {
@@ -42,7 +46,7 @@ const stateToAbbrevTransform = (document) => {
 export const uploadCsv = csvUploadSurvey123Creator(
   UnsummarizedTrappingModel,
   cleanCsvOrJson,
-  cleanBody,
+  extractModelAttributes,
   undefined,
   stateToAbbrevTransform,
 );

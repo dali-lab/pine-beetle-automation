@@ -1,67 +1,24 @@
-import compose from 'compose-function';
-
 import { UnsummarizedTrappingModel } from '../models';
 
 import {
-  CSV_TO_UNSUMMARIZED,
-  RANGER_DISTRICT_NAME_MAPPING,
-  STATE_TO_ABBREV,
   RESPONSE_TYPES,
 } from '../constants';
 
 import {
-  cleanBodyCreator,
-  cleanCsvCreator,
   csvDownloadCreator,
+  extractObjectFieldsCreator,
   getModelAttributes,
   newError,
-  unsummarizedDataCsvUploadCreator,
 } from '../utils';
 
 const modelAttributes = getModelAttributes(UnsummarizedTrappingModel);
 
-// this is a function to clean req.body
-const cleanBody = cleanBodyCreator(modelAttributes);
-
-const cleanCsv = cleanCsvCreator(CSV_TO_UNSUMMARIZED);
-
-// removes strange null valued rows
-const filterNulls = (document) => document.cleridCount !== 'NULL' && document.spbCount !== 'NULL';
-
-// transform state name
-const stateToAbbrevTransform = (document) => ({
-  ...document,
-  state: STATE_TO_ABBREV[document.state],
-});
-
-// transform ranger district name
-const rangerDistrictNameTransform = (document) => ({
-  ...document,
-  rangerDistrict: RANGER_DISTRICT_NAME_MAPPING[document.rangerDistrict],
-});
-
-const transformDocument = compose(stateToAbbrevTransform, rangerDistrictNameTransform);
-
 /**
- * @description uploads a csv to the unsummarized collection
- * @param {String} filename the csv filename on disk
- * @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
- * @throws other errors depending on what went wrong
+ * @description checks that any provided object contains all the model attributes, and filters out any other values
+ * @param {Object} obj an object to check
+ * @returns {Object|false} the filtered object containing only the model attributes if the provided object contains them, else false
  */
-export const uploadCsv = unsummarizedDataCsvUploadCreator(
-  UnsummarizedTrappingModel,
-  cleanCsv,
-  cleanBody,
-  filterNulls,
-  transformDocument,
-);
-
-/**
- * @description downloads a csv of the entire collection
- * @throws RESPONSE_TYPES.INTERNAL_ERROR for problem parsing CSV
- * @returns {String} path to CSV file
- */
-export const downloadCsv = csvDownloadCreator(UnsummarizedTrappingModel, modelAttributes);
+const extractModelAttributes = extractObjectFieldsCreator(modelAttributes);
 
 /**
  * @description Fetches one week's data from the unsummarized collection.
@@ -110,7 +67,7 @@ export const getByFilter = async (startYear, endYear, state, county, rangerDistr
  * @throws RESPONSE_TYPES.BAD_REQUEST if missing input
  */
 export const insertOne = async (body) => {
-  const cleanedBody = cleanBody(body);
+  const cleanedBody = extractModelAttributes(body);
   if (!cleanedBody) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
 
   const newDoc = new UnsummarizedTrappingModel(body);
@@ -126,7 +83,7 @@ export const insertOne = async (body) => {
  * @throws RESPONSE_TYPES.NOT_FOUND if no doc found for id
  */
 export const updateById = async (id, body) => {
-  const cleanedBody = cleanBody(body);
+  const cleanedBody = extractModelAttributes(body);
   if (!cleanedBody) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
 
   const updatedDoc = await UnsummarizedTrappingModel.findByIdAndUpdate(id, body, {
@@ -158,3 +115,10 @@ export const deleteById = async (id) => {
 export const deleteAll = async (options) => {
   return UnsummarizedTrappingModel.deleteMany(options);
 };
+
+/**
+ * @description downloads a csv of the entire collection
+ * @throws RESPONSE_TYPES.INTERNAL_ERROR for problem parsing CSV
+ * @returns {String} path to CSV file
+ */
+export const downloadCsv = csvDownloadCreator(UnsummarizedTrappingModel, modelAttributes);

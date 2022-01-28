@@ -10,16 +10,17 @@ import {
 } from '../constants';
 
 import {
-  cleanBodyCreator,
   csvDownloadCreator,
-  csvUploadCreator,
-  getIndexes,
+  extractObjectFieldsCreator,
   getModelAttributes,
+  getModelIndexes,
   getModelNumericAttributes,
   indicatorGeneratorCreator,
   newError,
   offsetYearPassCreator,
   predictionGeneratorCreator,
+  processCSV,
+  processCSVAsync,
   trappingAggregationPipelineCreator,
   upsertOpCreator,
   validateNumberEntry,
@@ -30,11 +31,15 @@ const numericModelAttributes = getModelNumericAttributes(SummarizedRangerDistric
 const spotAttributes = ['state', 'rangerDistrict', 'year', 'spotst0'];
 const downloadFieldsToOmit = ['cleridPerDay', 'spbPerDay'];
 
-// this is a function to clean req.body
-const cleanBody = cleanBodyCreator(modelAttributes);
+/**
+ * @description checks that any provided object contains all the model attributes, and filters out any other values
+ * @param {Object} obj an object to check
+ * @returns {Object|false} the filtered object containing only the model attributes if the provided object contains them, else false
+ */
+const extractModelAttributes = extractObjectFieldsCreator(modelAttributes);
 
 // generic upsert operator for this model
-const upsertOp = upsertOpCreator(getIndexes(SummarizedRangerDistrictModel));
+const upsertOp = upsertOpCreator(getModelIndexes(SummarizedRangerDistrictModel));
 
 /**
  * @description Fetches one year's data from the summarized ranger district collection.
@@ -81,7 +86,7 @@ export const getByFilter = async (startYear, endYear, state, rangerDistrict) => 
  * @throws RESPONSE_TYPES.BAD_REQUEST if missing input
  */
 export const insertOne = async (body) => {
-  const cleanedBody = cleanBody(body);
+  const cleanedBody = extractModelAttributes(body);
   if (!cleanedBody) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
 
   const newDoc = new SummarizedRangerDistrictModel(cleanedBody);
@@ -168,14 +173,22 @@ const cleanCsv = (row) => {
  * @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
  * @throws other errors depending on what went wrong
  */
-export const uploadCsv = csvUploadCreator(
-  SummarizedRangerDistrictModel,
-  cleanCsv,
-  cleanBody,
-  undefined,
-  undefined,
-  upsertOp,
-);
+export const uploadCsv = async (filename) => {
+  const { docs, rowCount } = await processCSV(filename, (row) => {
+    // cast the csv fields to our schema
+    const cleanedData = extractModelAttributes(cleanCsv(row));
+    if (!cleanedData) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in csv');
+
+    return cleanedData;
+  });
+
+  // apply another transformation to prepare for upserting
+  const upsertOperations = docs.map(upsertOp);
+  const bulkWriteResult = await SummarizedRangerDistrictModel.bulkWrite(upsertOperations);
+
+  console.log(`successfully parsed ${rowCount} rows from csv upload`);
+  return bulkWriteResult;
+};
 
 /**
  * @description cleans row of CSV for spot upload, casts undefined or empty string to null
@@ -199,17 +212,33 @@ const cleanSpotsCsv = (row) => {
 };
 
 /**
- * @description uploads spot data on county level
- * @returns {(filename: String) => Promise} async function receiving filter for data subsetting
+ * @description uploads a csv with spot data to the summarized county collection
+ * @param {String} filename the csv filename on disk
+ * @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
+ * @throws other errors depending on what went wrong
  */
-export const uploadSpotsCsv = csvUploadCreator(
-  SummarizedRangerDistrictModel,
-  cleanSpotsCsv,
-  cleanBodyCreator(spotAttributes),
-  undefined,
-  undefined,
-  upsertOpCreator(['state', 'year', 'rangerDistrict']),
-);
+export const uploadSpotsCsv = async (filename) => {
+  const { docs, rowCount } = await processCSVAsync(filename, async (row) => {
+    // cast the csv fields to our schema
+    const cleanedData = extractObjectFieldsCreator(spotAttributes)(cleanSpotsCsv(row));
+    if (!cleanedData) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in csv');
+
+    // explicitly look up and set endobrev value for this document
+    const { rangerDistrict, state, year } = cleanedData;
+
+    const matchingDoc = await SummarizedRangerDistrictModel.findOne({ state, year, rangerDistrict });
+    const endobrev = matchingDoc?.endobrev || null;
+
+    return { ...cleanedData, endobrev };
+  });
+
+  // apply another transformation to prepare for upserting
+  const upsertOperations = docs.map(upsertOp);
+  const bulkWriteResult = await SummarizedRangerDistrictModel.bulkWrite(upsertOperations);
+
+  console.log(`successfully parsed ${rowCount} rows from csv upload`);
+  return bulkWriteResult;
+};
 
 /**
  * @description Summarizes all trapping data at the ranger district level. Will overwrite all entries in this collection.

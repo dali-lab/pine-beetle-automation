@@ -130,17 +130,6 @@ export const deleteAll = async (options = {}) => {
 };
 
 /**
- * @description Deletes all data in the collection
- * @param {String} state state name
- * @param {Number} year year
- * @returns {Promise}
- */
-export const deleteStateYear = async (state, year) => {
-  if (state === 2018) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'Cannot delete 2018 data');
-  return SummarizedCountyModel.deleteMany({ state, year });
-};
-
-/**
  * @description downloads a csv of the entire collection
  * @throws RESPONSE_TYPES.INTERNAL_ERROR for problem parsing CSV
  * @returns {String} path to CSV file

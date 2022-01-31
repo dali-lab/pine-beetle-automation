@@ -1,5 +1,4 @@
 /* eslint-disable import/prefer-default-export */
-/* eslint-disable no-restricted-globals */
 /* eslint-disable new-cap */
 import path from 'path';
 import R from 'r-script';
@@ -23,18 +22,23 @@ export const runModel = (array) => {
       spotst2,
     } = doc;
 
-    if (SPB === null || isNaN(SPB) || isNaN(cleridst1)
-    || spotst1 === null || isNaN(spotst1) || spotst2 === null || isNaN(spotst2)
-    || endobrev === null || isNaN(endobrev)) {
-      throw newError(RESPONSE_TYPES.INTERNAL_ERROR, 'bad format for R model');
-    }
+    // null check
+    const unallowedNulls = [SPB, spotst1, spotst2, endobrev].reduce((acc, curr) => (
+      acc && curr !== null
+    ), true);
 
-    const allValidInput = [SPB, cleridst1, spotst1, spotst2, endobrev].reduce((acc, curr) => (
+    // not a number check
+    const unallowedNaNs = [SPB, cleridst1, spotst1, spotst2, endobrev].reduce((acc, curr) => (
+      acc && !Number.isNaN(curr)
+    ), true);
+
+    // non-negative check -- allows a null for cleridst1 to pass through
+    const unallowedNegatives = [SPB, cleridst1, spotst1, spotst2, endobrev].reduce((acc, curr) => (
       acc && (curr === null || curr >= 0)
     ), true);
 
-    if (!allValidInput) {
-      throw newError(RESPONSE_TYPES.INTERNAL_ERROR, 'bad format for R model, no negatives allowed');
+    if (unallowedNulls || unallowedNaNs || unallowedNegatives) {
+      throw newError(RESPONSE_TYPES.BAD_REQUEST, 'Bad format for R model');
     }
 
     return {

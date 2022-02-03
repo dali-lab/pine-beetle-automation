@@ -169,7 +169,7 @@ const SummarizedRangerDistrictSchema = new Schema({
     default: null,
     type: Number,
   },
-  predSpotsOrigUnits: { // model output: back-transformation of predicted spots (e^(pred.Spots.logUnits) - 1)
+  predSpotsorigUnits: { // model output: back-transformation of predicted spots (e^(pred.Spots.logUnits) - 1)
     default: null,
     type: Number,
   },

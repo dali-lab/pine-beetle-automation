@@ -7,6 +7,7 @@ import {
 
 import {
   RESPONSE_TYPES,
+  COLLECTION_NAMES,
 } from '../constants';
 
 import {
@@ -236,7 +237,7 @@ export const uploadSpotsCsv = async (filename) => {
  */
 export const summarizeAll = async (filter) => {
   return UnsummarizedTrappingModel.aggregate([
-    ...trappingAggregationPipelineCreator('rangerDistrict', 'summarizedrangerdistricts', filter),
+    ...trappingAggregationPipelineCreator('rangerDistrict', COLLECTION_NAMES.SUMMARIZED_RANGERDISTRICT, filter),
   ]).exec();
 };
 
@@ -250,11 +251,11 @@ export const yearT2Pass = (filter) => {
   // therefore, we need to run these separately to accomodate the db index, but it makes no difference in the data outcome
 
   const endoPipeline = SummarizedRangerDistrictModel.aggregate([
-    ...offsetYearPassCreator('t2')('rangerDistrict', 'summarizedrangerdistricts', filter, 1),
+    ...offsetYearPassCreator('t2')('rangerDistrict', COLLECTION_NAMES.SUMMARIZED_RANGERDISTRICT, filter, 1),
   ]).exec();
 
   const noEndoPipeline = SummarizedRangerDistrictModel.aggregate([
-    ...offsetYearPassCreator('t2')('rangerDistrict', 'summarizedrangerdistricts', filter, 0),
+    ...offsetYearPassCreator('t2')('rangerDistrict', COLLECTION_NAMES.SUMMARIZED_RANGERDISTRICT, filter, 0),
   ]).exec();
 
   return Promise.all([endoPipeline, noEndoPipeline]);
@@ -270,11 +271,11 @@ export const yearT1Pass = (filter) => {
   // therefore, we need to run these separately to accomodate the db index, but it makes no difference in the data outcome
 
   const endoPipeline = SummarizedRangerDistrictModel.aggregate([
-    ...offsetYearPassCreator('t1')('rangerDistrict', 'summarizedrangerdistricts', filter, 1),
+    ...offsetYearPassCreator('t1')('rangerDistrict', COLLECTION_NAMES.SUMMARIZED_RANGERDISTRICT, filter, 1),
   ]).exec();
 
   const noEndoPipeline = SummarizedRangerDistrictModel.aggregate([
-    ...offsetYearPassCreator('t1')('rangerDistrict', 'summarizedrangerdistricts', filter, 0),
+    ...offsetYearPassCreator('t1')('rangerDistrict', COLLECTION_NAMES.SUMMARIZED_RANGERDISTRICT, filter, 0),
   ]).exec();
 
   return Promise.all([endoPipeline, noEndoPipeline]);

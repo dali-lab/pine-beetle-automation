@@ -1,4 +1,3 @@
-import dataDownloadRouter from './data-download';
 import healthcheck from './healthcheck';
 import pipeline from './pipeline';
 import rModel from './r-model';
@@ -8,7 +7,6 @@ import survey123Router from './survey123';
 import unsummarizedTrappingRouter from './unsummarized-trapping';
 
 export default {
-  'data-download': dataDownloadRouter,
   healthcheck,
   pipeline,
   'r-model': rModel,

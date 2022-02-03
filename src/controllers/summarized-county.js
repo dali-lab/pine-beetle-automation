@@ -5,7 +5,7 @@ import {
   UnsummarizedTrappingModel,
 } from '../models';
 
-import { RESPONSE_TYPES } from '../constants';
+import { RESPONSE_TYPES, COLLECTION_NAMES } from '../constants';
 
 import {
   calculatedFieldsGeneratorCreator,
@@ -238,7 +238,7 @@ export const uploadSpotsCsv = async (filename) => {
  */
 export const summarizeAll = async (filter) => {
   return UnsummarizedTrappingModel.aggregate([
-    ...trappingAggregationPipelineCreator('county', 'summarizedcounties', filter),
+    ...trappingAggregationPipelineCreator('county', COLLECTION_NAMES.SUMMARIZED_COUNTY, filter),
   ]).exec();
 };
 
@@ -252,11 +252,11 @@ export const yearT2Pass = async (filter) => {
   // therefore, we need to run these separately to accomodate the db index, but it makes no difference in the data outcome
 
   const endoPipeline = SummarizedCountyModel.aggregate([
-    ...offsetYearPassCreator('t2')('county', 'summarizedcounties', filter, 1),
+    ...offsetYearPassCreator('t2')('county', COLLECTION_NAMES.SUMMARIZED_COUNTY, filter, 1),
   ]).exec();
 
   const noEndoPipeline = SummarizedCountyModel.aggregate([
-    ...offsetYearPassCreator('t2')('county', 'summarizedcounties', filter, 0),
+    ...offsetYearPassCreator('t2')('county', COLLECTION_NAMES.SUMMARIZED_COUNTY, filter, 0),
   ]).exec();
 
   return Promise.all([endoPipeline, noEndoPipeline]);
@@ -272,11 +272,11 @@ export const yearT1Pass = (filter) => {
   // therefore, we need to run these separately to accomodate the db index, but it makes no difference in the data outcome
 
   const endoPipeline = SummarizedCountyModel.aggregate([
-    ...offsetYearPassCreator('t1')('county', 'summarizedcounties', filter, 1),
+    ...offsetYearPassCreator('t1')('county', COLLECTION_NAMES.SUMMARIZED_COUNTY, filter, 1),
   ]).exec();
 
   const noEndoPipeline = SummarizedCountyModel.aggregate([
-    ...offsetYearPassCreator('t1')('county', 'summarizedcounties', filter, 0),
+    ...offsetYearPassCreator('t1')('county', COLLECTION_NAMES.SUMMARIZED_COUNTY, filter, 0),
   ]).exec();
 
   return Promise.all([endoPipeline, noEndoPipeline]);

@@ -7,11 +7,11 @@ import {
 } from '../constants';
 
 import {
-  cleanCsvCreator,
-  csvUploadSurvey123Creator,
   deleteInsert,
   extractObjectFieldsCreator,
   getModelAttributes,
+  processCSV,
+  survey123UnpackCreator,
   survey123WebhookUnpackCreator,
   transformSurvey123GlobalID,
 } from '../utils';
@@ -25,11 +25,24 @@ const unsummarizedModelAttributes = getModelAttributes(UnsummarizedTrappingModel
  */
 const extractModelAttributes = extractObjectFieldsCreator(unsummarizedModelAttributes);
 
-// casts either csv or json data to model schema
-const cleanCsvOrJson = cleanCsvCreator(CSV_TO_UNSUMMARIZED);
+/**
+ * @description casts csv or json data to model schema
+ * @param {Object} row object representing row of data
+ * @returns {Object} cleaned row with proper schema
+ */
+const cleanCsv = (row) => {
+  const cleanedArray = Object.entries(row)
+    .map(([csvKey, value]) => [CSV_TO_UNSUMMARIZED[csvKey], value])
+    .filter(([newKey]) => !!newKey);
 
-const survey123WebhookUnpacker = survey123WebhookUnpackCreator(cleanCsvOrJson, extractModelAttributes);
+  return Object.fromEntries(cleanedArray);
+};
 
+/**
+ * @description transforms state name to state abbreviation in object
+ * @param {Object} document input object with state field
+ * @returns {Object} same object with modified state field to be state abbreviation instead of name
+ */
 const stateToAbbrevTransform = (document) => {
   return {
     ...document,
@@ -40,16 +53,28 @@ const stateToAbbrevTransform = (document) => {
 /**
  * @description uploads a csv to the unsummarized collection
  * @param {String} filename the csv filename on disk
- * @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
- * @throws other errors depending on what went wrong
  */
-export const uploadCsv = csvUploadSurvey123Creator(
-  UnsummarizedTrappingModel,
-  cleanCsvOrJson,
-  extractModelAttributes,
-  undefined,
-  stateToAbbrevTransform,
-);
+export const uploadCsv = async (filename) => {
+  const unpacker = survey123UnpackCreator(cleanCsv, extractModelAttributes);
+
+  const { docs, rowCount } = await processCSV(filename, (row) => {
+    // attempt to unpack all weeks 1-6 and push all
+    const unpackedData = unpacker(row);
+    return unpackedData.map(stateToAbbrevTransform);
+  });
+
+  // spread out the operation into sequential deletes and inserts
+  const bulkOp = docs.flatMap(deleteInsert).filter((obj) => !!obj);
+
+  const insertOp = bulkOp.filter(({ insertOne }) => !!insertOne);
+  const deleteOp = bulkOp.filter(({ deleteMany }) => !!deleteMany);
+
+  const deleteRes = UnsummarizedTrappingModel.bulkWrite(deleteOp, { ordered: false });
+  const insertRes = UnsummarizedTrappingModel.bulkWrite(insertOp, { ordered: false });
+
+  console.log(`successfully parsed ${rowCount} rows from csv upload`);
+  return { deleteRes, insertRes };
+};
 
 /**
  * upload survey123 data to unsummarized collection -- should be called by webhook
@@ -57,8 +82,9 @@ export const uploadCsv = csvUploadSurvey123Creator(
  * @returns {Promise<Array>} delete result and insert result data
  */
 export const uploadSurvey123FromWebhook = async (rawData) => {
-  const data = survey123WebhookUnpacker(rawData)
-    .map(stateToAbbrevTransform);
+  const unpacker = survey123WebhookUnpackCreator(cleanCsv, extractModelAttributes);
+
+  const data = unpacker(rawData).map(stateToAbbrevTransform);
 
   // get globalID directly in case we need it below
   const globalID = transformSurvey123GlobalID(rawData.globalid);

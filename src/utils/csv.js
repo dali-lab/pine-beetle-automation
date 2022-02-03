@@ -7,19 +7,6 @@ import { newError } from './responses';
 import { RESPONSE_TYPES } from '../constants';
 
 /**
- * @description higher-order function that creates a csv caster function
- * @param {Object} row csv row of data
- * @param {Object} payload data or error info to send
- * @returns {(row: Object) => Object} function that casts a single row
- */
-export const cleanCsvCreator = (map) => (row) => {
-  const cleanedArray = Object.entries(row)
-    .map(([csvKey, value]) => [map[csvKey], value])
-    .filter(([newKey]) => !!newKey);
-  return Object.fromEntries(cleanedArray);
-};
-
-/**
  * @description deletes a file WARNING VERY SPOOKY
  * @param {Object} filename multer file to delete
  * @param {Boolean} [isAbsolutePath] optional param for if user supplied absolute path

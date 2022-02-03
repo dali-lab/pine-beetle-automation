@@ -327,7 +327,7 @@ export const predictionGeneratorCreator = (location, ScriptRunner, Model, upsert
       [location]: loc,
       pi,
       mu,
-      expSpotsIfOutbreak: Math.round(expSpotsIfOutbreak),
+      expSpotsIfOutbreak: !Number.isNaN(Math.round(expSpotsIfOutbreak)) ? Math.round(expSpotsIfOutbreak) : null,
       probSpotsGT0,
       probSpotsGT1000,
       probSpotsGT150,
@@ -410,7 +410,7 @@ export const calculatedFieldsGeneratorCreator = (location, ScriptRunner, Model, 
       'ln(spotst0+1)': lnSpots,
       'logit(Prob>50)': logitProb,
       predSpotslogUnits,
-      predSpotsorigUnits,
+      predSpotsorigUnits: !Number.isNaN(Math.round(predSpotsorigUnits)) ? Math.round(predSpotsorigUnits) : null,
       residualSpotslogUnits,
     };
   });

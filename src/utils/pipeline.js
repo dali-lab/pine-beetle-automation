@@ -70,22 +70,22 @@ export const trappingAggregationPipelineCreator = (location, collection, filter)
   {
     $project: {
       _id: 0,
-      cleridsPer2Weeks: { $multiply: [14, '$cleridAvg'] },
+      cleridsPer2Weeks: { $round: [{ $multiply: [14, '$cleridAvg'] }] },
       cleridPerDay: { // cast k,v array to object
         $arrayToObject: '$cleridPerDay',
       },
-      daysPerTrap: { $divide: ['$totalTrappingDays', '$trapCount'] },
+      daysPerTrap: { $round: [{ $divide: ['$totalTrappingDays', '$trapCount'] }] },
       endobrev: '$_id.endobrev',
       [location]: `$_id.${location}`,
       spbCount: 1,
       spbPer2Weeks: {
         $cond: {
           if: { $eq: ['$_id.endobrev', 1] },
-          then: { $multiply: [14, '$spbAvg'] },
-          else: { $multiply: [{ $multiply: [14, '$spbAvg'] }, 10] },
+          then: { $round: [{ $multiply: [14, '$spbAvg'] }] },
+          else: { $round: [{ $multiply: [{ $multiply: [14, '$spbAvg'] }, 10] }] },
         },
       },
-      spbPer2WeeksOrig: { $multiply: [14, '$spbAvg'] },
+      spbPer2WeeksOrig: { $round: [{ $multiply: [14, '$spbAvg'] }] },
       spbPerDay: { // cast k,v array to object
         $arrayToObject: '$spbPerDay',
       },
@@ -327,13 +327,91 @@ export const predictionGeneratorCreator = (location, ScriptRunner, Model, upsert
       [location]: loc,
       pi,
       mu,
-      expSpotsIfOutbreak,
+      expSpotsIfOutbreak: Math.round(expSpotsIfOutbreak),
       probSpotsGT0,
       probSpotsGT1000,
       probSpotsGT150,
       probSpotsGT20,
       probSpotsGT400,
       probSpotsGT50,
+    };
+  });
+
+  // upsert results into db
+  const writeOp = updatedData.map(upsertOp);
+  return Model.bulkWrite(writeOp);
+};
+
+/**
+ * higher-order function to create a calculated field generator
+ * @param {String} location either 'county' or 'rangerDistrict'
+ * @param {Function} ScriptRunner service to execute the model running
+ * @param {mongoose.Model} Model destination model to write to
+ * @param {Function} upsertOp an upsert operation to do bulkwrites with
+ * @returns {(filter: Object) => Promise}
+ */
+export const calculatedFieldsGeneratorCreator = (location, ScriptRunner, Model, upsertOp) => async (filter = {}) => {
+  const data = await Model.find(filter);
+
+  const rawInputs = data.map((doc) => {
+    const {
+      cleridsPer2Weeks,
+      endobrev,
+      probSpotsGT50,
+      spbPer2Weeks,
+      spotst0,
+      state,
+      year,
+      [location]: loc,
+    } = doc;
+
+    return {
+      endobrev,
+      state,
+      year,
+      [location]: loc,
+      cleridsPer2Weeks,
+      probSpotsGT50,
+      spbPer2Weeks,
+      spotst0,
+    };
+  });
+
+  // remove missing entries
+  const inputs = rawInputs.filter((obj) => !!obj);
+  const allCalculatedFields = await ScriptRunner(inputs);
+
+  // reformat and insert corresponding predictions object at the same index
+  const updatedData = inputs.map((doc, index) => {
+    const {
+      endobrev,
+      state,
+      year,
+      [location]: loc,
+    } = doc;
+
+    const {
+      'ln(cleridsPer2Weeks+1)': lnClerids,
+      'ln(spbPer2Weeks+1)': lnSPB,
+      'ln(spotst0+1)': lnSpots,
+      'logit(Prob>50)': logitProb,
+      predSpotslogUnits,
+      predSpotsorigUnits,
+      residualSpotslogUnits,
+    } = allCalculatedFields[index];
+
+    return {
+      endobrev,
+      state,
+      year,
+      [location]: loc,
+      'ln(cleridsPer2Weeks+1)': lnClerids,
+      'ln(spbPer2Weeks+1)': lnSPB,
+      'ln(spotst0+1)': lnSpots,
+      'logit(Prob>50)': logitProb,
+      predSpotslogUnits,
+      predSpotsorigUnits,
+      residualSpotslogUnits,
     };
   });
 

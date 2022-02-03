@@ -41,4 +41,32 @@ rModelRouter.route('/')
     }
   });
 
+rModelRouter.route('/calculated-fields')
+  .get(async (req, res) => {
+    const {
+      cleridsPer2Weeks,
+      probSpotsGT50,
+      spbPer2Weeks,
+      spotst0,
+    } = req.query;
+
+    const input = [{
+      cleridsPer2Weeks: parseFloat(cleridsPer2Weeks, 10),
+      probSpotsGT50: parseFloat(probSpotsGT50, 10),
+      spbPer2Weeks: parseFloat(spbPer2Weeks, 10),
+      spotst0: parseFloat(spotst0, 10),
+    }];
+
+    try {
+      const result = await rModel.generateCalculatedFields(input);
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result[0]));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    }
+  });
+
 export default rModelRouter;

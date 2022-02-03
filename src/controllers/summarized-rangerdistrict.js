@@ -10,6 +10,7 @@ import {
 } from '../constants';
 
 import {
+  calculatedFieldsGeneratorCreator,
   csvDownloadCreator,
   extractObjectFieldsCreator,
   getModelAttributes,
@@ -290,3 +291,9 @@ export const indicatorPass = indicatorGeneratorCreator('rangerDistrict', Summari
    * @returns {(filter: Object) => Promise} async function receiving filter for data subsetting
    */
 export const generateAllPredictions = predictionGeneratorCreator('rangerDistrict', rModel.runModel, SummarizedRangerDistrictModel, upsertOp);
+
+/**
+   * @description generates all calculated fields for the county level data
+   * @returns {(filter: Object) => Promise} async function receiving filter for data subsetting
+   */
+export const generateAllCalculatedFields = calculatedFieldsGeneratorCreator('rangerDistrict', rModel.generateCalculatedFields, SummarizedRangerDistrictModel, upsertOp);

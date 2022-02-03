@@ -5,6 +5,7 @@ import {
   yearT2Pass as countyYearT2Pass,
   indicatorPass as countyIndicatorPass,
   generateAllPredictions as countyGenerateAllPredictions,
+  generateAllCalculatedFields as countyGenerateAllCalculatedFields,
 } from './summarized-county';
 
 import {
@@ -13,6 +14,7 @@ import {
   yearT2Pass as rangerDistrictYearT2Pass,
   indicatorPass as rangerDistrictIndicatorPass,
   generateAllPredictions as rangerDistrictGenerateAllPredictions,
+  generateAllCalculatedFields as rangerDistrictGenerateAllCalculatedFields,
 } from './summarized-rangerdistrict';
 
 // start year that we should modify data (allows us to leave all 2020 and prior data alone)
@@ -61,6 +63,12 @@ export const runPipelineAll = async (cutoffYear = DEFAULT_CUTOFF_YEAR) => {
       rangerDistrictGenerateAllPredictions(yearT0Filter),
     ]);
 
+    // generate calculated fields
+    const calculatedFieldsResult = await Promise.all([
+      countyGenerateAllCalculatedFields(yearT0Filter),
+      rangerDistrictGenerateAllCalculatedFields(yearT0Filter),
+    ]);
+
     console.log('FINISHED RUNNING PIPELINE');
 
     return {
@@ -69,6 +77,7 @@ export const runPipelineAll = async (cutoffYear = DEFAULT_CUTOFF_YEAR) => {
       yearT1PassResult,
       indicatorPassResult,
       predictionResult,
+      calculatedFieldsResult,
     };
   } catch (error) {
     console.log('ERROR RUNNING PIPELINE');

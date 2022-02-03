@@ -25,6 +25,7 @@ import {
 } from './validators';
 
 import {
+  calculatedFieldsGeneratorCreator,
   indicatorGeneratorCreator,
   offsetYearPassCreator,
   predictionGeneratorCreator,
@@ -40,6 +41,7 @@ import {
 } from './survey123';
 
 export {
+  calculatedFieldsGeneratorCreator,
   cleanCsvCreator,
   csvDownloadCreator,
   csvUploadSurvey123Creator,

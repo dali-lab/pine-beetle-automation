@@ -8,6 +8,7 @@ import {
 import { RESPONSE_TYPES } from '../constants';
 
 import {
+  calculatedFieldsGeneratorCreator,
   csvDownloadCreator,
   extractObjectFieldsCreator,
   getModelAttributes,
@@ -292,3 +293,9 @@ export const indicatorPass = indicatorGeneratorCreator('county', SummarizedCount
    * @returns {(filter: Object) => Promise} async function receiving filter for data subsetting
    */
 export const generateAllPredictions = predictionGeneratorCreator('county', rModel.runModel, SummarizedCountyModel, upsertOp);
+
+/**
+   * @description generates all calculated fields for the county level data
+   * @returns {(filter: Object) => Promise} async function receiving filter for data subsetting
+   */
+export const generateAllCalculatedFields = calculatedFieldsGeneratorCreator('county', rModel.generateCalculatedFields, SummarizedCountyModel, upsertOp);

@@ -69,8 +69,8 @@ export const uploadCsv = async (filename) => {
   const insertOp = bulkOp.filter(({ insertOne }) => !!insertOne);
   const deleteOp = bulkOp.filter(({ deleteMany }) => !!deleteMany);
 
-  const deleteRes = UnsummarizedTrappingModel.bulkWrite(deleteOp, { ordered: false });
-  const insertRes = UnsummarizedTrappingModel.bulkWrite(insertOp, { ordered: false });
+  const deleteRes = await UnsummarizedTrappingModel.bulkWrite(deleteOp, { ordered: false });
+  const insertRes = await UnsummarizedTrappingModel.bulkWrite(insertOp, { ordered: false });
 
   console.log(`successfully parsed ${rowCount} rows from csv upload`);
   return { deleteRes, insertRes };

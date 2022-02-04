@@ -1,3 +1,5 @@
+const ROUND_EPSILON = 0.0000001;
+
 /* eslint-disable new-cap */
 /* eslint-disable import/prefer-default-export */
 /**
@@ -70,22 +72,22 @@ export const trappingAggregationPipelineCreator = (location, collection, filter)
   {
     $project: {
       _id: 0,
-      cleridsPer2Weeks: { $round: [{ $multiply: [14, '$cleridAvg'] }] },
+      cleridsPer2Weeks: { $round: [{ $add: [{ $multiply: [14, '$cleridAvg'] }, ROUND_EPSILON] }] },
       cleridPerDay: { // cast k,v array to object
         $arrayToObject: '$cleridPerDay',
       },
-      daysPerTrap: { $round: [{ $divide: ['$totalTrappingDays', '$trapCount'] }] },
+      daysPerTrap: { $round: [{ $add: [{ $divide: ['$totalTrappingDays', '$trapCount'] }, ROUND_EPSILON] }] },
       endobrev: '$_id.endobrev',
       [location]: `$_id.${location}`,
       spbCount: 1,
       spbPer2Weeks: {
         $cond: {
           if: { $eq: ['$_id.endobrev', 1] },
-          then: { $round: [{ $multiply: [14, '$spbAvg'] }] },
-          else: { $round: [{ $multiply: [{ $multiply: [14, '$spbAvg'] }, 10] }] },
+          then: { $round: [{ $add: [{ $multiply: [14, '$spbAvg'] }, ROUND_EPSILON] }] },
+          else: { $round: [{ $add: [{ $multiply: [{ $multiply: [14, '$spbAvg'] }, 10] }, ROUND_EPSILON] }] },
         },
       },
-      spbPer2WeeksOrig: { $round: [{ $multiply: [14, '$spbAvg'] }] },
+      spbPer2WeeksOrig: { $round: [{ $add: [{ $multiply: [14, '$spbAvg'] }, ROUND_EPSILON] }] },
       spbPerDay: { // cast k,v array to object
         $arrayToObject: '$spbPerDay',
       },

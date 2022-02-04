@@ -33,8 +33,6 @@ import {
 
 import {
   deleteInsert,
-  survey123UnpackCreator,
-  survey123WebhookUnpackCreator,
   transformSurvey123GlobalID,
 } from './survey123';
 
@@ -55,8 +53,6 @@ export {
   predictionGeneratorCreator,
   processCSV,
   processCSVAsync,
-  survey123UnpackCreator,
-  survey123WebhookUnpackCreator,
   transformSurvey123GlobalID,
   trappingAggregationPipelineCreator,
   upsertOpCreator,

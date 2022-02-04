@@ -2,8 +2,8 @@ import { UnsummarizedTrappingModel } from '../models';
 import { runPipelineAll } from './pipeline';
 
 import {
-  CSV_TO_UNSUMMARIZED,
   STATE_TO_ABBREV_COMBINED,
+  RESPONSE_TYPES,
 } from '../constants';
 
 import {
@@ -11,9 +11,8 @@ import {
   extractObjectFieldsCreator,
   getModelAttributes,
   processCSV,
-  survey123UnpackCreator,
-  survey123WebhookUnpackCreator,
   transformSurvey123GlobalID,
+  newError,
 } from '../utils';
 
 const unsummarizedModelAttributes = getModelAttributes(UnsummarizedTrappingModel);
@@ -24,19 +23,6 @@ const unsummarizedModelAttributes = getModelAttributes(UnsummarizedTrappingModel
  * @returns {Object|false} the filtered object containing only the model attributes if the provided object contains them, else false
  */
 const extractModelAttributes = extractObjectFieldsCreator(unsummarizedModelAttributes);
-
-/**
- * @description casts csv or json data to model schema
- * @param {Object} row object representing row of data
- * @returns {Object} cleaned row with proper schema
- */
-const cleanCsv = (row) => {
-  const cleanedArray = Object.entries(row)
-    .map(([csvKey, value]) => [CSV_TO_UNSUMMARIZED[csvKey], value])
-    .filter(([newKey]) => !!newKey);
-
-  return Object.fromEntries(cleanedArray);
-};
 
 /**
  * @description transforms state name to state abbreviation in object
@@ -50,12 +36,56 @@ const stateToAbbrevTransform = (document) => {
   };
 };
 
+const ordinalStrings = Object.entries({
+  1: '1st', 2: '2nd', 3: '3rd', 4: '4th', 5: '5th', 6: '6th',
+});
+
 /**
  * @description uploads a csv to the unsummarized collection
  * @param {String} filename the csv filename on disk
  */
 export const uploadCsv = async (filename) => {
-  const unpacker = survey123UnpackCreator(cleanCsv, extractModelAttributes);
+  const unpacker = (sixWeekData) => {
+    return ordinalStrings.map(([weekNum, weekOrdinal]) => {
+      // convert fields to unsummarized schema
+      const convertedRawData = {
+        bloom: sixWeekData['What bloomed?'],
+        bloomDate: sixWeekData['Date of Inital bloom'], // fix spelling
+        cleridCount: sixWeekData[`Number Clerids (${weekOrdinal} Collection)`],
+        collectionDate: sixWeekData[`Date of Collection ${weekNum}`],
+        county: sixWeekData['County/Parish'],
+        daysActive: sixWeekData[`Active Trapping Days (${weekOrdinal} Collection)`],
+        endobrev: 1,
+        FIPS: null,
+        globalID: sixWeekData.GlobalID,
+        latitude: sixWeekData.Latitude,
+        longitude: sixWeekData.Longitude,
+        lure: sixWeekData['Trap Lure'],
+        rangerDistrict: sixWeekData['National Forest (Ranger District)'],
+        season: sixWeekData.Season,
+        sirexLure: 'Y',
+        spbCount: sixWeekData[`Number SPB (${weekOrdinal} Collection)`],
+        startDate: sixWeekData['Traps set out on:'],
+        state: sixWeekData.State,
+        trap: sixWeekData['Trap name'],
+        year: sixWeekData.Year,
+      };
+
+      const cleanedData = extractModelAttributes(convertedRawData);
+
+      if (!cleanedData) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in csv');
+
+      if (!cleanedData.collectionDate || !cleanedData.daysActive || cleanedData.daysActive === '0') return undefined; // no data for this week
+
+      const shouldDeleteSurvey = sixWeekData['Delete this survey?'] === 'yes';
+      const isFinalCollection = ['yes', '', null, undefined].includes(sixWeekData['Is this the Final Collection?']);
+
+      return {
+        ...cleanedData,
+        shouldInsert: !shouldDeleteSurvey && isFinalCollection, // only insert if data is good and final
+      };
+    }).filter((doc) => !!doc); // remove all nulls
+  };
 
   const { docs, rowCount } = await processCSV(filename, (row) => {
     // attempt to unpack all weeks 1-6 and push all
@@ -77,12 +107,51 @@ export const uploadCsv = async (filename) => {
 };
 
 /**
- * upload survey123 data to unsummarized collection -- should be called by webhook
+ * @description uploads survey123 data to unsummarized collection - should be called by webhook
  * @param {Object} rawData raw data from survey123
  * @returns {Promise<Array>} delete result and insert result data
  */
 export const uploadSurvey123FromWebhook = async (rawData) => {
-  const unpacker = survey123WebhookUnpackCreator(cleanCsv, extractModelAttributes);
+  const unpacker = (sixWeekData) => {
+    return ordinalStrings.map(([weekNum]) => {
+      // convert fields to unsummarized schema
+      const convertedRawData = {
+        bloom: sixWeekData.Species_Bloom,
+        bloomDate: sixWeekData.Initial_Bloom,
+        cleridCount: sixWeekData[`Number_Clerids${weekNum}`],
+        collectionDate: sixWeekData[`CollectionDate${weekNum}`],
+        county: sixWeekData.County,
+        daysActive: sixWeekData[`TrappingInterval${weekNum}`],
+        endobrev: 1,
+        FIPS: null,
+        globalID: transformSurvey123GlobalID(sixWeekData.globalid), // transform into regular form
+        latitude: sixWeekData.Latitude,
+        longitude: sixWeekData.Longitude,
+        lure: sixWeekData.Trap_Lure,
+        rangerDistrict: sixWeekData.Nat_Forest_Ranger_Dist,
+        season: sixWeekData.Season,
+        sirexLure: 'Y',
+        spbCount: sixWeekData[`Number_SPB${weekNum}`],
+        startDate: sixWeekData.TrapSetDate,
+        state: sixWeekData.USA_State,
+        trap: sixWeekData.Trap_name,
+        year: sixWeekData.Year,
+      };
+
+      const cleanedData = extractModelAttributes(convertedRawData);
+
+      if (!cleanedData) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in webhook data');
+      if (!cleanedData.collectionDate || !cleanedData.daysActive || cleanedData.daysActive === '0') return undefined; // no data for this week
+
+      const shouldDeleteSurvey = sixWeekData.DeleteSurvey === 'yes';
+      const isFinalCollection = sixWeekData.Is_Final_Collection === 'yes';
+
+      return {
+        ...cleanedData,
+        shouldInsert: !shouldDeleteSurvey && isFinalCollection, // only insert if data is good and final
+      };
+    }).filter((doc) => !!doc); // remove all nulls
+  };
 
   const data = unpacker(rawData).map(stateToAbbrevTransform);
 

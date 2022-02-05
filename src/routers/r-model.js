@@ -14,7 +14,7 @@ const rModelRouter = Router();
 rModelRouter.route('/')
   .get(async (req, res) => {
     const {
-      cleridst1 = 0,
+      cleridst1,
       endobrev = 0,
       SPB = 0,
       spotst1 = 0,
@@ -22,7 +22,7 @@ rModelRouter.route('/')
     } = req.query;
 
     const input = [{
-      cleridst1: parseFloat(cleridst1, 10),
+      cleridst1: cleridst1 ? parseFloat(cleridst1, 10) : null,
       endobrev: parseInt(endobrev, 10),
       SPB: parseFloat(SPB, 10),
       spotst1: parseInt(spotst1, 10),

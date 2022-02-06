@@ -1,4 +1,3 @@
-/* eslint-disable sort-keys */
 import mongoose, { Schema } from 'mongoose';
 import numeral from 'numeral';
 
@@ -47,7 +46,7 @@ const UnsummarizedTrappingSchema = new Schema({
     min: 0,
     type: Number,
   },
-  fips: {
+  FIPS: {
     type: Number,
   },
   globalID: {

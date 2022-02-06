@@ -1,139 +1,107 @@
-import { mergeSpots as mergeCountySpots } from './spot-data-county';
-import { mergeSpots as mergeRangerDistrictSpots } from './spot-data-rangerdistrict';
-
+/* eslint-disable import/prefer-default-export */
 import {
-  deleteAll as countySummarizeDeleteAll,
-  deleteStateYear as countySummarizeDeleteStateYear,
+  clearAll as countyClearAll,
+  deleteStaleRows as countyDeleteStaleRows,
   summarizeAll as countySummarizeAll,
-  summarizeStateYear as countySummarizeStateYear,
-} from './summarized-county-trapping';
-
-import {
-  deleteAll as rangerDistrictSummarizeDeleteAll,
-  deleteStateYear as rangerDistrictSummarizeDeleteStateYear,
-  summarizeAll as rangerDistrictSummarizeAll,
-  summarizeStateYear as rangerDistrictSummarizeStateYear,
-} from './summarized-rangerdistrict-trapping';
-
-import {
-  deleteAll as countyPredictionDeleteAll,
-  deleteStateYear as countyPredictionDeleteStateYear,
-  generateStateYearPredictions as countyGenerateStateYearPredictions,
+  yearT1Pass as countyYearT1Pass,
+  yearT2Pass as countyYearT2Pass,
+  indicatorPass as countyIndicatorPass,
   generateAllPredictions as countyGenerateAllPredictions,
-} from './county-prediction';
+  generateAllCalculatedFields as countyGenerateAllCalculatedFields,
+} from './summarized-county';
 
 import {
-  deleteAll as rangerDistrictPredictionDeleteAll,
-  deleteStateYear as rangerDistrictPredictionDeleteStateYear,
-  generateStateYearPredictions as rangerDistrictGenerateStateYearPredictions,
+  clearAll as rangerDistrictClearAll,
+  deleteStaleRows as rangerDistrictDeleteStaleRows,
+  summarizeAll as rangerDistrictSummarizeAll,
+  yearT1Pass as rangerDistrictYearT1Pass,
+  yearT2Pass as rangerDistrictYearT2Pass,
+  indicatorPass as rangerDistrictIndicatorPass,
   generateAllPredictions as rangerDistrictGenerateAllPredictions,
-} from './rd-prediction';
+  generateAllCalculatedFields as rangerDistrictGenerateAllCalculatedFields,
+} from './summarized-rangerdistrict';
 
-const ignore2018DataOptions = {
-  year: { $ne: 2018 },
-};
+// start year that we should modify data (allows us to leave all 2020 and prior data alone)
+const CUTOFF_YEAR = 2021;
 
+/**
+ * @description runs the entire pipeline (summarize data, generate predictions)
+ * @param {Number} [cutoffYear=2021] start year that data should be modified for
+ * @returns {Promise<Object>} result of each operation
+ */
 export const runPipelineAll = async () => {
   console.log('RUNNING PIPELINE');
 
+  const yearT0Filter = { year: { $gte: CUTOFF_YEAR } };
+  const yearT1Filter = { year: { $gte: CUTOFF_YEAR - 1 } };
+  const yearT2Filter = { year: { $gte: CUTOFF_YEAR - 2 } };
+
   try {
-    // drop all summarized data and predictions
-    const deleteResult = await Promise.all([
-      countySummarizeDeleteAll(ignore2018DataOptions),
-      rangerDistrictSummarizeDeleteAll(ignore2018DataOptions),
-      countyPredictionDeleteAll(),
-      rangerDistrictPredictionDeleteAll(),
+    // set spbPer2Weeks values to null for all summarized (within year filter)
+    // after summarization, if spbPer2Weeks is still null, then hasSPBTrapping will be
+    // set to 0 in the indicator pass, which will flag a row to be deleted
+    // in the stale row pass iff there is also no spotst0 data
+    const clearResult = await Promise.all([
+      countyClearAll(yearT0Filter),
+      rangerDistrictClearAll(yearT0Filter),
     ]);
 
     // summarize county and ranger district data
     const summarizeResult = await Promise.all([
-      countySummarizeAll(),
-      rangerDistrictSummarizeAll(),
+      countySummarizeAll(yearT0Filter),
+      rangerDistrictSummarizeAll(yearT0Filter),
     ]);
 
-    // append spot data
-    const spotAppendResult = await Promise.all([
-      mergeCountySpots('t2'),
-      mergeCountySpots('t1'),
-      mergeCountySpots('t0'),
-      mergeRangerDistrictSpots('t2'),
-      mergeRangerDistrictSpots('t1'),
-      mergeRangerDistrictSpots('t0'),
+    // generate spotst2
+    const yearT2PassResult = await Promise.all([
+      countyYearT2Pass(yearT2Filter),
+      rangerDistrictYearT2Pass(yearT2Filter),
+    ]);
+
+    // generate spotst1 & cleridst1
+    const yearT1PassResult = await Promise.all([
+      countyYearT1Pass(yearT1Filter),
+      rangerDistrictYearT1Pass(yearT1Filter),
+    ]);
+
+    // set indicator variables
+    const indicatorPassResult = await Promise.all([
+      countyIndicatorPass(yearT0Filter),
+      rangerDistrictIndicatorPass(yearT0Filter),
+    ]);
+
+    // delete rows where no trapping or spot data exists (and therefore no predictions either)
+    const deleteStaleRowsResult = await Promise.all([
+      countyDeleteStaleRows(yearT0Filter),
+      rangerDistrictDeleteStaleRows(yearT0Filter),
     ]);
 
     // generate predictions
     const predictionResult = await Promise.all([
-      countyGenerateAllPredictions(),
-      rangerDistrictGenerateAllPredictions(),
+      countyGenerateAllPredictions(yearT0Filter),
+      rangerDistrictGenerateAllPredictions(yearT0Filter),
+    ]);
+
+    // generate calculated fields
+    const calculatedFieldsResult = await Promise.all([
+      countyGenerateAllCalculatedFields(yearT0Filter),
+      rangerDistrictGenerateAllCalculatedFields(yearT0Filter),
     ]);
 
     console.log('FINISHED RUNNING PIPELINE');
 
     return {
-      deleteResult,
-      predictionResult,
-      spotAppendResult,
+      clearResult,
       summarizeResult,
+      yearT2PassResult,
+      yearT1PassResult,
+      indicatorPassResult,
+      deleteStaleRowsResult,
+      predictionResult,
+      calculatedFieldsResult,
     };
   } catch (error) {
     console.log('ERROR RUNNING PIPELINE');
-    console.log(error);
-    return error;
-  }
-};
-
-/**
- * runs pipeline by summarizing data, appending spot data, and generating predictions
- * @param {String} state state to aggregate and predict on
- * @param {String} year year to aggregate and predict on
- * @returns {Promise<Object>} result data of each bulk operation
- */
-export const runPipelineStateYear = async (state, rawYear = '0') => {
-  const year = parseInt(rawYear, 10);
-
-  console.log(`RUNNING PIPELINE ON STATE ${state}, YEAR ${year}`);
-
-  try {
-    // drop all summarized data and predictions
-    const deleteResult = await Promise.all([
-      countySummarizeDeleteStateYear(state, year),
-      rangerDistrictSummarizeDeleteStateYear(state, year),
-      countyPredictionDeleteStateYear(state, year),
-      rangerDistrictPredictionDeleteStateYear(state, year),
-    ]);
-
-    // summarize county and ranger district data
-    const summarizeResult = await Promise.all([
-      countySummarizeStateYear(state, year),
-      rangerDistrictSummarizeStateYear(state, year),
-    ]);
-
-    // append spot data
-    const spotAppendResult = await Promise.all([
-      mergeCountySpots('t2', year - 2, state),
-      mergeCountySpots('t1', year - 1, state),
-      mergeCountySpots('t0', year, state),
-      mergeRangerDistrictSpots('t2', year - 2, state),
-      mergeRangerDistrictSpots('t1', year - 1, state),
-      mergeRangerDistrictSpots('t0', year, state),
-    ]);
-
-    // generate predictions
-    const predictionResult = await Promise.all([
-      countyGenerateStateYearPredictions(state, year),
-      rangerDistrictGenerateStateYearPredictions(state, year),
-    ]);
-
-    console.log(`FINISHED RUNNING PIPELINE ON STATE ${state}, YEAR ${year}`);
-
-    return {
-      deleteResult,
-      predictionResult,
-      spotAppendResult,
-      summarizeResult,
-    };
-  } catch (error) {
-    console.log(`ERROR RUNNING PIPELINE ON STATE ${state}, YEAR ${year}`);
     console.log(error);
     return error;
   }

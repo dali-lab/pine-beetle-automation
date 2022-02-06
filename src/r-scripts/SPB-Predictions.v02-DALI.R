@@ -91,13 +91,13 @@ preds = data.frame(
 colnames(preds) = c(
     "pi",
     "mu",
-    "Exp spots if outbreak",
-    "prob.Spots>0",
-    "prob.Spots>19",
-    "prob.Spots>53",
-    "prob.Spots>147",
-    "prob.Spots>402",
-    "prob.Spots>1095"
+    "expSpotsIfOutbreak",
+    "probSpotsGT0",
+    "probSpotsGT20",
+    "probSpotsGT50",
+    "probSpotsGT150",
+    "probSpotsGT400",
+    "probSpotsGT1000"
 )
 
 preds # returns to caller

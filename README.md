@@ -49,10 +49,6 @@ package.json                        [package]
 Procfile                            [Heroku file to configure server deployment]
 ```
 
-## Design Philosophy and Principles
-
-To be added.
-
 ## Code Style
 
 We use async/await for all asynchronous functions.

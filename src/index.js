@@ -48,7 +48,7 @@ app.use(bodyParser.json({ extended: true, limit: '50mb' }));
 
 // ROUTES
 Object.entries(routers).forEach(([prefix, router]) => {
-  app.use(`/v2/${prefix}`, router);
+  app.use(`/v3/${prefix}`, router);
 });
 
 // custom 404 middleware

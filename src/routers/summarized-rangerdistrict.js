@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import multer from 'multer';
 
 import {
   deleteFile,
@@ -8,14 +9,16 @@ import {
 
 import { RESPONSE_TYPES } from '../constants';
 import { requireAuth } from '../middleware';
-import { RDPrediction } from '../controllers';
+import { SummarizedRangerDistrict, Pipeline } from '../controllers';
 
-const RDPredictionRouter = Router();
+const summarizedRangerDistrictRouter = Router();
 
-RDPredictionRouter.route('/')
+const upload = multer({ dest: './uploads' });
+
+summarizedRangerDistrictRouter.route('/')
   .get(async (_req, res) => {
     try {
-      const result = await RDPrediction.getAll();
+      const result = await SummarizedRangerDistrict.getAll();
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
@@ -33,7 +36,20 @@ RDPredictionRouter.route('/')
         return;
       }
 
-      const result = await RDPrediction.insertOne(req.body);
+      const result = await SummarizedRangerDistrict.insertOne(req.body);
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    }
+  })
+
+  .delete(requireAuth, async (req, res) => {
+    try {
+      const result = await SummarizedRangerDistrict.deleteAll();
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
@@ -44,7 +60,7 @@ RDPredictionRouter.route('/')
     }
   });
 
-RDPredictionRouter.route('/filter')
+summarizedRangerDistrictRouter.route('/filter')
   .get(async (req, res) => {
     const {
       endYear,
@@ -54,7 +70,7 @@ RDPredictionRouter.route('/filter')
     } = req.query;
 
     try {
-      const result = await RDPrediction.getByFilter(startYear, endYear, state, rangerDistrict);
+      const result = await SummarizedRangerDistrict.getByFilter(startYear, endYear, state, rangerDistrict);
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
@@ -65,14 +81,70 @@ RDPredictionRouter.route('/filter')
     }
   });
 
-RDPredictionRouter.route('/download')
+summarizedRangerDistrictRouter.route('/spots/upload')
+  .post(requireAuth, upload.single('csv'), async (req, res) => {
+    if (!req.file) {
+      res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'missing file'));
+      return;
+    }
+
+    try {
+      const uploadResult = await SummarizedRangerDistrict.uploadSpotsCsv(req.file.path);
+      Pipeline.runPipelineAll();
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
+        data: uploadResult,
+        message: 'file uploaded successfully',
+      }));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    } finally {
+      // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
+      setTimeout(() => {
+        deleteFile(req.file.path);
+      }, 1000 * 10);
+    }
+  });
+
+summarizedRangerDistrictRouter.route('/upload')
+  .post(requireAuth, upload.single('csv'), async (req, res) => {
+    if (!req.file) {
+      res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'missing file'));
+      return;
+    }
+
+    try {
+      const uploadResult = await SummarizedRangerDistrict.uploadCsv(req.file.path);
+      Pipeline.runPipelineAll();
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
+        data: uploadResult,
+        message: 'file uploaded successfully',
+      }));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    } finally {
+      // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
+      setTimeout(() => {
+        deleteFile(req.file.path);
+      }, 1000 * 10);
+    }
+  });
+
+summarizedRangerDistrictRouter.route('/download')
   .get(async (req, res) => {
     let filepath;
 
     try {
-      filepath = await RDPrediction.downloadCsv(req.query);
+      filepath = await SummarizedRangerDistrict.downloadCsv(req.query);
 
-      res.attachment('rangerdistrict-predictions.csv').sendFile(filepath);
+      res.attachment('rangerdistrict-summarized.csv').sendFile(filepath);
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;
@@ -86,34 +158,11 @@ RDPredictionRouter.route('/download')
     }
   });
 
-RDPredictionRouter.route('/predict')
-  .get(requireAuth, async (req, res) => {
-    try {
-      const { state, year } = req.query;
-      if (state && year) {
-        await RDPrediction.generateStateYearPredictions(state, parseInt(year, 10));
-      } else {
-        await RDPrediction.generateAllPredictions();
-      }
-
-      const message = state && year
-        ? `predicted by ranger district on ${state} for ${year}`
-        : 'predicted all by ranger district';
-
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, message));
-    } catch (error) {
-      const errorResponse = generateErrorResponse(error);
-      const { error: errorMessage, status } = errorResponse;
-      console.log(errorMessage);
-      res.status(status).send(errorResponse);
-    }
-  });
-
-RDPredictionRouter.route('/:id')
+summarizedRangerDistrictRouter.route('/:id')
   .get(async (req, res) => {
     try {
       const { id } = req.params;
-      const result = await RDPrediction.getById(id);
+      const result = await SummarizedRangerDistrict.getById(id);
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
@@ -133,7 +182,7 @@ RDPredictionRouter.route('/:id')
         return;
       }
 
-      const result = await RDPrediction.updateById(id, req.body);
+      const result = await SummarizedRangerDistrict.updateById(id, req.body);
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
@@ -147,7 +196,7 @@ RDPredictionRouter.route('/:id')
   .delete(requireAuth, async (req, res) => {
     try {
       const { id } = req.params;
-      const result = await RDPrediction.deleteById(id);
+      const result = await SummarizedRangerDistrict.deleteById(id);
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
@@ -158,4 +207,4 @@ RDPredictionRouter.route('/:id')
     }
   });
 
-export default RDPredictionRouter;
+export default summarizedRangerDistrictRouter;

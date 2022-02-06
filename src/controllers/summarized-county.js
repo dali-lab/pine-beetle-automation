@@ -309,9 +309,9 @@ export const generateAllPredictions = predictionGeneratorCreator('county', rMode
 export const generateAllCalculatedFields = calculatedFieldsGeneratorCreator('county', rModel.generateCalculatedFields, SummarizedCountyModel, upsertOp);
 
 /**
- * @description Clears all rows where neither trapping nor spot data exists. Used in survey deletion.
+ * @description deletes all rows where neither trapping nor spot data exists
  * @param {Object} filter mongo query filter for subsetting data
  */
-export const clearStaleRows = async (filter) => {
+export const deleteStaleRows = async (filter) => {
   return SummarizedCountyModel.deleteMany({ ...filter, hasSPBTrapping: 0, hasSpotst0: 0 });
 };

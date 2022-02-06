@@ -232,6 +232,14 @@ export const uploadSpotsCsv = async (filename) => {
 };
 
 /**
+ * @description Clears the SPB value for all documents matching filter. This helps ensure data validity during survey deletions.
+ * @param {Object} filter mongo query filter for subsetting data
+ */
+export const clearAll = async (filter) => {
+  return SummarizedRangerDistrictModel.updateMany(filter, { spbPer2Weeks: null });
+};
+
+/**
  * @description Summarizes all trapping data at the ranger district level. Will overwrite all entries in this collection.
  * @param {Object} filter mongo query filter for subsetting data
  */
@@ -298,3 +306,11 @@ export const generateAllPredictions = predictionGeneratorCreator('rangerDistrict
    * @returns {(filter: Object) => Promise} async function receiving filter for data subsetting
    */
 export const generateAllCalculatedFields = calculatedFieldsGeneratorCreator('rangerDistrict', rModel.generateCalculatedFields, SummarizedRangerDistrictModel, upsertOp);
+
+/**
+ * @description Clears all rows where neither trapping nor spot data exists. Used in survey deletion.
+ * @param {Object} filter mongo query filter for subsetting data
+ */
+export const clearStaleRows = async (filter) => {
+  return SummarizedRangerDistrictModel.deleteMany({ ...filter, hasSPBTrapping: 0, hasSpotst0: 0 });
+};

@@ -1,5 +1,7 @@
 /* eslint-disable import/prefer-default-export */
 import {
+  clearAll as countyClearAll,
+  clearStaleRows as countyClearStaleRows,
   summarizeAll as countySummarizeAll,
   yearT1Pass as countyYearT1Pass,
   yearT2Pass as countyYearT2Pass,
@@ -9,6 +11,8 @@ import {
 } from './summarized-county';
 
 import {
+  clearAll as rangerDistrictClearAll,
+  clearStaleRows as rangerDistrictClearStaleRows,
   summarizeAll as rangerDistrictSummarizeAll,
   yearT1Pass as rangerDistrictYearT1Pass,
   yearT2Pass as rangerDistrictYearT2Pass,
@@ -33,6 +37,12 @@ export const runPipelineAll = async (cutoffYear = DEFAULT_CUTOFF_YEAR) => {
   const yearT2Filter = { year: { $gte: cutoffYear - 2 } };
 
   try {
+    // delete spb values in case they become invalid
+    const deleteResult = await Promise.all([
+      countyClearAll(yearT0Filter),
+      rangerDistrictClearAll(yearT0Filter),
+    ]);
+
     // summarize county and ranger district data
     const summarizeResult = await Promise.all([
       countySummarizeAll(yearT0Filter),
@@ -69,9 +79,17 @@ export const runPipelineAll = async (cutoffYear = DEFAULT_CUTOFF_YEAR) => {
       rangerDistrictGenerateAllCalculatedFields(yearT0Filter),
     ]);
 
+    // clear un-needed rows
+    const clearStaleRowsResult = await Promise.all([
+      countyClearStaleRows(yearT0Filter),
+      rangerDistrictClearStaleRows(yearT0Filter),
+    ]);
+
     console.log('FINISHED RUNNING PIPELINE');
 
     return {
+      clearStaleRowsResult,
+      deleteResult,
       summarizeResult,
       yearT2PassResult,
       yearT1PassResult,

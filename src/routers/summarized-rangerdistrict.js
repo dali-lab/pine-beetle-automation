@@ -158,6 +158,27 @@ summarizedRangerDistrictRouter.route('/download')
     }
   });
 
+summarizedRangerDistrictRouter.route('/download-predict')
+  .get(async (req, res) => {
+    let filepath;
+
+    try {
+      filepath = await SummarizedRangerDistrict.downloadPredictionCsv(req.query);
+
+      res.attachment('rangerdistrict-prediction.csv').sendFile(filepath);
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    } finally {
+      // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
+      setTimeout(() => {
+        deleteFile(filepath, true);
+      }, 1000 * 10);
+    }
+  });
+
 summarizedRangerDistrictRouter.route('/:id')
   .get(async (req, res) => {
     try {

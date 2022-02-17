@@ -81,6 +81,10 @@ Uploads a CSV of summarized county data. Expects a `csv` file field in the body.
 
 Sends CSV of entire summarized county collection
 
+## `GET /summarized-county/download-predicted`
+
+Sends CSV of predictions of county collection
+
 ## `GET /summarized-county/:id`
 
 Gets a row of summarized county data by its unique id.

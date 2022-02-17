@@ -82,6 +82,10 @@ Uploads a CSV of summarized ranger district data. Expects a `csv` file field in 
 
 Sends CSV of entire summarized ranger district collection
 
+## `GET /summarized-rangerdistrict/download-predicted`
+
+Sends CSV of predictions of ranger district collection
+
 ## `GET /summarized-rangerdistrict/:id`
 
 Gets a row of summarized ranger district data by its unique id.

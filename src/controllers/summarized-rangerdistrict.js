@@ -32,6 +32,7 @@ const modelAttributes = getModelAttributes(SummarizedRangerDistrictModel);
 const numericModelAttributes = getModelNumericAttributes(SummarizedRangerDistrictModel);
 const spotAttributes = ['state', 'rangerDistrict', 'year', 'spotst0'];
 const downloadFieldsToOmit = ['cleridPerDay', 'spbPerDay'];
+const downloadFieldsPrediction = ['state', 'rangerDistrict', 'year', 'mu', 'pi', 'expSpotsIfOutbreak', 'probSpotsGT0', 'probSpotsGT20', 'probSpotsGT50', 'probSpotsGT150', 'probSpotsGT400', 'probSpotsGT1000'];
 
 /**
  * @description checks that any provided object contains all the model attributes, and filters out any other values
@@ -141,6 +142,16 @@ export const deleteAll = async (options = {}) => {
 export const downloadCsv = csvDownloadCreator(
   SummarizedRangerDistrictModel,
   modelAttributes.filter((a) => !downloadFieldsToOmit.includes(a)),
+);
+
+/**
+ * @description downloads a csv of the columns relevant to predictions
+ * @throws RESPONSE_TYPES.INTERNAL_ERROR for problem parsing CSV
+ * @returns {String} path to CSV file
+ */
+export const downloadPredictionCsv = csvDownloadCreator(
+  SummarizedRangerDistrictModel,
+  modelAttributes.filter((a) => downloadFieldsPrediction.includes(a)),
 );
 
 // function for cleaning row of csv (will cast undefined or empty string to null for specified fields)

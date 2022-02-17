@@ -29,6 +29,7 @@ const modelAttributes = getModelAttributes(SummarizedCountyModel);
 const numericModelAttributes = getModelNumericAttributes(SummarizedCountyModel);
 const spotAttributes = ['state', 'county', 'year', 'spotst0'];
 const downloadFieldsToOmit = ['cleridPerDay', 'spbPerDay'];
+const downloadFieldsPrediction = ['state', 'county', 'year', 'mu', 'pi', 'expSpotsIfOutbreak', 'probSpotsGT0', 'probSpotsGT20', 'probSpotsGT50', 'probSpotsGT150', 'probSpotsGT400', 'probSpotsGT1000'];
 
 /**
  * @description checks that any provided object contains all the model attributes, and filters out any other values
@@ -138,6 +139,16 @@ export const deleteAll = async (options = {}) => {
 export const downloadCsv = csvDownloadCreator(
   SummarizedCountyModel,
   modelAttributes.filter((a) => !downloadFieldsToOmit.includes(a)),
+);
+
+/**
+ * @description downloads a csv of the columns relevant to predictions
+ * @throws RESPONSE_TYPES.INTERNAL_ERROR for problem parsing CSV
+ * @returns {String} path to CSV file
+ */
+export const downloadPredictionCsv = csvDownloadCreator(
+  SummarizedCountyModel,
+  modelAttributes.filter((a) => downloadFieldsPrediction.includes(a)),
 );
 
 /**

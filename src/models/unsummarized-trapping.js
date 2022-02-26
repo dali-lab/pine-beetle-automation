@@ -21,24 +21,28 @@ mongoose.SchemaTypes.String.cast((v) => {
 
 // collection 1: historical unsummarized trapping
 const UnsummarizedTrappingSchema = new Schema({
-  bloom: {
-    type: String,
-  },
-  bloomDate: {
-    type: Date,
-  },
-  cleridCount: {
-    min: 0,
+  year: {
+    min: 1900,
     type: Number,
   },
-  collectionDate: {
-    type: Date,
+  state: {
+    type: String,
   },
   county: {
     type: String,
   },
-  daysActive: {
+  rangerDistrict: {
+    type: String,
+  },
+  FIPS: {
     type: Number,
+  },
+  season: {
+    lowercase: true,
+    type: String,
+  },
+  trap: {
+    type: String,
   },
   endobrev: {
     default: 1,
@@ -46,8 +50,34 @@ const UnsummarizedTrappingSchema = new Schema({
     min: 0,
     type: Number,
   },
-  FIPS: {
+  sirexLure: {
+    type: String,
+  },
+  startDate: {
+    type: Date,
+  },
+  endDate: {
+    type: Date,
+  },
+  collectionDate: {
+    type: Date,
+  },
+  daysActive: {
     type: Number,
+  },
+  spbCount: {
+    min: 0,
+    type: Number,
+  },
+  cleridCount: {
+    min: 0,
+    type: Number,
+  },
+  bloom: {
+    type: String,
+  },
+  bloomDate: {
+    type: Date,
   },
   globalID: {
     type: String,
@@ -65,33 +95,6 @@ const UnsummarizedTrappingSchema = new Schema({
   },
   lure: {
     type: String,
-  },
-  rangerDistrict: {
-    type: String,
-  },
-  season: {
-    lowercase: true,
-    type: String,
-  },
-  sirexLure: {
-    type: String,
-  },
-  spbCount: {
-    min: 0,
-    type: Number,
-  },
-  startDate: {
-    type: Date,
-  },
-  state: {
-    type: String,
-  },
-  trap: {
-    type: String,
-  },
-  year: {
-    min: 1900,
-    type: Number,
   },
 });
 

@@ -32,7 +32,7 @@ const modelAttributes = getModelAttributes(SummarizedRangerDistrictModel);
 const numericModelAttributes = getModelNumericAttributes(SummarizedRangerDistrictModel);
 const spotAttributes = ['state', 'rangerDistrict', 'year', 'spotst0'];
 const downloadFieldsToOmit = ['cleridPerDay', 'spbPerDay'];
-const downloadFieldsPrediction = ['state', 'rangerDistrict', 'year', 'mu', 'pi', 'expSpotsIfOutbreak', 'probSpotsGT0', 'probSpotsGT20', 'probSpotsGT50', 'probSpotsGT150', 'probSpotsGT400', 'probSpotsGT1000'];
+const downloadFieldsPrediction = ['state', 'rangerDistrict', 'year', 'mu', 'pi', 'spotst0', 'expSpotsIfOutbreak', 'probSpotsGT0', 'probSpotsGT20', 'probSpotsGT50', 'probSpotsGT150', 'probSpotsGT400', 'probSpotsGT1000'];
 
 /**
  * @description checks that any provided object contains all the model attributes, and filters out any other values

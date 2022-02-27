@@ -56,9 +56,6 @@ const UnsummarizedTrappingSchema = new Schema({
   startDate: {
     type: Date,
   },
-  endDate: {
-    type: Date,
-  },
   collectionDate: {
     type: Date,
   },

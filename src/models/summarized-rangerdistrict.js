@@ -98,11 +98,6 @@ const SummarizedRangerDistrictSchema = new Schema({
     min: 0,
     type: Number,
   },
-  spotst0: { // number of local infestations of SPB ("spots") in state/county this year
-    default: null,
-    min: 0,
-    type: Number,
-  },
   spotst1: { // number of local infestations of SPB ("spots") in state/county in year - 1
     default: null,
     min: 0,
@@ -123,6 +118,11 @@ const SummarizedRangerDistrictSchema = new Schema({
   },
   expSpotsIfOutbreak: { // model output: expected number of spots if there is an outbreak (outbreak defined as any spots)
     default: null,
+    type: Number,
+  },
+  spotst0: { // number of local infestations of SPB ("spots") in state/county this year
+    default: null,
+    min: 0,
     type: Number,
   },
   probSpotsGT0: { // model output: probability of >0 spots in year/state/county

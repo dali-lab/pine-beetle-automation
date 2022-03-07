@@ -56,7 +56,7 @@ export const processCSVAsync = (filename, transformRow = (r) => Promise.resolve(
       .on('data', (data) => promises.push(transformRow(data)))
       .on('error', (err) => reject(err))
       .on('end', async (rowCount) => {
-        const docs = await Promise.all(promises);
+        const docs = await Promise.all(promises).catch(reject);
         resolve({ docs, rowCount });
       });
   });

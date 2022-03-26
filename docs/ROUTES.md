@@ -5,7 +5,13 @@
 Returns 200 response when server is up.
 
 ## [r-model](./r-model.md)
+
 ## [unsummarized-trapping](./unsummarized-trapping.md)
-## [spot-data](./spots.md)
-## [summarized-county-trapping](./summarized-county-trapping.md)
-## [summarized-rangerdistrict-trapping](./summarized-rangerdistrict-trapping.md)
+
+## [summarized-county](./summarized-county.md)
+
+## [summarized-rangerdistrict](./summarized-rangerdistrict.md)
+
+## [pipeline](./pipeline.md)
+
+## [survey123](./survey123.md)

@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import multer from 'multer';
 
 import {
   deleteFile,
@@ -12,8 +11,6 @@ import { requireAuth } from '../middleware';
 import { UnsummarizedTrapping } from '../controllers';
 
 const unsummarizedTrappingRouter = Router();
-
-const upload = multer({ dest: './uploads' });
 
 unsummarizedTrappingRouter.route('/')
   .get(async (_req, res) => { // get all unsummarized data
@@ -45,32 +42,40 @@ unsummarizedTrappingRouter.route('/')
       console.log(errorMessage);
       res.status(status).send(errorResponse);
     }
-  });
+  })
 
-unsummarizedTrappingRouter.route('/upload')
-  .post(requireAuth, upload.single('csv'), async (req, res) => {
-    if (!req.file) {
-      res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'missing file'));
-      return;
-    }
-
+  .delete(requireAuth, async (req, res) => { // delete all
     try {
-      const uploadResult = await UnsummarizedTrapping.uploadCsv(req.file.path);
+      const documents = await UnsummarizedTrapping.deleteAll();
 
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
-        data: uploadResult,
-        message: 'file uploaded successfully',
-      }));
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, documents));
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;
       console.log(errorMessage);
       res.status(status).send(errorResponse);
-    } finally {
-      // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
-      setTimeout(() => {
-        deleteFile(req.file.path);
-      }, 1000 * 10);
+    }
+  });
+
+unsummarizedTrappingRouter.route('/filter')
+  .get(async (req, res) => {
+    const {
+      county,
+      endYear,
+      rangerDistrict,
+      startYear,
+      state,
+    } = req.query;
+
+    try {
+      const result = await UnsummarizedTrapping.getByFilter(startYear, endYear, state, county, rangerDistrict);
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
     }
   });
 

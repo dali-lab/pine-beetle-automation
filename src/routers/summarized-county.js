@@ -9,16 +9,16 @@ import {
 
 import { RESPONSE_TYPES } from '../constants';
 import { requireAuth } from '../middleware';
-import { SummarizedCountyTrapping, Pipeline } from '../controllers';
+import { SummarizedCounty, Pipeline } from '../controllers';
 
-const summarizedCountyTrappingRouter = Router();
+const summarizedCountyRouter = Router();
 
 const upload = multer({ dest: './uploads' });
 
-summarizedCountyTrappingRouter.route('/')
+summarizedCountyRouter.route('/')
   .get(async (_req, res) => {
     try {
-      const result = await SummarizedCountyTrapping.getAll();
+      const result = await SummarizedCounty.getAll();
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
@@ -36,7 +36,20 @@ summarizedCountyTrappingRouter.route('/')
         return;
       }
 
-      const result = await SummarizedCountyTrapping.insertOne(req.body);
+      const result = await SummarizedCounty.insertOne(req.body);
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    }
+  })
+
+  .delete(requireAuth, async (req, res) => {
+    try {
+      const result = await SummarizedCounty.deleteAll();
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
@@ -47,7 +60,7 @@ summarizedCountyTrappingRouter.route('/')
     }
   });
 
-summarizedCountyTrappingRouter.route('/filter')
+summarizedCountyRouter.route('/filter')
   .get(async (req, res) => {
     const {
       county,
@@ -57,7 +70,7 @@ summarizedCountyTrappingRouter.route('/filter')
     } = req.query;
 
     try {
-      const result = await SummarizedCountyTrapping.getByFilter(startYear, endYear, state, county);
+      const result = await SummarizedCounty.getByFilter(startYear, endYear, state, county);
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
@@ -68,30 +81,7 @@ summarizedCountyTrappingRouter.route('/filter')
     }
   });
 
-summarizedCountyTrappingRouter.route('/aggregate')
-  .get(requireAuth, async (req, res) => {
-    try {
-      const { state, year } = req.query;
-      if (state && year) {
-        await SummarizedCountyTrapping.summarizeStateYear(state, parseInt(year, 10));
-      } else {
-        await SummarizedCountyTrapping.summarizeAll();
-      }
-
-      const message = state && year
-        ? `summarized by county on ${state} for ${year}`
-        : 'summarized all by county';
-
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, message));
-    } catch (error) {
-      const errorResponse = generateErrorResponse(error);
-      const { error: errorMessage, status } = errorResponse;
-      console.log(errorMessage);
-      res.status(status).send(errorResponse);
-    }
-  });
-
-summarizedCountyTrappingRouter.route('/upload')
+summarizedCountyRouter.route('/spots/upload')
   .post(requireAuth, upload.single('csv'), async (req, res) => {
     if (!req.file) {
       res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'missing file'));
@@ -99,7 +89,7 @@ summarizedCountyTrappingRouter.route('/upload')
     }
 
     try {
-      const uploadResult = await SummarizedCountyTrapping.uploadCsv(req.file.path);
+      const uploadResult = await SummarizedCounty.uploadSpotsCsv(req.file.path);
       Pipeline.runPipelineAll();
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
@@ -119,12 +109,40 @@ summarizedCountyTrappingRouter.route('/upload')
     }
   });
 
-summarizedCountyTrappingRouter.route('/download')
+summarizedCountyRouter.route('/upload')
+  .post(requireAuth, upload.single('csv'), async (req, res) => {
+    if (!req.file) {
+      res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'missing file'));
+      return;
+    }
+
+    try {
+      const uploadResult = await SummarizedCounty.uploadCsv(req.file.path);
+      Pipeline.runPipelineAll();
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
+        data: uploadResult,
+        message: 'file uploaded successfully',
+      }));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    } finally {
+      // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
+      setTimeout(() => {
+        deleteFile(req.file.path);
+      }, 1000 * 10);
+    }
+  });
+
+summarizedCountyRouter.route('/download')
   .get(async (req, res) => {
     let filepath;
 
     try {
-      filepath = await SummarizedCountyTrapping.downloadCsv(req.query);
+      filepath = await SummarizedCounty.downloadCsv(req.query);
 
       res.attachment('county-summarized.csv').sendFile(filepath);
     } catch (error) {
@@ -140,11 +158,32 @@ summarizedCountyTrappingRouter.route('/download')
     }
   });
 
-summarizedCountyTrappingRouter.route('/:id')
+summarizedCountyRouter.route('/download-predict')
+  .get(async (req, res) => {
+    let filepath;
+
+    try {
+      filepath = await SummarizedCounty.downloadPredictionCsv(req.query);
+
+      res.attachment('county-prediction.csv').sendFile(filepath);
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    } finally {
+      // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
+      setTimeout(() => {
+        deleteFile(filepath, true);
+      }, 1000 * 10);
+    }
+  });
+
+summarizedCountyRouter.route('/:id')
   .get(async (req, res) => {
     try {
       const { id } = req.params;
-      const result = await SummarizedCountyTrapping.getById(id);
+      const result = await SummarizedCounty.getById(id);
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
@@ -164,7 +203,7 @@ summarizedCountyTrappingRouter.route('/:id')
         return;
       }
 
-      const result = await SummarizedCountyTrapping.updateById(id, req.body);
+      const result = await SummarizedCounty.updateById(id, req.body);
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
@@ -178,7 +217,7 @@ summarizedCountyTrappingRouter.route('/:id')
   .delete(requireAuth, async (req, res) => {
     try {
       const { id } = req.params;
-      const result = await SummarizedCountyTrapping.deleteById(id);
+      const result = await SummarizedCounty.deleteById(id);
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
@@ -189,4 +228,4 @@ summarizedCountyTrappingRouter.route('/:id')
     }
   });
 
-export default summarizedCountyTrappingRouter;
+export default summarizedCountyRouter;

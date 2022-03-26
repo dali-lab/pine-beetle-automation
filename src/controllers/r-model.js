@@ -1,5 +1,3 @@
-/* eslint-disable import/prefer-default-export */
-/* eslint-disable no-restricted-globals */
 /* eslint-disable new-cap */
 import path from 'path';
 import R from 'r-script';
@@ -7,6 +5,7 @@ import { newError } from '../utils';
 import { RESPONSE_TYPES } from '../constants';
 
 const rpath = path.resolve(__dirname, '../r-scripts/SPB-Predictions.v02-DALI.R');
+const rcalculatedFieldsPath = path.resolve(__dirname, '../r-scripts/Calculated-Outcome-Fields.R');
 
 /**
  * runs the r model by feeding it an array of entries
@@ -23,18 +22,23 @@ export const runModel = (array) => {
       spotst2,
     } = doc;
 
-    if (SPB === null || isNaN(SPB) || isNaN(cleridst1)
-    || spotst1 === null || isNaN(spotst1) || spotst2 === null || isNaN(spotst2)
-    || endobrev === null || isNaN(endobrev)) {
-      throw newError(RESPONSE_TYPES.INTERNAL_ERROR, 'bad format for R model');
-    }
+    // null check
+    const noInvalidNulls = [SPB, spotst1, spotst2, endobrev].reduce((acc, curr) => (
+      acc && curr !== null
+    ), true);
 
-    const allValidInput = [SPB, cleridst1, spotst1, spotst2, endobrev].reduce((acc, curr) => (
+    // not a number check
+    const noInvalidNaNs = [SPB, cleridst1, spotst1, spotst2, endobrev].reduce((acc, curr) => (
+      acc && !Number.isNaN(curr)
+    ), true);
+
+    // non-negative check -- allows a null for cleridst1 to pass through
+    const noInvalidNegatives = [SPB, cleridst1, spotst1, spotst2, endobrev].reduce((acc, curr) => (
       acc && (curr === null || curr >= 0)
     ), true);
 
-    if (!allValidInput) {
-      throw newError(RESPONSE_TYPES.INTERNAL_ERROR, 'bad format for R model, no negatives allowed');
+    if (!(noInvalidNulls && noInvalidNaNs && noInvalidNegatives)) {
+      throw newError(RESPONSE_TYPES.BAD_REQUEST, 'Bad format for R model');
     }
 
     return {
@@ -51,6 +55,45 @@ export const runModel = (array) => {
       resolve(data);
     } else {
       R(rpath)
+        .data({ data })
+        .call((error, d) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(d);
+          }
+        });
+    }
+  });
+};
+
+/**
+ * runs the r script for calculating outcome fields by feeding it an array of entries
+ * @param {Array} array the data
+ * @returns {Promise<Array>} finished calculations
+ */
+export const generateCalculatedFields = (array) => {
+  const data = array.map((doc) => {
+    const {
+      cleridsPer2Weeks,
+      probSpotsGT50,
+      spbPer2Weeks,
+      spotst0,
+    } = doc;
+
+    return {
+      spbPer2Weeks,
+      cleridsPer2Weeks,
+      spotst0,
+      probSpotsGT50,
+    };
+  });
+
+  return new Promise((resolve, reject) => {
+    if (!data.length) {
+      resolve(data);
+    } else {
+      R(rcalculatedFieldsPath)
         .data({ data })
         .call((error, d) => {
           if (error) {

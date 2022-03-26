@@ -9,16 +9,16 @@ import {
 
 import { RESPONSE_TYPES } from '../constants';
 import { requireAuth } from '../middleware';
-import { SummarizedRangerDistrictTrapping, Pipeline } from '../controllers';
+import { SummarizedRangerDistrict, Pipeline } from '../controllers';
 
-const summarizedRangerDistrictTrappingRouter = Router();
+const summarizedRangerDistrictRouter = Router();
 
 const upload = multer({ dest: './uploads' });
 
-summarizedRangerDistrictTrappingRouter.route('/')
+summarizedRangerDistrictRouter.route('/')
   .get(async (_req, res) => {
     try {
-      const result = await SummarizedRangerDistrictTrapping.getAll();
+      const result = await SummarizedRangerDistrict.getAll();
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
@@ -36,7 +36,20 @@ summarizedRangerDistrictTrappingRouter.route('/')
         return;
       }
 
-      const result = await SummarizedRangerDistrictTrapping.insertOne(req.body);
+      const result = await SummarizedRangerDistrict.insertOne(req.body);
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    }
+  })
+
+  .delete(requireAuth, async (req, res) => {
+    try {
+      const result = await SummarizedRangerDistrict.deleteAll();
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
@@ -47,30 +60,7 @@ summarizedRangerDistrictTrappingRouter.route('/')
     }
   });
 
-summarizedRangerDistrictTrappingRouter.route('/aggregate')
-  .get(requireAuth, async (req, res) => {
-    try {
-      const { state, year } = req.query;
-      if (state && year) {
-        await SummarizedRangerDistrictTrapping.summarizeStateYear(state, parseInt(year, 10));
-      } else {
-        await SummarizedRangerDistrictTrapping.summarizeAll();
-      }
-
-      const message = state && year
-        ? `summarized by ranger district on ${state} for ${year}`
-        : 'summarized all by ranger district';
-
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, message));
-    } catch (error) {
-      const errorResponse = generateErrorResponse(error);
-      const { error: errorMessage, status } = errorResponse;
-      console.log(errorMessage);
-      res.status(status).send(errorResponse);
-    }
-  });
-
-summarizedRangerDistrictTrappingRouter.route('/filter')
+summarizedRangerDistrictRouter.route('/filter')
   .get(async (req, res) => {
     const {
       endYear,
@@ -80,7 +70,7 @@ summarizedRangerDistrictTrappingRouter.route('/filter')
     } = req.query;
 
     try {
-      const result = await SummarizedRangerDistrictTrapping.getByFilter(startYear, endYear, state, rangerDistrict);
+      const result = await SummarizedRangerDistrict.getByFilter(startYear, endYear, state, rangerDistrict);
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
@@ -91,7 +81,7 @@ summarizedRangerDistrictTrappingRouter.route('/filter')
     }
   });
 
-summarizedRangerDistrictTrappingRouter.route('/upload')
+summarizedRangerDistrictRouter.route('/spots/upload')
   .post(requireAuth, upload.single('csv'), async (req, res) => {
     if (!req.file) {
       res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'missing file'));
@@ -99,7 +89,7 @@ summarizedRangerDistrictTrappingRouter.route('/upload')
     }
 
     try {
-      const uploadResult = await SummarizedRangerDistrictTrapping.uploadCsv(req.file.path);
+      const uploadResult = await SummarizedRangerDistrict.uploadSpotsCsv(req.file.path);
       Pipeline.runPipelineAll();
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
@@ -119,12 +109,40 @@ summarizedRangerDistrictTrappingRouter.route('/upload')
     }
   });
 
-summarizedRangerDistrictTrappingRouter.route('/download')
+summarizedRangerDistrictRouter.route('/upload')
+  .post(requireAuth, upload.single('csv'), async (req, res) => {
+    if (!req.file) {
+      res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'missing file'));
+      return;
+    }
+
+    try {
+      const uploadResult = await SummarizedRangerDistrict.uploadCsv(req.file.path);
+      Pipeline.runPipelineAll();
+
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
+        data: uploadResult,
+        message: 'file uploaded successfully',
+      }));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    } finally {
+      // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
+      setTimeout(() => {
+        deleteFile(req.file.path);
+      }, 1000 * 10);
+    }
+  });
+
+summarizedRangerDistrictRouter.route('/download')
   .get(async (req, res) => {
     let filepath;
 
     try {
-      filepath = await SummarizedRangerDistrictTrapping.downloadCsv(req.query);
+      filepath = await SummarizedRangerDistrict.downloadCsv(req.query);
 
       res.attachment('rangerdistrict-summarized.csv').sendFile(filepath);
     } catch (error) {
@@ -140,11 +158,32 @@ summarizedRangerDistrictTrappingRouter.route('/download')
     }
   });
 
-summarizedRangerDistrictTrappingRouter.route('/:id')
+summarizedRangerDistrictRouter.route('/download-predict')
+  .get(async (req, res) => {
+    let filepath;
+
+    try {
+      filepath = await SummarizedRangerDistrict.downloadPredictionCsv(req.query);
+
+      res.attachment('rangerdistrict-prediction.csv').sendFile(filepath);
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    } finally {
+      // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
+      setTimeout(() => {
+        deleteFile(filepath, true);
+      }, 1000 * 10);
+    }
+  });
+
+summarizedRangerDistrictRouter.route('/:id')
   .get(async (req, res) => {
     try {
       const { id } = req.params;
-      const result = await SummarizedRangerDistrictTrapping.getById(id);
+      const result = await SummarizedRangerDistrict.getById(id);
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
@@ -164,7 +203,7 @@ summarizedRangerDistrictTrappingRouter.route('/:id')
         return;
       }
 
-      const result = await SummarizedRangerDistrictTrapping.updateById(id, req.body);
+      const result = await SummarizedRangerDistrict.updateById(id, req.body);
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
@@ -178,7 +217,7 @@ summarizedRangerDistrictTrappingRouter.route('/:id')
   .delete(requireAuth, async (req, res) => {
     try {
       const { id } = req.params;
-      const result = await SummarizedRangerDistrictTrapping.deleteById(id);
+      const result = await SummarizedRangerDistrict.deleteById(id);
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
@@ -189,4 +228,4 @@ summarizedRangerDistrictTrappingRouter.route('/:id')
     }
   });
 
-export default summarizedRangerDistrictTrappingRouter;
+export default summarizedRangerDistrictRouter;

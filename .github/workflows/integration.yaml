@@ -33,5 +33,5 @@ jobs:
         # cache: 'npm'
     - run: yarn install --frozen-lockfile # switch to below line if npm
     # - run: npm ci 
-    # - run: yarn build --if-present # uncomment if build test
+    - run: yarn build --if-present # uncomment if build test
     - run: yarn test

@@ -7,20 +7,25 @@ on:
       - release
 
 jobs:
-  build:
+  deploy-dev:
+    if: github.ref == 'ref/heads/dev'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
-      - if: github.ref == 'ref/heads/dev'
-        uses: akhileshns/heroku-deploy@v3.12.12
+      - uses: akhileshns/heroku-deploy@v3.12.12
         with:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
           heroku_app_name: ${{secrets.HEROKU_DEV_APP_NAME}}
           heroku_email: ${{secrets.HEROKU_EMAIL}}
 
-      - if: github.ref == 'ref/heads/release'
-        uses: akhileshns/heroku-deploy@v3.12.12
+  deploy-prod:
+    - if: github.ref == 'ref/heads/release'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: akhileshns/heroku-deploy@v3.12.12
         with:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
           heroku_app_name: ${{secrets.HEROKU_RELEASE_APP_NAME}}

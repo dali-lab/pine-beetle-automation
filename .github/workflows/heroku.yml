@@ -20,7 +20,7 @@ jobs:
           heroku_email: ${{secrets.HEROKU_EMAIL}}
 
   deploy-prod:
-    - if: github.ref == 'ref/heads/release'
+    if: github.ref == 'ref/heads/release'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

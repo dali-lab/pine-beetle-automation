@@ -5,8 +5,8 @@ name: Node.js CI
 on:
   push:
     branches:
-      - "dev" # beta
-      - "release" # gamma
+      - dev # beta
+      - release # gamma
   pull_request:
     branches:
       - "*" # modify this to only run on certain branches
@@ -30,8 +30,8 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-        cache: 'yarn' # switch to below line if npm
-        # cache: 'npm'
+        cache: yarn # switch to below line if npm
+        # cache: npm
     - run: yarn install --frozen-lockfile # switch to below line if npm
     # - run: npm ci 
     - run: yarn lint

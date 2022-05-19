@@ -9,7 +9,7 @@ on:
       - release # gamma
   pull_request:
     branches:
-      - * # modify this to only run on certain branches
+      - "*" # modify this to only run on certain branches
 
 jobs:
   test:

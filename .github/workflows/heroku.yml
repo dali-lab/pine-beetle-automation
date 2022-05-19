@@ -7,14 +7,8 @@ on:
       - release
 
 jobs:
-  test-all:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - run: echo '${{ github.ref }}'
-
   deploy-dev:
-    if: github.ref == 'ref/heads/dev'
+    if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -26,7 +20,7 @@ jobs:
           heroku_email: ${{secrets.HEROKU_EMAIL}}
 
   deploy-prod:
-    if: github.ref == 'ref/heads/release'
+    if: github.ref == 'refs/heads/release'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

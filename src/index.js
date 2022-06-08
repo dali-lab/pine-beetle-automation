@@ -16,8 +16,6 @@ const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost/pb-dev';
 
 const mongooseOptions = {
   loggerLevel: 'error',
-  useCreateIndex: true,
-  useFindAndModify: false,
   useNewUrlParser: true,
   useUnifiedTopology: true,
 };

@@ -1,4 +1,3 @@
-/* eslint-disable import/prefer-default-export */
 import {
   clearAll as countyClearAll,
   deleteStaleRows as countyDeleteStaleRows,
@@ -20,6 +19,9 @@ import {
   generateAllPredictions as rangerDistrictGenerateAllPredictions,
   generateAllCalculatedFields as rangerDistrictGenerateAllCalculatedFields,
 } from './summarized-rangerdistrict';
+
+import { RESPONSE_TYPES } from '../constants';
+import { newError } from '../utils';
 
 // start year that we should modify data (allows us to leave all 2020 and prior data alone)
 const CUTOFF_YEAR = 2021;
@@ -105,4 +107,35 @@ export const runPipelineAll = async () => {
     console.log(error);
     return error;
   }
+};
+
+/**
+ * @description runs indicator and calculated fields pipeline
+ * @param {Number} startYear
+ * @param {Number} endYear
+ * @returns {Promise<Object>} result of each operation
+ */
+export const runIndicatorCalculatorPipelineYears = async (startYear, endYear) => {
+  if (startYear + 5 <= endYear) {
+    throw newError(RESPONSE_TYPES.BAD_REQUEST, 'please only run indicator pipeline for maximum five year interval (four years between start and end year)');
+  }
+
+  const filter = { year: { $gte: startYear, $lte: endYear } };
+
+  // set indicator variables
+  const indicatorPassResult = await Promise.all([
+    countyIndicatorPass(filter),
+    rangerDistrictIndicatorPass(filter),
+  ]);
+
+  // generate calculated fields
+  const calculatedFieldsResult = await Promise.all([
+    countyGenerateAllCalculatedFields(filter),
+    rangerDistrictGenerateAllCalculatedFields(filter),
+  ]);
+
+  return {
+    indicatorPassResult,
+    calculatedFieldsResult,
+  };
 };

@@ -18,7 +18,7 @@ jobs:
 
     strategy:
       matrix: # runs a test for each item in strategy matrix
-        node-version: [16.x] # needs to be updated to fit project standard
+        node-version: [18.x] # needs to be updated to fit project standard
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     # env: # uncomment if env vars needed for build step
@@ -33,7 +33,7 @@ jobs:
         cache: yarn # switch to below line if npm
         # cache: npm
     - run: yarn install --frozen-lockfile # switch to below line if npm
-    # - run: npm ci 
+    # - run: npm ci
     - run: yarn lint
     - run: npm run build --if-present
     # - run: yarn test

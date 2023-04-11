@@ -1,5 +1,4 @@
 import express from 'express';
-import bodyParser from 'body-parser';
 import cors from 'cors';
 import morgan from 'morgan';
 import mongoose from 'mongoose';
@@ -41,8 +40,8 @@ app.use((_req, res, next) => {
 app.use(morgan('dev'));
 
 // enable json message body for posting data to API, extend default size limit
-app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
-app.use(bodyParser.json({ extended: true, limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ extended: true, limit: '50mb' }));
 
 // ROUTES
 Object.entries(routers).forEach(([prefix, router]) => {

@@ -17,8 +17,10 @@ export const deleteInsert = (sixWeeksData) => {
   const { globalID, shouldInsert } = sixWeeksData.find((d) => !!d) || {};
 
   if (!globalID) {
-    throw newError(RESPONSE_TYPES.INTERNAL_ERROR,
-      'missing row identifier (globalID) for survey123');
+    throw newError(
+      RESPONSE_TYPES.INTERNAL_ERROR,
+      'missing row identifier (globalID) for survey123',
+    );
   }
 
   const numDaysActive = sixWeeksData.reduce((acc, curr) => (

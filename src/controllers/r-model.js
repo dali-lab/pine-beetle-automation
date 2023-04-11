@@ -1,11 +1,37 @@
 /* eslint-disable new-cap */
 import path from 'path';
 import R from 'r-script';
-import { newError } from '../utils';
+import {
+  // R,
+  newError,
+} from '../utils';
 import { RESPONSE_TYPES } from '../constants';
 
-const rpath = path.resolve(__dirname, '../r-scripts/SPB-Predictions.v02-DALI.R');
-const rcalculatedFieldsPath = path.resolve(__dirname, '../r-scripts/Calculated-Outcome-Fields.R');
+const rPredictionPath = path.resolve(__dirname, '../r-scripts/SPB-Predictions.v02-DALI.R');
+const rCalculatedFieldsPath = path.resolve(__dirname, '../r-scripts/Calculated-Outcome-Fields.R');
+
+/**
+ * promise wrapper around r-script npm package
+ * @param {string} rPath path to r script
+ * @param {array} data the input to r script
+ */
+const rPromiseWrapper = async (rPath, data) => {
+  return new Promise((resolve, reject) => {
+    if (!data.length) {
+      resolve(data);
+    } else {
+      R(rPath)
+        .data({ data })
+        .call((error, d) => {
+          if (error) {
+            reject(newError(RESPONSE_TYPES.INTERNAL_ERROR, error.toString()));
+          } else {
+            resolve(d);
+          }
+        });
+    }
+  });
+};
 
 /**
  * runs the r model by feeding it an array of entries
@@ -50,21 +76,7 @@ export const runModel = (array) => {
     };
   });
 
-  return new Promise((resolve, reject) => {
-    if (!data.length) {
-      resolve(data);
-    } else {
-      R(rpath)
-        .data({ data })
-        .call((error, d) => {
-          if (error) {
-            reject(newError(RESPONSE_TYPES.INTERNAL_ERROR, error.toString()));
-          } else {
-            resolve(d);
-          }
-        });
-    }
-  });
+  return rPromiseWrapper(rPredictionPath, data);
 };
 
 /**
@@ -89,19 +101,5 @@ export const generateCalculatedFields = (array) => {
     };
   });
 
-  return new Promise((resolve, reject) => {
-    if (!data.length) {
-      resolve(data);
-    } else {
-      R(rcalculatedFieldsPath)
-        .data({ data })
-        .call((error, d) => {
-          if (error) {
-            reject(newError(RESPONSE_TYPES.INTERNAL_ERROR, error.toString()));
-          } else {
-            resolve(d);
-          }
-        });
-    }
-  });
+  return rPromiseWrapper(rCalculatedFieldsPath, data);
 };

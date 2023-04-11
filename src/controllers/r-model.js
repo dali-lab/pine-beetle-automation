@@ -58,7 +58,7 @@ export const runModel = (array) => {
         .data({ data })
         .call((error, d) => {
           if (error) {
-            reject(error);
+            reject(newError(RESPONSE_TYPES.INTERNAL_ERROR, error.toString()));
           } else {
             resolve(d);
           }
@@ -97,7 +97,7 @@ export const generateCalculatedFields = (array) => {
         .data({ data })
         .call((error, d) => {
           if (error) {
-            reject(error);
+            reject(newError(RESPONSE_TYPES.INTERNAL_ERROR, error.toString()));
           } else {
             resolve(d);
           }

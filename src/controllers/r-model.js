@@ -15,21 +15,17 @@ const rCalculatedFieldsPath = path.resolve(__dirname, '../r-scripts/Calculated-O
  * @param {string} rPath path to r script
  * @param {array} data the input to r script
  */
-const rPromiseWrapper = async (rPath, data) => {
+const rPromiseWrapper = async (rPath, ...args) => {
   return new Promise((resolve, reject) => {
-    if (!data.length) {
-      resolve(data);
-    } else {
-      R(rPath)
-        .data({ data })
-        .call((error, d) => {
-          if (error) {
-            reject(newError(RESPONSE_TYPES.INTERNAL_ERROR, error.toString()));
-          } else {
-            resolve(d);
-          }
-        });
-    }
+    R(rPath)
+      .data(...args)
+      .call((error, d) => {
+        if (error) {
+          reject(newError(RESPONSE_TYPES.INTERNAL_ERROR, error.toString()));
+        } else {
+          resolve(d);
+        }
+      });
   });
 };
 
@@ -76,7 +72,9 @@ export const runModel = (array) => {
     };
   });
 
-  return rPromiseWrapper(rPredictionPath, data);
+  if (!data.length) return data;
+
+  return rPromiseWrapper(rPredictionPath, { data });
 };
 
 /**
@@ -101,5 +99,7 @@ export const generateCalculatedFields = (array) => {
     };
   });
 
-  return rPromiseWrapper(rCalculatedFieldsPath, data);
+  if (!data.length) return data;
+
+  return rPromiseWrapper(rCalculatedFieldsPath, { data });
 };

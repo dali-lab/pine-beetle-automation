@@ -104,8 +104,7 @@ export const runPipelineAll = async () => {
     };
   } catch (error) {
     console.log('ERROR RUNNING PIPELINE');
-    console.log(error);
-    return error;
+    throw error;
   }
 };
 

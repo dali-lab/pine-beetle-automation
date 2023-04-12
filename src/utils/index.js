@@ -36,6 +36,8 @@ import {
   transformSurvey123GlobalID,
 } from './survey123';
 
+import { callRScript } from './r-launcher';
+
 export {
   calculatedFieldsGeneratorCreator,
   csvDownloadCreator,
@@ -53,6 +55,7 @@ export {
   predictionGeneratorCreator,
   processCSV,
   processCSVAsync,
+  callRScript,
   transformSurvey123GlobalID,
   trappingAggregationPipelineCreator,
   upsertOpCreator,

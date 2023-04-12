@@ -164,7 +164,9 @@ export const uploadSurvey123FromWebhook = async (rawData) => {
   const deleteInsertRes = await UnsummarizedTrappingModel.bulkWrite(deleteInsertOp, { ordered: true });
 
   // run entire pipeline
-  runPipelineAll();
+  // don't throw the error here since we want the webhook to return 200 immediately
+  // also don't await it for the same purpose; run pipeline in background
+  runPipelineAll().catch(console.log);
 
   return deleteInsertRes;
 };

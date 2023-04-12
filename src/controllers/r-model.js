@@ -1,11 +1,12 @@
-/* eslint-disable new-cap */
 import path from 'path';
-import R from 'r-script';
-import { newError } from '../utils';
+import {
+  callRScript,
+  newError,
+} from '../utils';
 import { RESPONSE_TYPES } from '../constants';
 
-const rpath = path.resolve(__dirname, '../r-scripts/SPB-Predictions.v02-DALI.R');
-const rcalculatedFieldsPath = path.resolve(__dirname, '../r-scripts/Calculated-Outcome-Fields.R');
+const rPredictionPath = path.resolve(__dirname, '../r-scripts/SPB-Predictions.v02-DALI.R');
+const rCalculatedFieldsPath = path.resolve(__dirname, '../r-scripts/Calculated-Outcome-Fields.R');
 
 /**
  * runs the r model by feeding it an array of entries
@@ -50,21 +51,9 @@ export const runModel = (array) => {
     };
   });
 
-  return new Promise((resolve, reject) => {
-    if (!data.length) {
-      resolve(data);
-    } else {
-      R(rpath)
-        .data({ data })
-        .call((error, d) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(d);
-          }
-        });
-    }
-  });
+  if (!data.length) return data;
+
+  return callRScript(rPredictionPath, { data });
 };
 
 /**
@@ -89,19 +78,7 @@ export const generateCalculatedFields = (array) => {
     };
   });
 
-  return new Promise((resolve, reject) => {
-    if (!data.length) {
-      resolve(data);
-    } else {
-      R(rcalculatedFieldsPath)
-        .data({ data })
-        .call((error, d) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(d);
-          }
-        });
-    }
-  });
+  if (!data.length) return data;
+
+  return callRScript(rCalculatedFieldsPath, { data });
 };

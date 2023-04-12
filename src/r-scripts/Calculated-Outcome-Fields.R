@@ -5,7 +5,7 @@
 #	spotst0: beetle spots in forest this year (t)
 #   probSpotsGT50: probability of >50 spots this year (year t)
 
-attach(input[[1]]) # takes single parameter, called as R.data({ data: [{ spbPer2Weeks, cleridsPer2Weeks, spots }] }) from node.js
+attach(input[[1]]) # takes single parameter, called as callRScript(thisfilepath, { data: [{ spbPer2Weeks, cleridsPer2Weeks, spots }] }) from node.js
 attach(data)
 
 lnSPB = log(spbPer2Weeks+1)

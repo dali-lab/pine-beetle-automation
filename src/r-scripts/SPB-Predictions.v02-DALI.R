@@ -11,7 +11,7 @@
 # Revised by Jeff Liu, Angela Zhang, DALI 20F to fix bug in dividing SPB by 10 when endobrev == 1
 
 
-attach(input[[1]]) # takes single parameter, called as R.data({ data: [{ SPB, cleridst1, spotst1, spotst2, endobrev }] }) from node.js
+attach(input[[1]]) # takes single parameter, called as callRScript(thisfilepath, { data: [{ SPB, cleridst1, spotst1, spotst2, endobrev }] }) from node.js
 # this script DOES NOT check 'data' for validity; the caller is responsible.
 attach(data)
 

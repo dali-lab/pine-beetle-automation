@@ -1,33 +1,12 @@
-/* eslint-disable new-cap */
 import path from 'path';
-import R from 'r-script';
 import {
-  // R,
+  callRScript,
   newError,
 } from '../utils';
 import { RESPONSE_TYPES } from '../constants';
 
 const rPredictionPath = path.resolve(__dirname, '../r-scripts/SPB-Predictions.v02-DALI.R');
 const rCalculatedFieldsPath = path.resolve(__dirname, '../r-scripts/Calculated-Outcome-Fields.R');
-
-/**
- * promise wrapper around r-script npm package
- * @param {string} rPath path to r script
- * @param {array} data the input to r script
- */
-const rPromiseWrapper = async (rPath, ...args) => {
-  return new Promise((resolve, reject) => {
-    R(rPath)
-      .data(...args)
-      .call((error, d) => {
-        if (error) {
-          reject(newError(RESPONSE_TYPES.INTERNAL_ERROR, error.toString()));
-        } else {
-          resolve(d);
-        }
-      });
-  });
-};
 
 /**
  * runs the r model by feeding it an array of entries
@@ -74,7 +53,7 @@ export const runModel = (array) => {
 
   if (!data.length) return data;
 
-  return rPromiseWrapper(rPredictionPath, { data });
+  return callRScript(rPredictionPath, { data });
 };
 
 /**
@@ -101,5 +80,5 @@ export const generateCalculatedFields = (array) => {
 
   if (!data.length) return data;
 
-  return rPromiseWrapper(rCalculatedFieldsPath, { data });
+  return callRScript(rCalculatedFieldsPath, { data });
 };

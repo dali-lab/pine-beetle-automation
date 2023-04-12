@@ -15,6 +15,9 @@ import { RESPONSE_TYPES } from '../constants';
  * command line args + env variables, and the original package would use env variables
  * to send all the data. stdin should be unbounded so this works better.
  *
+ * see https://www.in-ulm.de/~mascheck/various/argmax/ for kernel details on this
+ * https://code.whatever.social/questions/46897008/why-am-i-getting-e2big-from-exec-when-im-accounting-for-the-arguments-and-the
+ *
  * @param {string} rPath path to R script to run
  * @param {...Object} dataArgs data to pass to script
  * @returns {Promise<Object[]>} output from R

@@ -78,7 +78,7 @@ export const uploadCsv = async (filename) => {
       if (!cleanedData.collectionDate || !cleanedData.daysActive || cleanedData.daysActive === '0') return undefined; // no data for this week
 
       const shouldDeleteSurvey = sixWeekData['Delete this survey?'] === 'yes';
-      const isFinalCollection = ['yes', '', null, undefined].includes(sixWeekData['Is this the Final Collection?']);
+      const isFinalCollection = sixWeekData.Is_Final_Collection === 'yes';
 
       return {
         ...cleanedData,

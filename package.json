@@ -5,12 +5,12 @@
   "author": "",
   "main": "src/index.js",
   "scripts": {
-    "lint": "eslint src",
+    "lint": "eslint src --cache",
     "dev": "nodemon src/index.js --exec \"yarn lint && babel-node\"",
     "start": "babel-node src/index.js",
     "clean": "rm -rf dist/; rm -rf uploads/*",
     "build": "yarn clean; babel src -d dist --copy-files --no-copy-ignored",
-    "prod": "yarn build; node dist/index.js"
+    "prod": "yarn build; NODE_ENV=production node dist/index.js"
   },
   "license": "ISC",
   "engines": {

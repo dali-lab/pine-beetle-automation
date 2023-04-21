@@ -15,10 +15,10 @@ rModelRouter.route('/')
   .get(async (req, res) => {
     const {
       cleridst1,
-      endobrev = 0,
-      SPB = 0,
-      spotst1 = 0,
-      spotst2 = 0,
+      endobrev,
+      SPB,
+      spotst1,
+      spotst2,
     } = req.query;
 
     const input = [{

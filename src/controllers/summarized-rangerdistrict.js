@@ -90,7 +90,6 @@ export const getByFilter = async (startYear, endYear, state, rangerDistrict) => 
  */
 export const insertOne = async (body) => {
   const cleanedBody = extractModelAttributes(body);
-  if (!cleanedBody) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
 
   const newDoc = new SummarizedRangerDistrictModel(cleanedBody);
   return newDoc.save();
@@ -179,7 +178,6 @@ export const uploadCsv = async (filename) => {
   const { docs, rowCount } = await processCSV(filename, (row) => {
     // cast the csv fields to our schema
     const cleanedData = extractModelAttributes(cleanCsv(row));
-    if (!cleanedData) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in csv');
 
     return cleanedData;
   });
@@ -223,7 +221,6 @@ export const uploadSpotsCsv = async (filename) => {
   const { docs, rowCount } = await processCSVAsync(filename, async (row) => {
     // cast the csv fields to our schema
     const cleanedData = extractObjectFieldsCreator(spotAttributes)(cleanSpotsCsv(row));
-    if (!cleanedData) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in csv');
 
     // explicitly look up and set endobrev value for this document
     const { rangerDistrict, state, year } = cleanedData;

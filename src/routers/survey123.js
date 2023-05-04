@@ -7,6 +7,8 @@ import {
   generateResponse,
 } from '../utils';
 
+import { requireAuth } from '../middleware';
+
 import { RESPONSE_TYPES } from '../constants';
 
 import { Survey123 } from '../controllers';
@@ -16,7 +18,7 @@ const upload = multer({ dest: './uploads' });
 const survey123Router = Router();
 
 survey123Router.route('/upload')
-  .post(upload.single('csv'), async (req, res) => {
+  .post(requireAuth, upload.single('csv'), async (req, res) => {
     if (!req.file) {
       res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'missing file'));
       return;

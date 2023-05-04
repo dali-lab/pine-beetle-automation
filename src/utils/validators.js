@@ -6,6 +6,7 @@ import { newError } from './responses';
  * @param {Array<String>} fields list of required fields
  * @param {Object} obj the object to check
  * @returns {(obj: Object) => Any} function returning object with only specified fields if all provided, false otherwise
+ * @throws RESPONSE_TYPES.BAD_REQUEST if missing fields
  */
 export const extractObjectFieldsCreator = (fields) => (obj) => {
   // validate document by checking if all fields defined

@@ -110,7 +110,7 @@ export const uploadCsv = async (filename) => {
   console.log(`successfully parsed ${rowCount} rows from csv upload`);
 
   // run entire pipeline
-  // don't throw the error here since we want the webhook to return 200 immediately
+  // don't throw the error here since we want to return 200 immediately
   // also don't await it for the same purpose; run pipeline in background
   runPipelineAll().catch(console.error);
 
@@ -181,7 +181,7 @@ export const uploadSurvey123FromWebhook = async (rawData) => {
   const deleteInsertRes = await UnsummarizedTrappingModel.bulkWrite(deleteInsertOp, { ordered: true });
 
   // run entire pipeline
-  // don't throw the error here since we want the webhook to return 200 immediately
+  // don't throw the error here since we want to return 200 immediately
   // also don't await it for the same purpose; run pipeline in background
   runPipelineAll().catch(console.error);
 

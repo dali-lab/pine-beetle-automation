@@ -53,7 +53,7 @@ export const processCSVAsync = (filename, transformRow = (r) => Promise.resolve(
 
   return new Promise((resolve, reject) => {
     parseFile(filepath, { headers: true })
-      .on('data', (data) => promises.push(transformRow(data)))
+      .on('data', (data) => promises.push(transformRow(data).catch(reject)))
       .on('error', (err) => reject(err))
       .on('end', async (rowCount) => {
         const docs = await Promise.all(promises).catch(reject);

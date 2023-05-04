@@ -18,10 +18,8 @@ export const extractObjectFieldsCreator = (fields) => (obj) => {
 
   // only extract good fields
   return fields.reduce((old, key) => ({
-    cleanedObj: {
-      ...old.cleanedObj,
-      [key]: obj[key],
-    },
+    ...old,
+    [key]: obj[key],
   }), {});
 };
 

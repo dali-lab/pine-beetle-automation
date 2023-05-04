@@ -101,6 +101,10 @@ export const uploadCsv = async (filename) => {
   // spread out the operation into sequential deletes and inserts
   const bulkOp = docs.flatMap(deleteInsert).filter((obj) => !!obj);
 
+  if (!bulkOp.length) {
+    throw newError(RESPONSE_TYPES.BAD_REQUEST, 'no valid data');
+  }
+
   const insertOp = bulkOp.filter(({ insertOne }) => !!insertOne);
   const deleteOp = bulkOp.filter(({ deleteMany }) => !!deleteMany);
 

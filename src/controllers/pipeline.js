@@ -26,6 +26,7 @@ import { newError } from '../utils';
 // start year that we should modify data (allows us to leave all 2020 and prior data alone)
 const CUTOFF_YEAR = 2021;
 
+// lock variables for pipeline
 let mutexLock = false;
 let queued = false;
 
@@ -36,6 +37,12 @@ let queued = false;
  * @returns {Promise<Object>} result of each operation
  */
 export const runPipelineAll = async (options = { inQueue: false }) => {
+  // This queuing system exists to prevent two concurrent pipeline runs, which rarely causes (temporary)
+  // data corruption. It implements a mutex lock and a retrying queue of length 1 to do this.
+  // this is theoretically still vulnerable to mid-pipeline crash errors and if two servers run pipeline
+  // on the same database.
+  // a more robust method would use transactions, but that would incur a ~20% slowdown and need a partial
+  // rewrite of the summarization pipeline. ($merge is unsupported by transactions.)
   const { inQueue } = options;
 
   if (queued && !inQueue) {
@@ -45,16 +52,23 @@ export const runPipelineAll = async (options = { inQueue: false }) => {
 
   if (mutexLock) { // pseudo-mutex-lock for ensuring only one pipeline runs at once
     queued = true;
+
     const delayMs = 5000;
     console.warn(`pipeline already running. retrying in ${delayMs} ms.`);
+
     const sleep = new Promise((res) => { setTimeout(res, delayMs); });
     await sleep;
+
     console.warn('retrying running pipeline');
+    // give it the inQueue flag to indicate that it's the single queued job
     return runPipelineAll({ inQueue: true });
   }
 
+  // entering the main body means nothing is queued (or we just exited queue),
+  // and lock should be acquired.
   queued = false;
   mutexLock = true;
+
   console.time('PIPELINE');
   console.log('RUNNING PIPELINE, engaging lock');
 
@@ -103,6 +117,9 @@ export const runPipelineAll = async (options = { inQueue: false }) => {
     console.timeEnd('T1');
 
     // set indicator variables
+    // This is the current bottleneck at around 35% of runtime.
+    // can be sped up by using $merge and aggregation pipelines but that
+    // is not compatible if transactions are wanted.
     console.time('INDICATOR');
     console.log('INDICATOR BEGIN');
     const indicatorPassResult = await Promise.all([

@@ -68,9 +68,8 @@ export const getByFilter = async (startYear, endYear, state, county, rangerDistr
  */
 export const insertOne = async (body) => {
   const cleanedBody = extractModelAttributes(body);
-  if (!cleanedBody) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
 
-  const newDoc = new UnsummarizedTrappingModel(body);
+  const newDoc = new UnsummarizedTrappingModel(cleanedBody);
   return newDoc.save();
 };
 
@@ -84,9 +83,8 @@ export const insertOne = async (body) => {
  */
 export const updateById = async (id, body) => {
   const cleanedBody = extractModelAttributes(body);
-  if (!cleanedBody) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing parameter(s) in request body');
 
-  const updatedDoc = await UnsummarizedTrappingModel.findByIdAndUpdate(id, body, {
+  const updatedDoc = await UnsummarizedTrappingModel.findByIdAndUpdate(id, cleanedBody, {
     new: true,
     omitUndefined: true,
   });

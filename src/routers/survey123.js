@@ -9,10 +9,7 @@ import {
 
 import { RESPONSE_TYPES } from '../constants';
 
-import {
-  Survey123,
-  Pipeline,
-} from '../controllers';
+import { Survey123 } from '../controllers';
 
 const upload = multer({ dest: './uploads' });
 
@@ -27,7 +24,6 @@ survey123Router.route('/upload')
 
     try {
       const uploadResult = await Survey123.uploadCsv(req.file.path);
-      Pipeline.runPipelineAll();
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
         data: uploadResult,
@@ -36,7 +32,7 @@ survey123Router.route('/upload')
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;
-      console.log(errorMessage);
+      console.error(errorMessage);
       res.status(status).send(errorResponse);
     } finally {
       // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
@@ -60,7 +56,8 @@ survey123Router.route('/webhook')
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;
-      console.log(errorMessage);
+      console.error(errorMessage);
+      console.error(attributes);
       res.status(status).send(errorResponse);
     }
   });

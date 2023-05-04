@@ -71,9 +71,14 @@ export const uploadCsv = async (filename) => {
         year: sixWeekData.Year,
       };
 
+      // will throw error if missing fields
       const cleanedData = extractModelAttributes(convertedRawData);
 
-      if (!cleanedData) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in csv');
+      // copied from utils/extractObjectFieldsCreator
+      const missingFields = ['Delete this survey?', 'Is_Final_Collection'].filter((field) => sixWeekData[field] === undefined);
+      if (missingFields.length > 0) {
+        throw newError(RESPONSE_TYPES.BAD_REQUEST, `missing fields: ${missingFields}`);
+      }
 
       if (!cleanedData.collectionDate || !cleanedData.daysActive || cleanedData.daysActive === '0') return undefined; // no data for this week
 
@@ -103,6 +108,12 @@ export const uploadCsv = async (filename) => {
   const insertRes = await UnsummarizedTrappingModel.bulkWrite(insertOp, { ordered: false });
 
   console.log(`successfully parsed ${rowCount} rows from csv upload`);
+
+  // run entire pipeline
+  // don't throw the error here since we want the webhook to return 200 immediately
+  // also don't await it for the same purpose; run pipeline in background
+  runPipelineAll().catch(console.error);
+
   return { deleteRes, insertRes };
 };
 
@@ -138,9 +149,15 @@ export const uploadSurvey123FromWebhook = async (rawData) => {
         year: sixWeekData.Year,
       };
 
+      // will throw error if missing fields
       const cleanedData = extractModelAttributes(convertedRawData);
 
-      if (!cleanedData) throw newError(RESPONSE_TYPES.BAD_REQUEST, 'missing fields in webhook data');
+      // copied from utils/extractObjectFieldsCreator
+      const missingFields = ['DeleteSurvey', 'Is_Final_Collection'].filter((field) => sixWeekData[field] === undefined);
+      if (missingFields.length > 0) {
+        throw newError(RESPONSE_TYPES.BAD_REQUEST, `missing fields: ${missingFields}`);
+      }
+
       if (!cleanedData.collectionDate || !cleanedData.daysActive || cleanedData.daysActive === '0') return undefined; // no data for this week
 
       const shouldDeleteSurvey = sixWeekData.DeleteSurvey === 'yes';
@@ -166,7 +183,7 @@ export const uploadSurvey123FromWebhook = async (rawData) => {
   // run entire pipeline
   // don't throw the error here since we want the webhook to return 200 immediately
   // also don't await it for the same purpose; run pipeline in background
-  runPipelineAll().catch(console.log);
+  runPipelineAll().catch(console.error);
 
   return deleteInsertRes;
 };

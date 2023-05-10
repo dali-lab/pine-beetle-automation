@@ -48,6 +48,9 @@ export const uploadCsv = async (filename) => {
   const unpacker = (sixWeekData) => {
     return ordinalStrings.map(([weekNum, weekOrdinal]) => {
       // convert fields to unsummarized schema
+      // this tracks the csv export format from survey123.arcgis.com per the data upload guide.
+      // this may change over time if spelling changes etc, so retry the download and read the
+      // csv columns if needed.
       const convertedRawData = {
         bloom: sixWeekData['What bloomed?'],
         bloomDate: sixWeekData['Date of Inital bloom'], // fix spelling
@@ -130,11 +133,14 @@ export const uploadSurvey123FromWebhook = async (rawData) => {
   const unpacker = (sixWeekData) => {
     return ordinalStrings.map(([weekNum]) => {
       // convert fields to unsummarized schema
+      // the webhook format can either be checked in ngrok/server logs,
+      // or you can login to http://gfcgis.maps.arcgis.com and head to the Pine Beetle dashboard there,
+      // and then download csv from there to see the column names.
       const convertedRawData = {
         bloom: sixWeekData.Species_Bloom,
         bloomDate: sixWeekData.Initial_Bloom,
         cleridCount: sixWeekData[`Number_Clerids${weekNum}`],
-        collectionDate: sixWeekData[`CollectionDate${weekNum}`],
+        collectionDate: sixWeekData[`CollectionDate${weekNum}`] ?? null, // explicitly give null default value due to survey123 bug
         county: sixWeekData.County,
         daysActive: sixWeekData[`TrappingInterval${weekNum}`],
         endobrev: 1,
@@ -154,6 +160,7 @@ export const uploadSurvey123FromWebhook = async (rawData) => {
       };
 
       // will throw error if missing fields
+      // if sixWeekData[`CollectionDate{weekNum}`] was undefined due to the survey123 bug, this will NOT throw...
       const cleanedData = extractModelAttributes(convertedRawData);
 
       // copied from utils/extractObjectFieldsCreator
@@ -162,6 +169,7 @@ export const uploadSurvey123FromWebhook = async (rawData) => {
         throw newError(RESPONSE_TYPES.BAD_REQUEST, `missing fields: ${missingFields}`);
       }
 
+      // if sixWeekData[`CollectionDate{weekNum}`] was undefined due to the survey123 bug, this will return here indicating 'missing week data'
       if (!cleanedData.collectionDate || !cleanedData.daysActive || cleanedData.daysActive === '0') return undefined; // no data for this week
 
       const shouldDeleteSurvey = sixWeekData.DeleteSurvey === 'yes';

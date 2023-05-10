@@ -46,6 +46,7 @@ src/
     utils/                          [various shared logic components e.g. csv parsing, MongoDB aggregation, prediction calculation]
     index.js                        [script to start the node servere
 docs/                               [documentation on route API and specific processes]
+testing/                            [small test script for checking predictions]
 .babelrc                            [babel setup]
 .eslintrc                           [eslint setup]
 init.R                              [R script to install jsonlite package during deployment]

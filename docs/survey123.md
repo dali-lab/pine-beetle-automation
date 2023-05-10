@@ -2,7 +2,7 @@
 
 ## `GET /upload`
 
-Uploads a CSV of survey-123 style unsummarized data. This file can be directly downloaded from the Survey123 interface. Expects a `csv` file field in the body. Expects the following column names in the csv file:
+Uploads a CSV of survey-123 style unsummarized data. This file can be directly downloaded from the Survey123 interface. Expects a `csv` file field in the body. Requires auth. Expects the following column names in the csv file (this might become outdated over time):
 
 - `ObjectID`
 - `GlobalID`
@@ -83,13 +83,13 @@ Uploads a CSV of survey-123 style unsummarized data. This file can be directly d
 - `Editor`
 - `Latitude`
 - `Longitude`
-- `Is this the Final Collection?`
+- `Is_Final_Collection`
 - `x`
 - `y`
 
 ## `POST /webhook`
 
-Route provided to Survey123 for uploading new data. Expects a `feature` object in the body with an `attributes` field containing the following fields:
+Route provided to Survey123 for uploading new data. Expects a `feature` object in the body with an `attributes` field containing the following fields (may become outdated over time):
 
 - `SPB`
 - `USA_State`

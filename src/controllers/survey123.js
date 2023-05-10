@@ -134,7 +134,7 @@ export const uploadSurvey123FromWebhook = async (rawData) => {
         bloom: sixWeekData.Species_Bloom,
         bloomDate: sixWeekData.Initial_Bloom,
         cleridCount: sixWeekData[`Number_Clerids${weekNum}`],
-        collectionDate: sixWeekData[`CollectionDate${weekNum}`],
+        collectionDate: sixWeekData[`CollectionDate${weekNum}`] ?? null, // explicitly give null default value due to survey123 bug
         county: sixWeekData.County,
         daysActive: sixWeekData[`TrappingInterval${weekNum}`],
         endobrev: 1,
@@ -154,6 +154,7 @@ export const uploadSurvey123FromWebhook = async (rawData) => {
       };
 
       // will throw error if missing fields
+      // if sixWeekData[`CollectionDate{weekNum}`] was undefined due to the survey123 bug, this will NOT throw...
       const cleanedData = extractModelAttributes(convertedRawData);
 
       // copied from utils/extractObjectFieldsCreator
@@ -162,6 +163,7 @@ export const uploadSurvey123FromWebhook = async (rawData) => {
         throw newError(RESPONSE_TYPES.BAD_REQUEST, `missing fields: ${missingFields}`);
       }
 
+      // if sixWeekData[`CollectionDate{weekNum}`] was undefined due to the survey123 bug, this will return here indicating 'missing week data'
       if (!cleanedData.collectionDate || !cleanedData.daysActive || cleanedData.daysActive === '0') return undefined; // no data for this week
 
       const shouldDeleteSurvey = sixWeekData.DeleteSurvey === 'yes';

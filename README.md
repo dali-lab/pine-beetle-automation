@@ -25,6 +25,10 @@ You must have [Node](https://nodejs.org) and [yarn](https://yarnpkg.com/) instal
 3. Add a `.env` file and paste in the necessary contents (see Handoff Document for this)
 4. `yarn dev` to run in the local development environment
 
+To develop on the webhook locally, use the "pine beetle prediction ngrok" webhook on Survey123. First install ngrok in whichever ecosystem you prefer. We found that it's easiest to get an ngrok account and API key, so you can login to the ngrok software to use additional command line flags. 
+
+The necessary flags, to ensure that POST requests work with OPTIONS preflight requests, is `ngrok http --host-header=rewrite 9091` for http on port 9091.
+
 ## API Documentation
 
 **See all server routes [here](./docs/ROUTES.md)**.
@@ -68,11 +72,14 @@ Pull requests should always be first merged into the `dev` branch so they are st
 ## Contributors
 
 - Jeff Liu
-- Thomas Monfre
-- Angela Zhang
 
 ### Past Project Members
 
+- Thomas Monfre
+- Grace Wang
+- Maria Cristoforo
+- Alex Lopez
+- Angela Zhang
 - Nathan Schneider
 - John McCambridge
 - Madeline Hess

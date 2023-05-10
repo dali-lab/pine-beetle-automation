@@ -48,6 +48,9 @@ export const uploadCsv = async (filename) => {
   const unpacker = (sixWeekData) => {
     return ordinalStrings.map(([weekNum, weekOrdinal]) => {
       // convert fields to unsummarized schema
+      // this tracks the csv export format from survey123.arcgis.com per the data upload guide.
+      // this may change over time if spelling changes etc, so retry the download and read the
+      // csv columns if needed.
       const convertedRawData = {
         bloom: sixWeekData['What bloomed?'],
         bloomDate: sixWeekData['Date of Inital bloom'], // fix spelling
@@ -130,6 +133,9 @@ export const uploadSurvey123FromWebhook = async (rawData) => {
   const unpacker = (sixWeekData) => {
     return ordinalStrings.map(([weekNum]) => {
       // convert fields to unsummarized schema
+      // the webhook format can either be checked in ngrok/server logs,
+      // or you can login to http://gfcgis.maps.arcgis.com and head to the Pine Beetle dashboard there,
+      // and then download csv from there to see the column names.
       const convertedRawData = {
         bloom: sixWeekData.Species_Bloom,
         bloomDate: sixWeekData.Initial_Bloom,

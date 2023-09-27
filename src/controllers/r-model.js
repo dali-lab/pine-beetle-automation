@@ -5,15 +5,20 @@ import {
 } from '../utils';
 import { RESPONSE_TYPES } from '../constants';
 
-const rPredictionPath = path.resolve(__dirname, '../r-scripts/SPB-Predictions.v02-DALI.R');
 const rCalculatedFieldsPath = path.resolve(__dirname, '../r-scripts/Calculated-Outcome-Fields.R');
+
+const rPredictionPaths = {
+  2022: path.resolve(__dirname, '../r-scripts/SPB-Predictions.v02-DALI.R'),
+  2023: path.resolve(__dirname, '../r-scripts/SPB-Predictions.v2.0.R'),
+};
 
 /**
  * runs the r model by feeding it an array of entries
  * @param {Array} array the data
+ * @param {Number} modelVersion version of the model to use in predictions
  * @returns {Promise<Array>} finished predictions
  */
-export const runModel = (array) => {
+export const runModel = (array, modelVersion) => {
   const data = array.map((doc) => {
     const {
       cleridst1,
@@ -53,7 +58,7 @@ export const runModel = (array) => {
 
   if (!data.length) return data;
 
-  return callRScript(rPredictionPath, { data });
+  return callRScript(rPredictionPaths[modelVersion], { data });
 };
 
 /**

@@ -259,7 +259,7 @@ export const indicatorGeneratorCreator = (location, Model, upsertOp) => async (f
  * @param {Function} upsertOp an upsert operation to do bulkwrites with
  * @returns {(filter: Object) => Promise}
  */
-export const predictionGeneratorCreator = (location, ScriptRunner, Model, upsertOp) => async (filter = {}) => {
+export const predictionGeneratorCreator = (location, ScriptRunner, Model, upsertOp, modelVersion) => async (filter = {}) => {
   const data = await Model.find({
     ...filter,
     isValidForPrediction: 1,
@@ -299,7 +299,7 @@ export const predictionGeneratorCreator = (location, ScriptRunner, Model, upsert
 
   // remove missing entries
   const inputs = rawInputs.filter((obj) => !!obj);
-  const allPredictions = await ScriptRunner(inputs);
+  const allPredictions = await ScriptRunner(inputs, modelVersion);
 
   // reformat and insert corresponding predictions object at the same index
   const updatedData = inputs.map((doc, index) => {

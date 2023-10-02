@@ -8,7 +8,7 @@ import { RESPONSE_TYPES } from '../constants';
 const rCalculatedFieldsPath = path.resolve(__dirname, '../r-scripts/Calculated-Outcome-Fields.R');
 
 const rPredictionPaths = {
-  2022: path.resolve(__dirname, '../r-scripts/SPB-Predictions.v02-DALI.R'),
+  2018: path.resolve(__dirname, '../r-scripts/SPB-Predictions.v02-DALI.R'),
   2023: path.resolve(__dirname, '../r-scripts/SPB-Predictions.v2.0.R'),
 };
 

@@ -19,6 +19,7 @@ rModelRouter.route('/')
       SPB,
       spotst1,
       spotst2,
+      modelVersion,
     } = req.query;
 
     const input = [{
@@ -30,7 +31,7 @@ rModelRouter.route('/')
     }];
 
     try {
-      const result = await rModel.runModel(input);
+      const result = await rModel.runModel(input, modelVersion);
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result[0]));
     } catch (error) {

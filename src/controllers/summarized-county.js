@@ -5,7 +5,7 @@ import {
   UnsummarizedTrappingModel,
 } from '../models';
 
-import { RESPONSE_TYPES, COLLECTION_NAMES } from '../constants';
+import { RESPONSE_TYPES, COLLECTION_NAMES, DEFAULT_MODEL_VERSION } from '../constants';
 
 import {
   calculatedFieldsGeneratorCreator,
@@ -308,7 +308,7 @@ export const indicatorPass = indicatorGeneratorCreator('county', SummarizedCount
    * @description generates all predictions for the county level data
    * @returns {(filter: Object) => Promise} async function receiving filter for data subsetting
    */
-export const generateAllPredictions = predictionGeneratorCreator('county', rModel.runModel, SummarizedCountyModel, upsertOp);
+export const generateAllPredictions = predictionGeneratorCreator('county', rModel.runModel, SummarizedCountyModel, upsertOp, DEFAULT_MODEL_VERSION);
 
 /**
    * @description generates all calculated fields for the county level data

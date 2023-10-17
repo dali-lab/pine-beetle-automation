@@ -8,6 +8,7 @@ import {
 import {
   RESPONSE_TYPES,
   COLLECTION_NAMES,
+  DEFAULT_MODEL_VERSION,
 } from '../constants';
 
 import {
@@ -307,7 +308,7 @@ export const indicatorPass = indicatorGeneratorCreator('rangerDistrict', Summari
    * @description generates all predictions for the county level data
    * @returns {(filter: Object) => Promise} async function receiving filter for data subsetting
    */
-export const generateAllPredictions = predictionGeneratorCreator('rangerDistrict', rModel.runModel, SummarizedRangerDistrictModel, upsertOp);
+export const generateAllPredictions = predictionGeneratorCreator('rangerDistrict', rModel.runModel, SummarizedRangerDistrictModel, upsertOp, DEFAULT_MODEL_VERSION);
 
 /**
    * @description generates all calculated fields for the county level data

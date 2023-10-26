@@ -257,6 +257,7 @@ export const indicatorGeneratorCreator = (location, Model, upsertOp) => async (f
  * @param {Function} ScriptRunner service to execute the model running
  * @param {mongoose.Model} Model destination model to write to
  * @param {Function} upsertOp an upsert operation to do bulkwrites with
+ * @param {Number} modelVersion version of the R model to use in predictions - version is the year of the model release
  * @returns {(filter: Object) => Promise}
  */
 export const predictionGeneratorCreator = (location, ScriptRunner, Model, upsertOp, modelVersion) => async (filter = {}) => {

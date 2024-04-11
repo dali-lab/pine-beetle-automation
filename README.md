@@ -18,12 +18,14 @@ We have two backend servers that are used for handling various functionality. Ou
 
 ## Setup
 
-You must have [Node](https://nodejs.org) and [yarn](https://yarnpkg.com/) installed to run this project.
+You must have [Node](https://nodejs.org) and [yarn](https://yarnpkg.com/) installed to run this project, as well as R language.
 
 1. Clone the repository
 2. `yarn install`
 3. Add a `.env` file and paste in the necessary contents (see Handoff Document for this)
 4. `yarn dev` to run in the local development environment
+
+The `init.R` script, which is responsible for installing the jsonlite package, won't run automatically on local machine, so it needs to be run manually. In order to do it, open the R shell by typing `R` in the terminal, then use command `install.packages('jsonlite')`. This will allow to run predictions on local machine.
 
 To develop on the webhook locally, use the "pine beetle prediction ngrok" webhook on Survey123. First install ngrok in whichever ecosystem you prefer. We found that it's easiest to get an ngrok account and API key, so you can login to the ngrok software to use additional command line flags. 
 

@@ -10,6 +10,7 @@ const rCalculatedFieldsPath = path.resolve(__dirname, '../r-scripts/Calculated-O
 const rPredictionPaths = {
   2018: path.resolve(__dirname, '../r-scripts/SPB-Predictions.v02-DALI.R'),
   2024: path.resolve(__dirname, '../r-scripts/SPB-Predictions.v2.0.R'),
+  2025: path.resolve(__dirname, '../r-scripts/SPB-Predictions.v3.0.R'),
 };
 
 /**

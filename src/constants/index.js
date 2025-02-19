@@ -16,7 +16,7 @@ const COLLECTION_NAMES = {
   UNSUMMARIZED: 'unsummarizedtrappings',
 };
 
-const DEFAULT_MODEL_VERSION = 2024;
+const DEFAULT_MODEL_VERSION = 2025;
 
 export {
   ABBREV_TO_STATE,

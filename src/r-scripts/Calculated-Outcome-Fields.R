@@ -12,7 +12,7 @@ lnSPB = log(spbPer2Weeks+1)
 lnClerids = log(cleridsPer2Weeks+1)
 lnSpots = log(spotst0+1)
 logitProb = log(probSpotsGT50 / (1-probSpotsGT50))
-predSpotslogUnits = 0.129 + 6.743*(probSpotsGT50)
+predSpotslogUnits = 0.181 + 6.73*(probSpotsGT50)
 predSpotsorigUnits = exp(predSpotslogUnits)-1
 residualSpotslogUnits = lnSpots - predSpotslogUnits
 

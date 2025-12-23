@@ -13,11 +13,12 @@ import { UnsummarizedTrapping } from '../controllers';
 const unsummarizedTrappingRouter = Router();
 
 unsummarizedTrappingRouter.route('/')
-  .get(async (_req, res) => { // get all unsummarized data
+  .get(async (req, res) => { // get all unsummarized data
     try {
-      const documents = await UnsummarizedTrapping.getAll();
+      const { page, limit } = req.query;
+      const result = await UnsummarizedTrapping.getAll(page, limit);
 
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, documents));
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;
@@ -65,10 +66,20 @@ unsummarizedTrappingRouter.route('/filter')
       rangerDistrict,
       startYear,
       state,
+      page,
+      limit,
     } = req.query;
 
     try {
-      const result = await UnsummarizedTrapping.getByFilter(startYear, endYear, state, county, rangerDistrict);
+      const result = await UnsummarizedTrapping.getByFilter(
+        startYear,
+        endYear,
+        state,
+        county,
+        rangerDistrict,
+        page,
+        limit,
+      );
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
@@ -81,22 +92,19 @@ unsummarizedTrappingRouter.route('/filter')
 
 unsummarizedTrappingRouter.route('/download')
   .get(async (req, res) => {
-    let filepath;
-
     try {
-      filepath = await UnsummarizedTrapping.downloadCsv(req.query);
-
-      res.attachment('unsummarized-trapping.csv').sendFile(filepath);
+      await UnsummarizedTrapping.downloadCsvStream(req.query, res);
+      // Response jest już wysłany przez stream, nie trzeba nic więcej
     } catch (error) {
-      const errorResponse = generateErrorResponse(error);
-      const { error: errorMessage, status } = errorResponse;
-      console.log(errorMessage);
-      res.status(status).send(errorResponse);
-    } finally {
-      // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
-      setTimeout(() => {
-        deleteFile(filepath, true);
-      }, 1000 * 10);
+      // Jeśli response już został rozpoczęty, nie możemy wysłać błędu
+      if (!res.headersSent) {
+        const errorResponse = generateErrorResponse(error);
+        const { error: errorMessage, status } = errorResponse;
+        console.log(errorMessage);
+        res.status(status).send(errorResponse);
+      } else {
+        console.error('Error after streaming started:', error);
+      }
     }
   });
 

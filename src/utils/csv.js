@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import { parse } from 'json2csv';
 import { parseFile } from 'fast-csv';
+import { stringify } from 'csv-stringify';
 
 import { newError } from './responses';
 import { RESPONSE_TYPES } from '../constants';
@@ -104,4 +105,106 @@ export const csvDownloadCreator = (ModelName, fields) => async (filters) => {
     console.error(err);
     throw newError(RESPONSE_TYPES.INTERNAL_ERROR, err.toString());
   }
+};
+
+/**
+ * @description Creates a streaming CSV download function that doesn't load all data into memory
+ * Supports downloading all data if no year filters are provided
+ * @param {mongoose.Model} ModelName destination Model of download
+ * @param {Array<String>} fields model attributes in array (used for fields of the csv file)
+ * @returns {(filters: Object, res: Response) => Promise<void>} streaming function
+ * @throws RESPONSE_TYPES.BAD_REQUEST for invalid parameters
+ * @throws RESPONSE_TYPES.INTERNAL_ERROR for trouble parsing CSV
+ */
+export const csvStreamDownloadCreator = (ModelName, fields) => async (filters, res) => {
+  const {
+    county,
+    endYear,
+    rangerDistrict,
+    startYear,
+    state,
+  } = filters;
+
+  // --- WALIDACJA LAT (tylko jeśli podane) ---
+  const hasStartYear = startYear !== undefined && startYear !== '' && startYear !== null;
+  const hasEndYear = endYear !== undefined && endYear !== '' && endYear !== null;
+
+  let parsedStartYear;
+  let parsedEndYear;
+
+  if (hasStartYear) {
+    parsedStartYear = parseInt(startYear, 10);
+    if (Number.isNaN(parsedStartYear)) {
+      throw newError(RESPONSE_TYPES.BAD_REQUEST, 'startYear must be a valid integer');
+    }
+  }
+
+  if (hasEndYear) {
+    parsedEndYear = parseInt(endYear, 10);
+    if (Number.isNaN(parsedEndYear)) {
+      throw newError(RESPONSE_TYPES.BAD_REQUEST, 'endYear must be a valid integer');
+    }
+  }
+
+  // Jeśli oba lata są podane, sprawdź relację
+  if (parsedStartYear !== undefined && parsedEndYear !== undefined && parsedStartYear > parsedEndYear) {
+    throw newError(RESPONSE_TYPES.BAD_REQUEST, 'startYear cannot be greater than endYear');
+  }
+
+  // --- STREAMING QUERY (bez limitu - streaming obsłuży duże zbiory) ---
+  const query = ModelName.find();
+
+  // Filtry opcjonalne - jeśli nie podane, zwracamy wszystkie dane
+  if (parsedStartYear !== undefined) {
+    query.find({ year: { $gte: parsedStartYear } });
+  }
+  if (parsedEndYear !== undefined) {
+    query.find({ year: { $lte: parsedEndYear } });
+  }
+  if (state) query.find({ state });
+  if (county) query.find({ county });
+  if (rangerDistrict) query.find({ rangerDistrict });
+
+  // Ustaw nagłówki odpowiedzi
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename="export.csv"');
+
+  // Stream z Mongoose + transformacja do CSV
+  const cursor = query
+    .sort(ModelName.schema.indexes()[0][0])
+    .lean() // zmniejsza overhead
+    .cursor();
+
+  // CSV stringifier
+  const stringifier = stringify({
+    header: true,
+    columns: fields,
+  });
+
+  // Pipe: MongoDB cursor -> CSV stringifier -> HTTP response
+  return new Promise((resolve, reject) => {
+    cursor.on('data', (doc) => {
+      stringifier.write(doc);
+    });
+
+    cursor.on('error', (err) => {
+      stringifier.end();
+      reject(err);
+    });
+
+    cursor.on('end', () => {
+      stringifier.end();
+    });
+
+    stringifier.on('error', (err) => {
+      reject(err);
+    });
+
+    stringifier.on('end', () => {
+      resolve();
+    });
+
+    // Pipe stringifier do response
+    stringifier.pipe(res);
+  });
 };

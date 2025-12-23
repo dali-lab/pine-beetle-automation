@@ -10,6 +10,7 @@ import { RESPONSE_TYPES, COLLECTION_NAMES, DEFAULT_MODEL_VERSION } from '../cons
 import {
   calculatedFieldsGeneratorCreator,
   csvDownloadCreator,
+  csvStreamDownloadCreator,
   extractObjectFieldsCreator,
   getModelAttributes,
   getModelIndexes,
@@ -54,29 +55,86 @@ export const getById = async (id) => {
 };
 
 /**
- * @description Fetches all data from the summarized county collection.
- * @returns {Promise<[SummarizedCountyModel]>} all docs
+ * @description Fetches all data from the summarized county collection with pagination.
+ * @param {Number|String} [page=1] page number (1-indexed)
+ * @param {Number|String} [limit=1000] number of records per page
+ * @returns {Promise<{data: Array, pagination: Object}>} paginated results
  */
-export const getAll = async () => {
-  return SummarizedCountyModel.find();
+export const getAll = async (page = 1, limit = 1000) => {
+  const parsedPage = Math.max(1, parseInt(page, 10) || 1);
+  const parsedLimit = Math.min(5000, Math.max(1, parseInt(limit, 10) || 1000)); // max 5000 per page
+
+  const skip = (parsedPage - 1) * parsedLimit;
+  const total = await SummarizedCountyModel.countDocuments();
+
+  const data = await SummarizedCountyModel.find()
+    .sort({ year: 1, state: 1, county: 1, endobrev: 1 })
+    .skip(skip)
+    .limit(parsedLimit)
+    .lean()
+    .exec();
+
+  return {
+    data,
+    pagination: {
+      page: parsedPage,
+      limit: parsedLimit,
+      total,
+      totalPages: Math.ceil(total / parsedLimit),
+    },
+  };
 };
 
 /**
- * Fetches summarized county trapping data depending on a filter.
- * @param {Number} startYear the earliest year to return, inclusive
- * @param {Number} endYear the latest year to return, inclusive
+ * Fetches summarized county trapping data depending on a filter with pagination.
+ * @param {Number|String} startYear the earliest year to return, inclusive
+ * @param {Number|String} endYear the latest year to return, inclusive
  * @param {String} state the state to return
  * @param {String} county the county to return
+ * @param {Number|String} [page=1] page number (1-indexed)
+ * @param {Number|String} [limit=1000] number of records per page
+ * @returns {Promise<{data: Array, pagination: Object}>} paginated results
  */
-export const getByFilter = async (startYear, endYear, state, county) => {
+export const getByFilter = async (startYear, endYear, state, county, page = 1, limit = 1000) => {
   const query = SummarizedCountyModel.find();
 
-  if (startYear) query.find({ year: { $gte: startYear } });
-  if (endYear) query.find({ year: { $lte: endYear } });
+  if (startYear) {
+    const parsedStartYear = parseInt(startYear, 10);
+    if (!Number.isNaN(parsedStartYear)) {
+      query.find({ year: { $gte: parsedStartYear } });
+    }
+  }
+  if (endYear) {
+    const parsedEndYear = parseInt(endYear, 10);
+    if (!Number.isNaN(parsedEndYear)) {
+      query.find({ year: { $lte: parsedEndYear } });
+    }
+  }
   if (state) query.find({ state });
   if (county) query.find({ county });
 
-  return query.exec();
+  const parsedPage = Math.max(1, parseInt(page, 10) || 1);
+  const parsedLimit = Math.min(5000, Math.max(1, parseInt(limit, 10) || 1000)); // max 5000 per page
+
+  const skip = (parsedPage - 1) * parsedLimit;
+  const total = await query.countDocuments();
+
+  const data = await query
+    .sort({ year: 1, state: 1, county: 1, endobrev: 1 })
+    .skip(skip)
+    .limit(parsedLimit)
+    .lean()
+    .exec();
+
+  return {
+    data,
+    pagination: {
+      page: parsedPage,
+      limit: parsedLimit,
+      total,
+      totalPages: Math.ceil(total / parsedLimit),
+    },
+  };
 };
 
 /**
@@ -136,6 +194,19 @@ export const deleteAll = async (options = {}) => {
  * @returns {String} path to CSV file
  */
 export const downloadCsv = csvDownloadCreator(
+  SummarizedCountyModel,
+  modelAttributes.filter((a) => !downloadFieldsToOmit.includes(a)),
+);
+
+/**
+ * @description downloads a csv of the collection via streaming (memory-efficient)
+ * Supports all data if no year filters provided
+ * @param {Object} filters query filters
+ * @param {Object} res Express response object
+ * @throws RESPONSE_TYPES.INTERNAL_ERROR for problem parsing CSV
+ * @throws RESPONSE_TYPES.BAD_REQUEST for invalid parameters
+ */
+export const downloadCsvStream = csvStreamDownloadCreator(
   SummarizedCountyModel,
   modelAttributes.filter((a) => !downloadFieldsToOmit.includes(a)),
 );

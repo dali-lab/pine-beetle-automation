@@ -1,11 +1,11 @@
-import path from 'path';
+import { stringify } from 'csv-stringify';
+import { parseFile } from 'fast-csv';
 import fs from 'fs';
 import { parse } from 'json2csv';
-import { parseFile } from 'fast-csv';
-import { stringify } from 'csv-stringify';
+import path from 'path';
 
-import { newError } from './responses';
 import { RESPONSE_TYPES } from '../constants';
+import { newError } from './responses';
 
 /**
  * @description deletes a file WARNING VERY SPOOKY
@@ -82,14 +82,12 @@ export const csvDownloadCreator = (ModelName, fields) => async (filters) => {
   try {
     const query = ModelName.find();
 
-    // optional filters
     if (startYear) query.find({ year: { $gte: parseInt(startYear, 10) } });
     if (endYear) query.find({ year: { $lte: parseInt(endYear, 10) } });
     if (state) query.find({ state });
     if (county) query.find({ county });
     if (rangerDistrict) query.find({ rangerDistrict });
 
-    // use compound key to sort before sending the file
     const data = await query
       .sort(ModelName.schema.indexes()[0][0])
       .exec();
@@ -125,7 +123,6 @@ export const csvStreamDownloadCreator = (ModelName, fields) => async (filters, r
     state,
   } = filters;
 
-  // --- WALIDACJA LAT (tylko jeśli podane) ---
   const hasStartYear = startYear !== undefined && startYear !== '' && startYear !== null;
   const hasEndYear = endYear !== undefined && endYear !== '' && endYear !== null;
 
@@ -146,15 +143,12 @@ export const csvStreamDownloadCreator = (ModelName, fields) => async (filters, r
     }
   }
 
-  // Jeśli oba lata są podane, sprawdź relację
   if (parsedStartYear !== undefined && parsedEndYear !== undefined && parsedStartYear > parsedEndYear) {
     throw newError(RESPONSE_TYPES.BAD_REQUEST, 'startYear cannot be greater than endYear');
   }
 
-  // --- STREAMING QUERY (bez limitu - streaming obsłuży duże zbiory) ---
   const query = ModelName.find();
 
-  // Filtry opcjonalne - jeśli nie podane, zwracamy wszystkie dane
   if (parsedStartYear !== undefined) {
     query.find({ year: { $gte: parsedStartYear } });
   }
@@ -165,23 +159,19 @@ export const csvStreamDownloadCreator = (ModelName, fields) => async (filters, r
   if (county) query.find({ county });
   if (rangerDistrict) query.find({ rangerDistrict });
 
-  // Ustaw nagłówki odpowiedzi
   res.setHeader('Content-Type', 'text/csv');
   res.setHeader('Content-Disposition', 'attachment; filename="export.csv"');
 
-  // Stream z Mongoose + transformacja do CSV
   const cursor = query
     .sort(ModelName.schema.indexes()[0][0])
-    .lean() // zmniejsza overhead
+    .lean()
     .cursor();
 
-  // CSV stringifier
   const stringifier = stringify({
     header: true,
     columns: fields,
   });
 
-  // Pipe: MongoDB cursor -> CSV stringifier -> HTTP response
   return new Promise((resolve, reject) => {
     cursor.on('data', (doc) => {
       stringifier.write(doc);
@@ -204,7 +194,6 @@ export const csvStreamDownloadCreator = (ModelName, fields) => async (filters, r
       resolve();
     });
 
-    // Pipe stringifier do response
     stringifier.pipe(res);
   });
 };

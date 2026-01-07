@@ -47,7 +47,13 @@ export const getAll = async (page = 1, limit = 1000) => {
   const total = await UnsummarizedTrappingModel.countDocuments();
 
   const data = await UnsummarizedTrappingModel.find()
-    .sort({ year: 1, state: 1, rangerDistrict: 1, county: 1, trap: 1 })
+    .sort({
+      year: 1,
+      state: 1,
+      rangerDistrict: 1,
+      county: 1,
+      trap: 1,
+    })
     .skip(skip)
     .limit(parsedLimit)
     .lean()
@@ -101,7 +107,13 @@ export const getByFilter = async (startYear, endYear, state, county, rangerDistr
   const total = await query.countDocuments();
 
   const data = await query
-    .sort({ year: 1, state: 1, rangerDistrict: 1, county: 1, trap: 1 })
+    .sort({
+      year: 1,
+      state: 1,
+      rangerDistrict: 1,
+      county: 1,
+      trap: 1,
+    })
     .skip(skip)
     .limit(parsedLimit)
     .lean()

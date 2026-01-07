@@ -72,7 +72,12 @@ export const getAll = async (page = 1, limit = 1000) => {
   const total = await SummarizedRangerDistrictModel.countDocuments();
 
   const data = await SummarizedRangerDistrictModel.find()
-    .sort({ year: 1, state: 1, rangerDistrict: 1, endobrev: 1 })
+    .sort({
+      year: 1,
+      state: 1,
+      rangerDistrict: 1,
+      endobrev: 1,
+    })
     .skip(skip)
     .limit(parsedLimit)
     .lean()
@@ -124,7 +129,12 @@ export const getByFilter = async (startYear, endYear, state, rangerDistrict, pag
   const total = await query.countDocuments();
 
   const data = await query
-    .sort({ year: 1, state: 1, rangerDistrict: 1, endobrev: 1 })
+    .sort({
+      year: 1,
+      state: 1,
+      rangerDistrict: 1,
+      endobrev: 1,
+    })
     .skip(skip)
     .limit(parsedLimit)
     .lean()

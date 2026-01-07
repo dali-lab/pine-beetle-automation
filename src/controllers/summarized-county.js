@@ -68,7 +68,12 @@ export const getAll = async (page = 1, limit = 1000) => {
   const total = await SummarizedCountyModel.countDocuments();
 
   const data = await SummarizedCountyModel.find()
-    .sort({ year: 1, state: 1, county: 1, endobrev: 1 })
+    .sort({
+      year: 1,
+      state: 1,
+      county: 1,
+      endobrev: 1,
+    })
     .skip(skip)
     .limit(parsedLimit)
     .lean()
@@ -120,7 +125,12 @@ export const getByFilter = async (startYear, endYear, state, county, page = 1, l
   const total = await query.countDocuments();
 
   const data = await query
-    .sort({ year: 1, state: 1, county: 1, endobrev: 1 })
+    .sort({
+      year: 1,
+      state: 1,
+      county: 1,
+      endobrev: 1,
+    })
     .skip(skip)
     .limit(parsedLimit)
     .lean()

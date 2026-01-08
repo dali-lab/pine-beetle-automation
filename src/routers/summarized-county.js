@@ -112,7 +112,6 @@ summarizedCountyRouter.route('/spots/upload')
       console.log(errorMessage);
       res.status(status).send(errorResponse);
     } finally {
-      // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
       setTimeout(() => {
         deleteFile(req.file.path);
       }, 1000 * 10);
@@ -140,7 +139,6 @@ summarizedCountyRouter.route('/upload')
       console.log(errorMessage);
       res.status(status).send(errorResponse);
     } finally {
-      // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
       setTimeout(() => {
         deleteFile(req.file.path);
       }, 1000 * 10);
@@ -151,7 +149,6 @@ summarizedCountyRouter.route('/download')
   .get(async (req, res) => {
     try {
       await SummarizedCounty.downloadCsvStream(req.query, res);
-      // Response jest już wysłany przez stream
     } catch (error) {
       if (!res.headersSent) {
         const errorResponse = generateErrorResponse(error);

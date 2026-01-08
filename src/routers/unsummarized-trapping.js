@@ -6,13 +6,13 @@ import {
 } from '../utils';
 
 import { RESPONSE_TYPES } from '../constants';
-import { requireAuth } from '../middleware';
 import { UnsummarizedTrapping } from '../controllers';
+import { requireAuth } from '../middleware';
 
 const unsummarizedTrappingRouter = Router();
 
 unsummarizedTrappingRouter.route('/')
-  .get(async (req, res) => { // get all unsummarized data
+  .get(async (req, res) => {
     try {
       const { page, limit } = req.query;
       const result = await UnsummarizedTrapping.getAll(page, limit);
@@ -26,7 +26,7 @@ unsummarizedTrappingRouter.route('/')
     }
   })
 
-  .post(requireAuth, async (req, res) => { // add a new document to collection
+  .post(requireAuth, async (req, res) => {
     try {
       if (!Object.keys(req.body).length) {
         res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'empty body'));
@@ -44,7 +44,7 @@ unsummarizedTrappingRouter.route('/')
     }
   })
 
-  .delete(requireAuth, async (req, res) => { // delete all
+  .delete(requireAuth, async (req, res) => {
     try {
       const documents = await UnsummarizedTrapping.deleteAll();
 
@@ -93,9 +93,7 @@ unsummarizedTrappingRouter.route('/download')
   .get(async (req, res) => {
     try {
       await UnsummarizedTrapping.downloadCsvStream(req.query, res);
-      // Response jest już wysłany przez stream, nie trzeba nic więcej
     } catch (error) {
-      // Jeśli response już został rozpoczęty, nie możemy wysłać błędu
       if (!res.headersSent) {
         const errorResponse = generateErrorResponse(error);
         const { error: errorMessage, status } = errorResponse;
@@ -108,7 +106,7 @@ unsummarizedTrappingRouter.route('/download')
   });
 
 unsummarizedTrappingRouter.route('/:id')
-  .get(async (req, res) => { // get a document by its unique id
+  .get(async (req, res) => {
     try {
       const documents = await UnsummarizedTrapping.getById(req.params.id);
 
@@ -121,7 +119,7 @@ unsummarizedTrappingRouter.route('/:id')
     }
   })
 
-  .put(requireAuth, async (req, res) => { // modify a document by its unique id
+  .put(requireAuth, async (req, res) => {
     try {
       if (!Object.keys(req.body).length) {
         res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'empty body'));
@@ -139,7 +137,7 @@ unsummarizedTrappingRouter.route('/:id')
     }
   })
 
-  .delete(requireAuth, async (req, res) => { // delete a document by its unique id
+  .delete(requireAuth, async (req, res) => {
     try {
       const documents = await UnsummarizedTrapping.deleteById(req.params.id);
 

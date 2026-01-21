@@ -110,11 +110,12 @@ export const csvDownloadCreator = (ModelName, fields) => async (filters) => {
  * Supports downloading all data if no year filters are provided
  * @param {mongoose.Model} ModelName destination Model of download
  * @param {Array<String>} fields model attributes in array (used for fields of the csv file)
+ * @param {String} [fileName='export.csv'] optional file name for the downloaded CSV
  * @returns {(filters: Object, res: Response) => Promise<void>} streaming function
  * @throws RESPONSE_TYPES.BAD_REQUEST for invalid parameters
  * @throws RESPONSE_TYPES.INTERNAL_ERROR for trouble parsing CSV
  */
-export const csvStreamDownloadCreator = (ModelName, fields) => async (filters, res) => {
+export const csvStreamDownloadCreator = (ModelName, fields, fileName = 'export.csv') => async (filters, res) => {
   const {
     county,
     endYear,
@@ -160,7 +161,7 @@ export const csvStreamDownloadCreator = (ModelName, fields) => async (filters, r
   if (rangerDistrict) query.find({ rangerDistrict });
 
   res.setHeader('Content-Type', 'text/csv');
-  res.setHeader('Content-Disposition', 'attachment; filename="export.csv"');
+  res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
 
   const cursor = query
     .sort(ModelName.schema.indexes()[0][0])
@@ -173,6 +174,11 @@ export const csvStreamDownloadCreator = (ModelName, fields) => async (filters, r
   });
 
   return new Promise((resolve, reject) => {
+    // Clean up resources on ANY error
+    const cleanup = () => {
+      if (!cursor.closed) cursor.close();
+    };
+
     cursor.on('data', (doc) => {
       stringifier.write(doc);
     });
@@ -187,11 +193,19 @@ export const csvStreamDownloadCreator = (ModelName, fields) => async (filters, r
     });
 
     stringifier.on('error', (err) => {
+      cleanup(); // ← this ensures that cursor doesn't continue and DB connection can be closed when ie there were some malformed data causing stringifier error
       reject(err);
     });
 
     stringifier.on('end', () => {
+      cleanup(); // Good practice
       resolve();
+    });
+
+    // Handle client disconnect (ie use cancels download)
+    res.on('close', () => {
+      cleanup();
+      reject(new Error('Client disconnected'));
     });
 
     stringifier.pipe(res);

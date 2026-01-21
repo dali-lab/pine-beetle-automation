@@ -223,6 +223,7 @@ export const downloadCsv = csvDownloadCreator(
 export const downloadCsvStream = csvStreamDownloadCreator(
   SummarizedRangerDistrictModel,
   modelAttributes.filter((a) => !downloadFieldsToOmit.includes(a)),
+  'rangerdistrict-prediction.csv',
 );
 
 /**

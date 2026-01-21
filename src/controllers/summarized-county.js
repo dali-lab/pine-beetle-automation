@@ -56,11 +56,12 @@ export const getById = async (id) => {
 
 /**
  * @description Fetches all data from the summarized county collection with pagination.
- * @param {Number|String} [page=1] page number (1-indexed)
- * @param {Number|String} [limit=1000] number of records per page
- * @returns {Promise<{data: Array, pagination: Object}>} paginated results
+ * @param {Number|String} [page] page number (1-indexed)
+ * @param {Number|String} [limit] number of records per page
+ * @returns {Promise<Array|{data: Array, pagination: Object}>} array if no pagination params, otherwise paginated results
  */
-export const getAll = async (page = 1, limit = 1000) => {
+export const getAll = async (page, limit) => {
+  const hasPagination = page !== undefined || limit !== undefined;
   const parsedPage = Math.max(1, parseInt(page, 10) || 1);
   const parsedLimit = Math.min(5000, Math.max(1, parseInt(limit, 10) || 1000)); // max 5000 per page
 
@@ -79,6 +80,11 @@ export const getAll = async (page = 1, limit = 1000) => {
     .lean()
     .exec();
 
+  // Return just the array for backward compatibility when no pagination params are provided
+  if (!hasPagination) {
+    return data;
+  }
+
   return {
     data,
     pagination: {
@@ -96,11 +102,11 @@ export const getAll = async (page = 1, limit = 1000) => {
  * @param {Number|String} endYear the latest year to return, inclusive
  * @param {String} state the state to return
  * @param {String} county the county to return
- * @param {Number|String} [page=1] page number (1-indexed)
- * @param {Number|String} [limit=1000] number of records per page
- * @returns {Promise<{data: Array, pagination: Object}>} paginated results
+ * @param {Number|String} [page] page number (1-indexed)
+ * @param {Number|String} [limit] number of records per page
+ * @returns {Promise<Array|{data: Array, pagination: Object}>} array if no pagination params, otherwise paginated results
  */
-export const getByFilter = async (startYear, endYear, state, county, page = 1, limit = 1000) => {
+export const getByFilter = async (startYear, endYear, state, county, page, limit) => {
   const query = SummarizedCountyModel.find();
 
   if (startYear) {
@@ -118,6 +124,7 @@ export const getByFilter = async (startYear, endYear, state, county, page = 1, l
   if (state) query.find({ state });
   if (county) query.find({ county });
 
+  const hasPagination = page !== undefined || limit !== undefined;
   const parsedPage = Math.max(1, parseInt(page, 10) || 1);
   const parsedLimit = Math.min(5000, Math.max(1, parseInt(limit, 10) || 1000)); // max 5000 per page
 
@@ -135,6 +142,11 @@ export const getByFilter = async (startYear, endYear, state, county, page = 1, l
     .limit(parsedLimit)
     .lean()
     .exec();
+
+  // Return just the array for backward compatibility when no pagination params are provided
+  if (!hasPagination) {
+    return data;
+  }
 
   return {
     data,
@@ -219,6 +231,7 @@ export const downloadCsv = csvDownloadCreator(
 export const downloadCsvStream = csvStreamDownloadCreator(
   SummarizedCountyModel,
   modelAttributes.filter((a) => !downloadFieldsToOmit.includes(a)),
+  'county-prediction.csv',
 );
 
 /**

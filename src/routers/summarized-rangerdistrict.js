@@ -90,7 +90,7 @@ summarizedRangerDistrictRouter.route('/spots/upload')
 
     try {
       const uploadResult = await SummarizedRangerDistrict.uploadSpotsCsv(req.file.path);
-      Pipeline.runPipelineAll();
+      Pipeline.runPipelineAll().catch(console.error);
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
         data: uploadResult,
@@ -118,7 +118,7 @@ summarizedRangerDistrictRouter.route('/upload')
 
     try {
       const uploadResult = await SummarizedRangerDistrict.uploadCsv(req.file.path);
-      Pipeline.runPipelineAll();
+      Pipeline.runPipelineAll().catch(console.error);
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
         data: uploadResult,

@@ -90,7 +90,7 @@ summarizedCountyRouter.route('/spots/upload')
 
     try {
       const uploadResult = await SummarizedCounty.uploadSpotsCsv(req.file.path);
-      Pipeline.runPipelineAll();
+      Pipeline.runPipelineAll().catch(console.error);
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
         data: uploadResult,
@@ -118,7 +118,7 @@ summarizedCountyRouter.route('/upload')
 
     try {
       const uploadResult = await SummarizedCounty.uploadCsv(req.file.path);
-      Pipeline.runPipelineAll();
+      Pipeline.runPipelineAll().catch(console.error);
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
         data: uploadResult,

@@ -42,9 +42,9 @@ export const callRScript = async (rPath, ...dataArgs) => {
   child.stdin.end(input);
 
   return new Promise((resolve, reject) => {
-    child.stderr.on('data', (error) => {
-      // error comes in as a buffer, so it needs to become a string
-      return reject(newError(RESPONSE_TYPES.INTERNAL_ERROR, error.toString()));
+    let stderrOutput = '';
+    child.stderr.on('data', (data) => {
+      stderrOutput += data.toString();
     });
 
     let body = '';
@@ -54,15 +54,16 @@ export const callRScript = async (rPath, ...dataArgs) => {
 
     child.on('close', (exitCode) => {
       try {
-        // don't resolve if a non-zero error code happened bc we should have rejected already
         if (exitCode === 0) {
+          if (stderrOutput) {
+            console.warn(`R script warning: ${stderrOutput}`);
+          }
           resolve(JSON.parse(body));
+        } else {
+          reject(newError(RESPONSE_TYPES.INTERNAL_ERROR, stderrOutput || `R script exited with code ${exitCode}`));
         }
-        if (exitCode !== 0) {
-          reject();
-        }
-      } catch (error) {
-        reject(error);
+      } catch (parseError) {
+        reject(newError(RESPONSE_TYPES.INTERNAL_ERROR, stderrOutput || parseError.message));
       }
     });
   });

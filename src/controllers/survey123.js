@@ -60,7 +60,7 @@ export const uploadCsv = async (filename) => {
         daysActive: sixWeekData[`TrappingInterval${weekNum}`],
         endobrev: 1,
         FIPS: null,
-        globalID: sixWeekData.GlobalID,
+        globalID: sixWeekData.globalid || sixWeekData.GlobalID,
         latitude: sixWeekData.Latitude,
         longitude: sixWeekData.Longitude,
         lure: sixWeekData.Trap_Lure,

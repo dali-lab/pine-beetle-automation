@@ -33,12 +33,31 @@ export const deleteFile = async (filename, isAbsolutePath) => {
 export const processCSV = (filename, transformRow = (r) => r) => {
   const filepath = path.resolve(__dirname, `../../${filename}`);
   const docs = [];
+  let failed = false;
 
   return new Promise((resolve, reject) => {
-    parseFile(filepath, { headers: true })
-      .on('data', (data) => docs.push(transformRow(data)))
-      .on('error', (err) => reject(err))
-      .on('end', (rowCount) => resolve({ docs, rowCount }));
+    const stream = parseFile(filepath, { headers: true });
+
+    stream
+      .on('data', (data) => {
+        if (failed) return;
+        try {
+          docs.push(transformRow(data));
+        } catch (err) {
+          failed = true;
+          stream.destroy();
+          reject(err);
+        }
+      })
+      .on('error', (err) => {
+        if (!failed) {
+          failed = true;
+          reject(err);
+        }
+      })
+      .on('end', (rowCount) => {
+        if (!failed) resolve({ docs, rowCount });
+      });
   });
 };
 

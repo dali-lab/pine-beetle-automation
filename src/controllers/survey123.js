@@ -133,10 +133,12 @@ export const uploadCsv = async (filename) => {
   const insertOp = bulkOp.filter(({ insertOne }) => !!insertOne);
   const deleteOp = bulkOp.filter(({ deleteMany }) => !!deleteMany);
 
-  const deleteRes = await UnsummarizedTrappingModel.bulkWrite(deleteOp, { ordered: false });
-  const insertRes = await UnsummarizedTrappingModel.bulkWrite(insertOp, { ordered: false });
-
-  console.log(`successfully parsed ${rowCount} rows from csv upload`);
+  const deleteRes = deleteOp.length
+    ? await UnsummarizedTrappingModel.bulkWrite(deleteOp, { ordered: false })
+    : { deletedCount: 0 };
+  const insertRes = insertOp.length
+    ? await UnsummarizedTrappingModel.bulkWrite(insertOp, { ordered: false })
+    : { insertedCount: 0 };
 
   // run entire pipeline
   // don't throw the error here since we want to return 200 immediately

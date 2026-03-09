@@ -25,7 +25,7 @@ const requireAuth = async (req, res, next) => {
 
   try {
     // auth with main backend
-    const response = await axios.get(`${MAIN_BACKEND_ROUTE}/v3/user/auth`, {
+    const response = await axios.get(`${MAIN_BACKEND_ROUTE}/user/auth`, {
       headers: {
         authorization,
       },

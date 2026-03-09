@@ -143,7 +143,7 @@ export const uploadCsv = async (filename) => {
   // also don't await it for the same purpose; run pipeline in background
   runPipelineAll().catch(console.error);
 
-  return { deleteRes, insertRes };
+  return { rowCount, deleteRes, insertRes };
 };
 
 /**

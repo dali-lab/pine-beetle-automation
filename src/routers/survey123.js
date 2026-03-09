@@ -24,22 +24,23 @@ survey123Router.route('/upload')
       return;
     }
 
-    // Always process in background: return 202 immediately to avoid Heroku 30s H12 timeout.
-    // Upload + pipeline can take longer than 30s for larger files.
-    res.status(202).send(generateResponse(RESPONSE_TYPES.SUCCESS, {
-      message: 'Upload accepted, processing in background. Pipeline will run after data is saved.',
-    }));
-
     const filePath = req.file.path;
-    setImmediate(() => {
-      Survey123.uploadCsv(filePath)
-        .then(() => console.log('csv upload completed successfully'))
-        .catch((err) => console.error('csv upload failed:', err))
-        .finally(() => {
-          // delay so fs has flushed; then remove temp file
-          setTimeout(() => deleteFile(filePath), 1000 * 10);
-        });
-    });
+    try {
+      const result = await Survey123.uploadCsv(filePath);
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
+        message: 'CSV imported successfully. Pipeline has been started.',
+        rowsProcessed: result.rowCount,
+        inserted: result.insertRes?.insertedCount ?? 0,
+        deleted: result.deleteRes?.deletedCount ?? 0,
+      }));
+    } catch (err) {
+      const errorResponse = generateErrorResponse(err);
+      const { error: errorMessage, status } = errorResponse;
+      console.error('csv upload failed:', errorMessage);
+      res.status(status).send(errorResponse);
+    } finally {
+      setTimeout(() => deleteFile(filePath), 1000 * 10);
+    }
   });
 
 survey123Router.route('/webhook')

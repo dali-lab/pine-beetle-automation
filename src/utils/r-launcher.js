@@ -63,7 +63,7 @@ export const callRScript = async (rPath, ...dataArgs) => {
           reject(newError(RESPONSE_TYPES.INTERNAL_ERROR, stderrOutput || `R script exited with code ${exitCode}`));
         }
       } catch (parseError) {
-        reject(newError(RESPONSE_TYPES.INTERNAL_ERROR, stderrOutput || parseError.message));
+        reject(newError(RESPONSE_TYPES.INTERNAL_ERROR, `JSON parse failed: ${parseError.message}${stderrOutput ? `\nR stderr: ${stderrOutput}` : ''}`));
       }
     });
   });

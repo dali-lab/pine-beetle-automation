@@ -16,9 +16,10 @@ const summarizedCountyRouter = Router();
 const upload = multer({ dest: './uploads' });
 
 summarizedCountyRouter.route('/')
-  .get(async (_req, res) => {
+  .get(async (req, res) => {
     try {
-      const result = await SummarizedCounty.getAll();
+      const { page, limit } = req.query;
+      const result = await SummarizedCounty.getAll(page, limit);
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
@@ -67,10 +68,19 @@ summarizedCountyRouter.route('/filter')
       endYear,
       startYear,
       state,
+      page,
+      limit,
     } = req.query;
 
     try {
-      const result = await SummarizedCounty.getByFilter(startYear, endYear, state, county);
+      const result = await SummarizedCounty.getByFilter(
+        startYear,
+        endYear,
+        state,
+        county,
+        page,
+        limit,
+      );
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
@@ -102,7 +112,6 @@ summarizedCountyRouter.route('/spots/upload')
       console.log(errorMessage);
       res.status(status).send(errorResponse);
     } finally {
-      // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
       setTimeout(() => {
         deleteFile(req.file.path);
       }, 1000 * 10);
@@ -130,7 +139,6 @@ summarizedCountyRouter.route('/upload')
       console.log(errorMessage);
       res.status(status).send(errorResponse);
     } finally {
-      // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
       setTimeout(() => {
         deleteFile(req.file.path);
       }, 1000 * 10);
@@ -139,22 +147,17 @@ summarizedCountyRouter.route('/upload')
 
 summarizedCountyRouter.route('/download')
   .get(async (req, res) => {
-    let filepath;
-
     try {
-      filepath = await SummarizedCounty.downloadCsv(req.query);
-
-      res.attachment('county-summarized.csv').sendFile(filepath);
+      await SummarizedCounty.downloadCsvStream(req.query, res);
     } catch (error) {
-      const errorResponse = generateErrorResponse(error);
-      const { error: errorMessage, status } = errorResponse;
-      console.log(errorMessage);
-      res.status(status).send(errorResponse);
-    } finally {
-      // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
-      setTimeout(() => {
-        deleteFile(filepath, true);
-      }, 1000 * 10);
+      if (!res.headersSent) {
+        const errorResponse = generateErrorResponse(error);
+        const { error: errorMessage, status } = errorResponse;
+        console.log(errorMessage);
+        res.status(status).send(errorResponse);
+      } else {
+        console.error('Error after streaming started:', error);
+      }
     }
   });
 

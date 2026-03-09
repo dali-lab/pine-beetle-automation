@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 import {
-    RESPONSE_CODES,
-    RESPONSE_TYPES,
+  RESPONSE_CODES,
+  RESPONSE_TYPES,
 } from '../constants';
 
 import { generateResponse } from '../utils';

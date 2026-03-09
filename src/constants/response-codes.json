@@ -3,10 +3,6 @@
         "status": 200,
         "type": "SUCCESS"
     },
-    "ACCEPTED": {
-        "status": 202,
-        "type": "ACCEPTED"
-    },
     "NOT_FOUND": {
         "status": 404,
         "type": "NOT_FOUND"

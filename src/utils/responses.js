@@ -16,7 +16,7 @@ export const generateResponse = (responseType, payload) => {
   return {
     status,
     type,
-    ...(status >= 200 && status < 300 ? { data: payload } : { error: payload }),
+    ...(status === RESPONSE_CODES.SUCCESS.status ? { data: payload } : { error: payload }),
   };
 };
 

@@ -46,31 +46,31 @@ const ordinalStrings = Object.entries({
  */
 export const uploadCsv = async (filename) => {
   const unpacker = (sixWeekData) => {
-    return ordinalStrings.map(([weekNum, weekOrdinal]) => {
+    return ordinalStrings.map(([weekNum]) => {
       // convert fields to unsummarized schema
       // this tracks the csv export format from survey123.arcgis.com per the data upload guide.
       // this may change over time if spelling changes etc, so retry the download and read the
       // csv columns if needed.
       const convertedRawData = {
-        bloom: sixWeekData['What bloomed?'],
-        bloomDate: sixWeekData['Date of Inital bloom'], // fix spelling
-        cleridCount: sixWeekData[`Number Clerids (${weekOrdinal} Collection)`],
-        collectionDate: sixWeekData[`Date of Collection ${weekNum}`],
-        county: sixWeekData['County/Parish'],
-        daysActive: sixWeekData[`Active Trapping Days (${weekOrdinal} Collection)`],
+        bloom: sixWeekData.Species_Bloom,
+        bloomDate: sixWeekData.Initial_Bloom,
+        cleridCount: sixWeekData[`Number_Clerids${weekNum}`],
+        collectionDate: sixWeekData[`CollectionDate${weekNum}`],
+        county: sixWeekData.County,
+        daysActive: sixWeekData[`TrappingInterval${weekNum}`],
         endobrev: 1,
         FIPS: null,
         globalID: sixWeekData.GlobalID,
         latitude: sixWeekData.Latitude,
         longitude: sixWeekData.Longitude,
-        lure: sixWeekData['Trap Lure'],
-        rangerDistrict: sixWeekData['National Forest (Ranger District)'],
+        lure: sixWeekData.Trap_Lure,
+        rangerDistrict: sixWeekData.Nat_Forest_Ranger_Dist,
         season: sixWeekData.Season,
         sirexLure: 'Y',
-        spbCount: sixWeekData[`Number SPB (${weekOrdinal} Collection)`],
-        startDate: sixWeekData['Traps set out on:'],
-        state: sixWeekData.State,
-        trap: sixWeekData['Trap name'],
+        spbCount: sixWeekData[`Number_SPB${weekNum}`],
+        startDate: sixWeekData.TrapSetDate,
+        state: sixWeekData.USA_State,
+        trap: sixWeekData.Trap_name,
         year: sixWeekData.Year,
       };
 
@@ -78,14 +78,14 @@ export const uploadCsv = async (filename) => {
       const cleanedData = extractModelAttributes(convertedRawData);
 
       // copied from utils/extractObjectFieldsCreator
-      const missingFields = ['Delete this survey?', 'Is_Final_Collection'].filter((field) => sixWeekData[field] === undefined);
+      const missingFields = ['DeleteSurvey', 'Is_Final_Collection'].filter((field) => sixWeekData[field] === undefined);
       if (missingFields.length > 0) {
         throw newError(RESPONSE_TYPES.BAD_REQUEST, `missing fields: ${missingFields}`);
       }
 
       if (!cleanedData.collectionDate || !cleanedData.daysActive || cleanedData.daysActive === '0') return undefined; // no data for this week
 
-      const shouldDeleteSurvey = sixWeekData['Delete this survey?'] === 'yes';
+      const shouldDeleteSurvey = sixWeekData.DeleteSurvey === 'yes';
       const isFinalCollection = sixWeekData.Is_Final_Collection === 'yes';
 
       return {

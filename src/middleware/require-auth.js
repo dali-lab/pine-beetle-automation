@@ -14,13 +14,22 @@ import { generateResponse } from '../utils';
  * @param {Function} next function for proceeding with middleware
  */
 const requireAuth = async (req, res, next) => {
-  const { MAIN_BACKEND_ROUTE } = process.env;
+  let { MAIN_BACKEND_ROUTE } = process.env;
+  // ensure base URL without trailing /v3 so we don't get /v3/v3/user/auth
+  if (MAIN_BACKEND_ROUTE) {
+    MAIN_BACKEND_ROUTE = MAIN_BACKEND_ROUTE.replace(/\/v3\/?$/, '');
+  }
   const { authorization } = req.headers;
 
   // send unauthorized if no auth header
   if (!authorization) {
     return res.status(RESPONSE_CODES.UNAUTHORIZED.status)
       .send(generateResponse(RESPONSE_TYPES.UNAUTHORIZED));
+  }
+
+  if (!MAIN_BACKEND_ROUTE) {
+    return res.status(RESPONSE_CODES.INTERNAL_ERROR.status)
+      .send(generateResponse(RESPONSE_TYPES.INTERNAL_ERROR, 'MAIN_BACKEND_ROUTE is not configured'));
   }
 
   try {

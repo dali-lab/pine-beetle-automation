@@ -126,7 +126,7 @@ export const getByFilter = async (startYear, endYear, state, rangerDistrict, pag
   const parsedLimit = Math.min(5000, Math.max(1, parseInt(limit, 10) || 1000)); // max 5000 per page
 
   const skip = (parsedPage - 1) * parsedLimit;
-  const total = await query.countDocuments();
+  const total = await query.model.countDocuments(query.getFilter());
 
   const data = await query
     .sort({

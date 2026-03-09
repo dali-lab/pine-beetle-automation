@@ -13,6 +13,9 @@ dotenv.config({ silent: true });
 // DB Setup
 const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost/pb-dev';
 
+// Prepare for Mongoose 7 (suppresses strictQuery deprecation warning)
+mongoose.set('strictQuery', false);
+
 const mongooseOptions = {
   loggerLevel: 'error',
   useNewUrlParser: true,

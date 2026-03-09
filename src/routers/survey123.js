@@ -35,7 +35,10 @@ survey123Router.route('/upload')
       Survey123.uploadCsv(filePath)
         .then(() => console.log('csv upload completed successfully'))
         .catch((err) => console.error('csv upload failed:', err))
-        .finally(() => deleteFile(filePath));
+        .finally(() => {
+          // delay so fs has flushed; then remove temp file
+          setTimeout(() => deleteFile(filePath), 1000 * 10);
+        });
     });
   });
 

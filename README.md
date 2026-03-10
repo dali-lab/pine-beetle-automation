@@ -66,9 +66,9 @@ We use higher-order functions with dependency injection for behaviors repeated a
 
 Continuous deployment is setup with Heroku.
 
-Merging a PR to the `dev` branch will trigger a new build in the dev environment. When the build passes, an update will be released at [https://pine-beetle-prediction-dev.herokuapp.com](https://pine-beetle-prediction-dev.herokuapp.com).
+Merging a PR to the `dev` branch will trigger a new build in the dev environment. When the build passes, an update will be released at [https://pine-beetle-automation-dev-7702db82f77e.herokuapp.com](https://pine-beetle-automation-dev-7702db82f77e.herokuapp.com).
 
-Merging a PR to the `release` branch will trigger a new build in the production environment. When the build passes, an update will be released at [https://pine-beetle-prediction.herokuapp.com](https://pine-beetle-prediction.herokuapp.com).
+Merging a PR to the `release` branch will trigger a new build in the production environment. When the build passes, an update will be released at [https://pine-beetle-automation-6ba2941e05d1.herokuapp.com](https://pine-beetle-automation-6ba2941e05d1.herokuapp.com).
 
 Pull requests should always be first merged into the `dev` branch so they are staged in the development environment. After smoke testing the changes in the development environment, developers can then choose to release those changes into production by generating a `DEV TO RELEASE` pull request from the `dev` branch to the `release` branch. One this single PR is merged into `release`, the changes will be built into the production environment and will be accessible at the release API.
 

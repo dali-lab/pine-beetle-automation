@@ -1,5 +1,6 @@
 import {
   csvDownloadCreator,
+  csvStreamDownloadCreator,
   deleteFile,
   processCSV,
   processCSVAsync,
@@ -41,6 +42,7 @@ import { callRScript } from './r-launcher';
 export {
   calculatedFieldsGeneratorCreator,
   csvDownloadCreator,
+  csvStreamDownloadCreator,
   deleteFile,
   deleteInsert,
   extractObjectFieldsCreator,

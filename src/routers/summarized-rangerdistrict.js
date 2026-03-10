@@ -16,9 +16,10 @@ const summarizedRangerDistrictRouter = Router();
 const upload = multer({ dest: './uploads' });
 
 summarizedRangerDistrictRouter.route('/')
-  .get(async (_req, res) => {
+  .get(async (req, res) => {
     try {
-      const result = await SummarizedRangerDistrict.getAll();
+      const { page, limit } = req.query;
+      const result = await SummarizedRangerDistrict.getAll(page, limit);
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
@@ -67,10 +68,19 @@ summarizedRangerDistrictRouter.route('/filter')
       rangerDistrict,
       startYear,
       state,
+      page,
+      limit,
     } = req.query;
 
     try {
-      const result = await SummarizedRangerDistrict.getByFilter(startYear, endYear, state, rangerDistrict);
+      const result = await SummarizedRangerDistrict.getByFilter(
+        startYear,
+        endYear,
+        state,
+        rangerDistrict,
+        page,
+        limit,
+      );
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
     } catch (error) {
@@ -90,7 +100,7 @@ summarizedRangerDistrictRouter.route('/spots/upload')
 
     try {
       const uploadResult = await SummarizedRangerDistrict.uploadSpotsCsv(req.file.path);
-      Pipeline.runPipelineAll();
+      Pipeline.runPipelineAll().catch((err) => console.error('Pipeline failed after upload:', err));
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
         data: uploadResult,
@@ -118,7 +128,7 @@ summarizedRangerDistrictRouter.route('/upload')
 
     try {
       const uploadResult = await SummarizedRangerDistrict.uploadCsv(req.file.path);
-      Pipeline.runPipelineAll();
+      Pipeline.runPipelineAll().catch((err) => console.error('Pipeline failed after upload:', err));
 
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
         data: uploadResult,
@@ -139,22 +149,18 @@ summarizedRangerDistrictRouter.route('/upload')
 
 summarizedRangerDistrictRouter.route('/download')
   .get(async (req, res) => {
-    let filepath;
-
     try {
-      filepath = await SummarizedRangerDistrict.downloadCsv(req.query);
-
-      res.attachment('rangerdistrict-summarized.csv').sendFile(filepath);
+      await SummarizedRangerDistrict.downloadCsvStream(req.query, res);
+      // Response jest już wysłany przez stream
     } catch (error) {
-      const errorResponse = generateErrorResponse(error);
-      const { error: errorMessage, status } = errorResponse;
-      console.log(errorMessage);
-      res.status(status).send(errorResponse);
-    } finally {
-      // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
-      setTimeout(() => {
-        deleteFile(filepath, true);
-      }, 1000 * 10);
+      if (!res.headersSent) {
+        const errorResponse = generateErrorResponse(error);
+        const { error: errorMessage, status } = errorResponse;
+        console.log(errorMessage);
+        res.status(status).send(errorResponse);
+      } else {
+        console.error('Error after streaming started:', error);
+      }
     }
   });
 

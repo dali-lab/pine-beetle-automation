@@ -1,8 +1,14 @@
 # `/survey123` routes
 
-## `GET /upload`
+## `POST /upload`
 
-Uploads a CSV of survey-123 style unsummarized data. This file can be directly downloaded from the Survey123 interface. Expects a `csv` file field in the body. Requires auth. Expects the following column names in the csv file (this might become outdated over time):
+Uploads a CSV of survey-123 style unsummarized data. The server processes the file and responds with **200 OK** and a summary (rows processed, inserted, deleted), or **4xx/5xx** with an error message if the CSV is invalid or processing fails. Expects a `csv` file field in the body. Requires auth.
+
+**Note:** If you hit Heroku’s 30s request timeout (H12) with very large files, consider splitting the file or re-enabling background processing (202).
+
+The CSV file can be downloaded directly from the [Survey123](https://survey123.arcgis.com/) interface and then uploaded here. To export unsummarized data as CSV from this API, use `GET /v3/unsummarized-trapping/download` (see [unsummarized-trapping](./unsummarized-trapping.md)).
+
+Expects the following column names in the csv file (this might become outdated over time):
 
 - `ObjectID`
 - `GlobalID`

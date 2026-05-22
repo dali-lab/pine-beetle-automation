@@ -27,8 +27,9 @@ export const deleteInsert = (sixWeeksData) => {
     acc + (parseInt(curr.daysActive, 10) || 0)
   ), 0);
 
-  // only insert if data is valid and between 12 and 60 days total active
-  const insertOps = shouldInsert && numDaysActive >= 12 && numDaysActive <= 60
+  // only insert if data is valid and between 12 and 90 days total active
+  // upper bound 90 covers full 6-week spring surveys spanning ~Mar-May (typically 60-70 days)
+  const insertOps = shouldInsert && numDaysActive >= 12 && numDaysActive <= 90
     ? sixWeeksData.map((weekData) => ({
       insertOne: {
         document: weekData,

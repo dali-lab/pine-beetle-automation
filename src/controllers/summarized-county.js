@@ -20,7 +20,6 @@ import {
   offsetYearPassCreator,
   predictionGeneratorCreator,
   processCSV,
-  processCSVAsync,
   trappingAggregationPipelineCreator,
   tryCastNumber,
   upsertOpCreator,
@@ -345,6 +344,7 @@ export const uploadCsv = async (filename, options = {}) => {
     return {
       rowCount: parsed.rowCount,
       accepted: parsed.accepted,
+      willDelete: 0,
       skippedRows: 0,
       rejectedRows: parsed.rejected.length,
       skipped: [],
@@ -394,10 +394,12 @@ const cleanSpotsCsv = (row) => {
 /**
  * @description parses + validates the spots CSV without writing to DB
  */
+const countySpotKey = (d) => `${d.state}|${d.year}|${d.county}`;
+
 export const parseCountySpotsCsv = async (filename) => {
   const rejected = [];
 
-  const { docs, rowCount, rejections } = await processCSVAsync(filename, async (row, rowNumber) => {
+  const { docs, rowCount, rejections } = await processCSV(filename, (row, rowNumber) => {
     const cleanedData = extractObjectFieldsCreator(spotAttributes)(cleanSpotsCsv(row));
     const identifier = buildCountyIdentifier(row, rowNumber);
 
@@ -415,12 +417,7 @@ export const parseCountySpotsCsv = async (filename) => {
       return null;
     }
 
-    const { county, state, year } = cleanedData;
-
-    const matchingDoc = await SummarizedCountyModel.findOne({ state, year, county });
-    const endobrev = matchingDoc?.endobrev || null;
-
-    return { ...cleanedData, endobrev };
+    return cleanedData; // endobrev attached after a single batched lookup below
   }, { collectErrors: true });
 
   rejections.forEach(({ rowNumber, error, raw }) => {
@@ -432,7 +429,25 @@ export const parseCountySpotsCsv = async (filename) => {
     });
   });
 
-  const validDocs = docs.filter((d) => !!d);
+  const validRows = docs.filter((d) => !!d);
+
+  // resolve endobrev for every row in ONE query instead of findOne-per-row
+  const endobrevByKey = new Map();
+  if (validRows.length) {
+    const uniqueKeys = [...new Map(
+      validRows.map((d) => [countySpotKey(d), { state: d.state, year: d.year, county: d.county }]),
+    ).values()];
+    const matches = await SummarizedCountyModel
+      .find({ $or: uniqueKeys })
+      .select('state year county endobrev')
+      .lean();
+    matches.forEach((m) => endobrevByKey.set(countySpotKey(m), m.endobrev));
+  }
+
+  const validDocs = validRows.map((d) => ({
+    ...d,
+    endobrev: endobrevByKey.get(countySpotKey(d)) || null,
+  }));
   const upsertOperations = validDocs.map(upsertOp);
 
   return {
@@ -460,6 +475,7 @@ export const uploadSpotsCsv = async (filename, options = {}) => {
     return {
       rowCount: parsed.rowCount,
       accepted: parsed.accepted,
+      willDelete: 0,
       skippedRows: 0,
       rejectedRows: parsed.rejected.length,
       skipped: [],

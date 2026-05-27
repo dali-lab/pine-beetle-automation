@@ -15,6 +15,7 @@ import { requireAuth } from '../middleware';
 import { RESPONSE_TYPES } from '../constants';
 
 import { Survey123 } from '../controllers';
+import { UploadAuditModel } from '../models';
 
 const upload = multer({ dest: './uploads' });
 
@@ -108,8 +109,8 @@ survey123Router.route('/upload')
   });
 
 survey123Router.route('/upload/status')
-  .get(requireAuth, (req, res) => {
-    const { uploadId } = req.query;
+  .get(requireAuth, async (req, res) => {
+    const uploadId = String(req.query.uploadId || '');
 
     if (!uploadId) {
       res.status(400).send(generateErrorResponse({
@@ -119,7 +120,26 @@ survey123Router.route('/upload/status')
       return;
     }
 
-    const statusData = uploadStatuses.get(uploadId);
+    // In-memory status is the source of truth for in-flight uploads. If it's
+    // missing (e.g. the dyno restarted after processing finished), fall back to
+    // the persisted audit row so the client can still resolve the final state.
+    let statusData = uploadStatuses.get(uploadId);
+
+    if (!statusData) {
+      const audit = await UploadAuditModel.findOne({ uploadId }).lean();
+      if (audit) {
+        statusData = {
+          status: audit.status === 'failed' ? 'error' : 'success',
+          message: audit.errorMessage || 'CSV import completed.',
+          result: {
+            rowCount: audit.totalRows,
+            accepted: audit.acceptedRows,
+            skipped: audit.skipped || [],
+            rejected: audit.rejected || [],
+          },
+        };
+      }
+    }
 
     if (!statusData) {
       res.status(404).send(generateErrorResponse({

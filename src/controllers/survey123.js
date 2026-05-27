@@ -207,10 +207,10 @@ export const parseSurvey123Csv = async (filename) => {
     }).filter((doc) => !!doc);
   };
 
-  const { docs, rowCount, rejections } = await processCSV(filename, (row, rowNumber) => {
-    const unpackedData = unpacker(row, rowNumber);
-    return unpackedData.map(stateToAbbrevTransform);
-  }, { collectErrors: true });
+  const { docs, rowCount, rejections } = await processCSV(filename, (row, rowNumber) => ({
+    rowNumber,
+    weeks: unpacker(row, rowNumber).map(stateToAbbrevTransform),
+  }), { collectErrors: true });
 
   rejections.forEach(({ rowNumber, error, raw }) => {
     rejected.push({
@@ -225,23 +225,23 @@ export const parseSurvey123Csv = async (filename) => {
 
   // build bulk operations from valid docs, but additionally surface deleteInsert-level
   // rejections (e.g. active-days out of range) so the user sees why a survey was dropped
-  const bulkOpGroups = docs.map((sixWeeksData) => {
-    if (!sixWeeksData.length) return [];
-    const numDaysActive = sixWeeksData.reduce((acc, curr) => (
+  const bulkOpGroups = docs.map(({ rowNumber, weeks }) => {
+    if (!weeks.length) return [];
+    const numDaysActive = weeks.reduce((acc, curr) => (
       acc + (parseInt(curr.daysActive, 10) || 0)
     ), 0);
-    const { shouldInsert } = sixWeeksData.find((d) => !!d) || {};
+    const { shouldInsert } = weeks.find((d) => !!d) || {};
     if (shouldInsert && (numDaysActive < MIN_DAYS_ACTIVE || numDaysActive > MAX_DAYS_ACTIVE)) {
-      const first = sixWeeksData[0] || {};
+      const first = weeks[0] || {};
       rejected.push({
-        rowNumber: 0,
-        identifier: `${first.state || '?'} / ${first.county || '?'} / ${first.year || '?'} / ${first.trap || '?'}`,
+        rowNumber,
+        identifier: `row ${rowNumber} / ${first.state || '?'} / ${first.county || '?'} / ${first.year || '?'} / ${first.trap || '?'}`,
         reason: SURVEY123_REASONS.ACTIVE_DAYS_OUT_OF_RANGE,
         field: 'daysActive',
         value: `${numDaysActive} (allowed ${MIN_DAYS_ACTIVE}-${MAX_DAYS_ACTIVE})`,
       });
     }
-    return deleteInsert(sixWeeksData) || [];
+    return deleteInsert(weeks) || [];
   });
 
   const bulkOp = bulkOpGroups.flat().filter((obj) => !!obj);
@@ -277,6 +277,7 @@ export const uploadCsv = async (filename, options = {}) => {
     return {
       rowCount,
       accepted,
+      willDelete: deleteOp.length,
       skippedRows: skipped.length,
       rejectedRows: rejected.length,
       skipped,
@@ -302,6 +303,7 @@ export const uploadCsv = async (filename, options = {}) => {
   return {
     rowCount,
     accepted,
+    willDelete: deleteOp.length,
     skippedRows: skipped.length,
     rejectedRows: rejected.length,
     skipped,

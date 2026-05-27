@@ -24,7 +24,6 @@ import {
   offsetYearPassCreator,
   predictionGeneratorCreator,
   processCSV,
-  processCSVAsync,
   trappingAggregationPipelineCreator,
   tryCastNumber,
   upsertOpCreator,
@@ -329,6 +328,7 @@ export const uploadCsv = async (filename, options = {}) => {
     return {
       rowCount: parsed.rowCount,
       accepted: parsed.accepted,
+      willDelete: 0,
       skippedRows: 0,
       rejectedRows: parsed.rejected.length,
       skipped: [],
@@ -378,10 +378,12 @@ const cleanSpotsCsv = (row) => {
 /**
  * @description parses + validates the spots CSV without writing to DB
  */
+const rdSpotKey = (d) => `${d.state}|${d.year}|${d.rangerDistrict}`;
+
 export const parseRdSpotsCsv = async (filename) => {
   const rejected = [];
 
-  const { docs, rowCount, rejections } = await processCSVAsync(filename, async (row, rowNumber) => {
+  const { docs, rowCount, rejections } = await processCSV(filename, (row, rowNumber) => {
     const cleanedData = extractObjectFieldsCreator(spotAttributes)(cleanSpotsCsv(row));
     const identifier = buildRdIdentifier(row, rowNumber);
 
@@ -398,12 +400,7 @@ export const parseRdSpotsCsv = async (filename) => {
       return null;
     }
 
-    const { rangerDistrict, state, year } = cleanedData;
-
-    const matchingDoc = await SummarizedRangerDistrictModel.findOne({ state, year, rangerDistrict });
-    const endobrev = matchingDoc?.endobrev || null;
-
-    return { ...cleanedData, endobrev };
+    return cleanedData; // endobrev attached after a single batched lookup below
   }, { collectErrors: true });
 
   rejections.forEach(({ rowNumber, error, raw }) => {
@@ -415,7 +412,25 @@ export const parseRdSpotsCsv = async (filename) => {
     });
   });
 
-  const validDocs = docs.filter((d) => !!d);
+  const validRows = docs.filter((d) => !!d);
+
+  // resolve endobrev for every row in ONE query instead of findOne-per-row
+  const endobrevByKey = new Map();
+  if (validRows.length) {
+    const uniqueKeys = [...new Map(
+      validRows.map((d) => [rdSpotKey(d), { state: d.state, year: d.year, rangerDistrict: d.rangerDistrict }]),
+    ).values()];
+    const matches = await SummarizedRangerDistrictModel
+      .find({ $or: uniqueKeys })
+      .select('state year rangerDistrict endobrev')
+      .lean();
+    matches.forEach((m) => endobrevByKey.set(rdSpotKey(m), m.endobrev));
+  }
+
+  const validDocs = validRows.map((d) => ({
+    ...d,
+    endobrev: endobrevByKey.get(rdSpotKey(d)) || null,
+  }));
   const upsertOperations = validDocs.map(upsertOp);
 
   return {
@@ -443,6 +458,7 @@ export const uploadSpotsCsv = async (filename, options = {}) => {
     return {
       rowCount: parsed.rowCount,
       accepted: parsed.accepted,
+      willDelete: 0,
       skippedRows: 0,
       rejectedRows: parsed.rejected.length,
       skipped: [],

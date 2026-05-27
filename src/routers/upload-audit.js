@@ -15,9 +15,12 @@ uploadAuditRouter.route('/')
       const limit = Math.min(200, Math.max(1, parseInt(req.query.limit, 10) || 50));
       const skip = (page - 1) * limit;
 
+      // Coerce query params to strings + allowlist status to avoid Mongo
+      // operator injection (e.g. ?status[$ne]=...).
+      const ALLOWED_STATUS = ['success', 'partial', 'failed'];
       const filter = {};
-      if (req.query.status) filter.status = req.query.status;
-      if (req.query.source) filter.source = req.query.source;
+      if (ALLOWED_STATUS.includes(req.query.status)) filter.status = req.query.status;
+      if (req.query.source) filter.source = String(req.query.source);
 
       const [data, total] = await Promise.all([
         UploadAuditModel.find(filter)

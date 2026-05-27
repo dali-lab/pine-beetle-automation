@@ -21,6 +21,8 @@ import {
 
 import {
   extractObjectFieldsCreator,
+  tryCastDate,
+  tryCastNumber,
   validateNumberEntry,
 } from './validators';
 
@@ -34,10 +36,17 @@ import {
 
 import {
   deleteInsert,
+  MAX_DAYS_ACTIVE,
+  MIN_DAYS_ACTIVE,
   transformSurvey123GlobalID,
 } from './survey123';
 
 import { callRScript } from './r-launcher';
+
+import {
+  persistUploadAudit,
+  deriveUploadStatus,
+} from './audit';
 
 export {
   calculatedFieldsGeneratorCreator,
@@ -45,6 +54,7 @@ export {
   csvStreamDownloadCreator,
   deleteFile,
   deleteInsert,
+  deriveUploadStatus,
   extractObjectFieldsCreator,
   generateErrorResponse,
   generateResponse,
@@ -52,14 +62,19 @@ export {
   getModelIndexes,
   getModelNumericAttributes,
   indicatorGeneratorCreator,
+  MAX_DAYS_ACTIVE,
+  MIN_DAYS_ACTIVE,
   newError,
   offsetYearPassCreator,
+  persistUploadAudit,
   predictionGeneratorCreator,
   processCSV,
   processCSVAsync,
   callRScript,
   transformSurvey123GlobalID,
   trappingAggregationPipelineCreator,
+  tryCastDate,
+  tryCastNumber,
   upsertOpCreator,
   validateNumberEntry,
 };

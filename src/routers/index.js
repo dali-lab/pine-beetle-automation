@@ -5,6 +5,7 @@ import summarizedCountyRouter from './summarized-county';
 import summarizedRangerDistrictRouter from './summarized-rangerdistrict';
 import survey123Router from './survey123';
 import unsummarizedTrappingRouter from './unsummarized-trapping';
+import uploadAuditRouter from './upload-audit';
 
 export default {
   healthcheck,
@@ -14,4 +15,5 @@ export default {
   'summarized-rangerdistrict': summarizedRangerDistrictRouter,
   survey123: survey123Router,
   'unsummarized-trapping': unsummarizedTrappingRouter,
+  'upload-audit': uploadAuditRouter,
 };

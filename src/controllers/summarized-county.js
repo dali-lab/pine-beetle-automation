@@ -22,6 +22,7 @@ import {
   processCSV,
   processCSVAsync,
   trappingAggregationPipelineCreator,
+  tryCastNumber,
   upsertOpCreator,
   validateNumberEntry,
 } from '../utils';
@@ -263,26 +264,110 @@ const cleanCsv = (row) => {
   };
 };
 
+const buildCountyIdentifier = (row, rowNumber) => (
+  `row ${rowNumber} / ${row.state || '?'} / ${row.county || '?'} / ${row.year || '?'}`
+);
+
+// pre-validate every numeric attribute the same way mongoose would at bulkWrite time
+const collectNumericRejections = (row, identifier, rowNumber) => {
+  const out = [];
+  numericModelAttributes.forEach((field) => {
+    const raw = row[field];
+    if (raw === undefined || raw === null || raw === '') return;
+    if (!tryCastNumber(raw).ok) {
+      out.push({
+        rowNumber,
+        identifier,
+        reason: 'INVALID_NUMERIC',
+        field,
+        value: String(raw),
+      });
+    }
+  });
+  return out;
+};
+
+/**
+ * @description parses + validates the summarized-county CSV without writing to DB
+ */
+export const parseCountyCsv = async (filename) => {
+  const rejected = [];
+
+  const { docs, rowCount, rejections } = await processCSV(filename, (row, rowNumber) => {
+    const cleanedData = extractModelAttributes(cleanCsv(row));
+    const identifier = buildCountyIdentifier(row, rowNumber);
+
+    // pre-validate cast-ability for every numeric field — surfaces what
+    // would otherwise be a silent CastError at bulkWrite time
+    const castIssues = collectNumericRejections(cleanedData, identifier, rowNumber);
+    if (castIssues.length > 0) {
+      rejected.push(...castIssues);
+      return null;
+    }
+
+    return cleanedData;
+  }, { collectErrors: true });
+
+  rejections.forEach(({ rowNumber, error, raw }) => {
+    rejected.push({
+      rowNumber,
+      identifier: buildCountyIdentifier(raw, rowNumber),
+      reason: 'MISSING_REQUIRED_FIELD',
+      field: error?.message || '',
+    });
+  });
+
+  const validDocs = docs.filter((d) => !!d);
+  const upsertOperations = validDocs.map(upsertOp);
+
+  return {
+    rowCount,
+    upsertOperations,
+    accepted: validDocs.length,
+    skipped: [],
+    rejected,
+  };
+};
+
 /**
  * @description uploads a csv to the summarized county collection
  * @param {String} filename the csv filename on disk
+ * @param {Object} [options]
+ * @param {Boolean} [options.dryRun=false]
  * @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
  * @throws other errors depending on what went wrong
  */
-export const uploadCsv = async (filename) => {
-  const { docs, rowCount } = await processCSV(filename, (row) => {
-    // cast the csv fields to our schema
-    const cleanedData = extractModelAttributes(cleanCsv(row));
+export const uploadCsv = async (filename, options = {}) => {
+  const { dryRun = false } = options;
+  const parsed = await parseCountyCsv(filename);
 
-    return cleanedData;
-  });
+  if (dryRun) {
+    return {
+      rowCount: parsed.rowCount,
+      accepted: parsed.accepted,
+      skippedRows: 0,
+      rejectedRows: parsed.rejected.length,
+      skipped: [],
+      rejected: parsed.rejected,
+      bulkWriteResult: null,
+    };
+  }
 
-  // apply another transformation to prepare for upserting
-  const upsertOperations = docs.map(upsertOp);
-  const bulkWriteResult = await SummarizedCountyModel.bulkWrite(upsertOperations);
+  const bulkWriteResult = parsed.upsertOperations.length
+    ? await SummarizedCountyModel.bulkWrite(parsed.upsertOperations)
+    : null;
 
-  console.log(`successfully parsed ${rowCount} rows from csv upload`);
-  return bulkWriteResult;
+  console.log(`successfully parsed ${parsed.rowCount} rows from csv upload`);
+
+  return {
+    rowCount: parsed.rowCount,
+    accepted: parsed.accepted,
+    skippedRows: 0,
+    rejectedRows: parsed.rejected.length,
+    skipped: [],
+    rejected: parsed.rejected,
+    bulkWriteResult,
+  };
 };
 
 /**
@@ -307,31 +392,97 @@ const cleanSpotsCsv = (row) => {
 };
 
 /**
- * @description uploads a csv with spot data to the summarized county collection
- * @param {String} filename the csv filename on disk
- * @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
- * @throws other errors depending on what went wrong
+ * @description parses + validates the spots CSV without writing to DB
  */
-export const uploadSpotsCsv = async (filename) => {
-  const { docs, rowCount } = await processCSVAsync(filename, async (row) => {
-    // cast the csv fields to our schema
-    const cleanedData = extractObjectFieldsCreator(spotAttributes)(cleanSpotsCsv(row));
+export const parseCountySpotsCsv = async (filename) => {
+  const rejected = [];
 
-    // explicitly look up and set endobrev value for this document
+  const { docs, rowCount, rejections } = await processCSVAsync(filename, async (row, rowNumber) => {
+    const cleanedData = extractObjectFieldsCreator(spotAttributes)(cleanSpotsCsv(row));
+    const identifier = buildCountyIdentifier(row, rowNumber);
+
+    // validate spotst0 + year cast — these are the only numerics here
+    if (!tryCastNumber(cleanedData.spotst0).ok) {
+      rejected.push({
+        rowNumber, identifier, reason: 'INVALID_NUMERIC', field: 'spotst0', value: String(cleanedData.spotst0),
+      });
+      return null;
+    }
+    if (cleanedData.year !== undefined && cleanedData.year !== '' && !tryCastNumber(cleanedData.year).ok) {
+      rejected.push({
+        rowNumber, identifier, reason: 'INVALID_NUMERIC', field: 'year', value: String(cleanedData.year),
+      });
+      return null;
+    }
+
     const { county, state, year } = cleanedData;
 
     const matchingDoc = await SummarizedCountyModel.findOne({ state, year, county });
     const endobrev = matchingDoc?.endobrev || null;
 
     return { ...cleanedData, endobrev };
+  }, { collectErrors: true });
+
+  rejections.forEach(({ rowNumber, error, raw }) => {
+    rejected.push({
+      rowNumber,
+      identifier: buildCountyIdentifier(raw, rowNumber),
+      reason: 'MISSING_REQUIRED_FIELD',
+      field: error?.message || '',
+    });
   });
 
-  // apply another transformation to prepare for upserting
-  const upsertOperations = docs.map(upsertOp);
-  const bulkWriteResult = await SummarizedCountyModel.bulkWrite(upsertOperations);
+  const validDocs = docs.filter((d) => !!d);
+  const upsertOperations = validDocs.map(upsertOp);
 
-  console.log(`successfully parsed ${rowCount} rows from csv upload`);
-  return bulkWriteResult;
+  return {
+    rowCount,
+    upsertOperations,
+    accepted: validDocs.length,
+    skipped: [],
+    rejected,
+  };
+};
+
+/**
+ * @description uploads a csv with spot data to the summarized county collection
+ * @param {String} filename the csv filename on disk
+ * @param {Object} [options]
+ * @param {Boolean} [options.dryRun=false]
+ * @throws RESPONSE_TYPES.BAD_REQUEST for missing fields
+ * @throws other errors depending on what went wrong
+ */
+export const uploadSpotsCsv = async (filename, options = {}) => {
+  const { dryRun = false } = options;
+  const parsed = await parseCountySpotsCsv(filename);
+
+  if (dryRun) {
+    return {
+      rowCount: parsed.rowCount,
+      accepted: parsed.accepted,
+      skippedRows: 0,
+      rejectedRows: parsed.rejected.length,
+      skipped: [],
+      rejected: parsed.rejected,
+      bulkWriteResult: null,
+    };
+  }
+
+  const bulkWriteResult = parsed.upsertOperations.length
+    ? await SummarizedCountyModel.bulkWrite(parsed.upsertOperations)
+    : null;
+
+  console.log(`successfully parsed ${parsed.rowCount} rows from csv upload`);
+
+  return {
+    rowCount: parsed.rowCount,
+    accepted: parsed.accepted,
+    skippedRows: 0,
+    rejectedRows: parsed.rejected.length,
+    skipped: [],
+    rejected: parsed.rejected,
+    bulkWriteResult,
+  };
 };
 
 /**

@@ -1,3 +1,5 @@
+import numeral from 'numeral';
+
 import { RESPONSE_TYPES } from '../constants';
 import { newError } from './responses';
 
@@ -31,4 +33,34 @@ export const extractObjectFieldsCreator = (fields) => (obj) => {
  */
 export const validateNumberEntry = (value, fallback = null) => {
   return value === undefined || value === null || value === '' ? fallback : value;
+};
+
+/**
+ * @description mirrors the mongoose Number cast from unsummarized-trapping.js:
+ *  - null/undefined → { ok: true, coerced: null }
+ *  - '' → { ok: true, coerced: 0 }
+ *  - parseable via numeral → { ok: true, coerced: number }
+ *  - otherwise → { ok: false }
+ * Used by upload preview to surface CastError-equivalent failures BEFORE bulkWrite.
+ */
+export const tryCastNumber = (value) => {
+  if (value === undefined || value === null) return { ok: true, coerced: null };
+  if (value === '') return { ok: true, coerced: 0 };
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? { ok: true, coerced: value } : { ok: false };
+  }
+  const parsed = numeral(value).value();
+  if (parsed === null || Number.isNaN(parsed)) return { ok: false };
+  return { ok: true, coerced: parsed };
+};
+
+/**
+ * @description checks Date castability the same way mongoose would.
+ * Returns { ok, coerced } where ok=false means mongoose would throw CastError.
+ */
+export const tryCastDate = (value) => {
+  if (value === undefined || value === null || value === '') return { ok: true, coerced: null };
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return { ok: false };
+  return { ok: true, coerced: d };
 };

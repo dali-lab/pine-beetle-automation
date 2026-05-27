@@ -4,8 +4,10 @@ import multer from 'multer';
 
 import {
   deleteFile,
+  deriveUploadStatus,
   generateErrorResponse,
   generateResponse,
+  persistUploadAudit,
 } from '../utils';
 
 import { requireAuth } from '../middleware';
@@ -27,6 +29,26 @@ const cleanupStatus = (uploadId) => {
   setTimeout(() => uploadStatuses.delete(uploadId), STATUS_TTL_MS);
 };
 
+survey123Router.route('/upload/preview')
+  .post(requireAuth, upload.single('csv'), async (req, res) => {
+    if (!req.file) {
+      res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'missing file'));
+      return;
+    }
+    const filePath = req.file.path;
+    try {
+      const result = await Survey123.uploadCsv(filePath, { dryRun: true });
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    } finally {
+      setTimeout(() => deleteFile(filePath), 1000 * 10);
+    }
+  });
+
 survey123Router.route('/upload')
   .post(requireAuth, upload.single('csv'), async (req, res) => {
     if (!req.file) {
@@ -35,6 +57,7 @@ survey123Router.route('/upload')
     }
 
     const filePath = req.file.path;
+    const originalFilename = req.file.originalname;
     const uploadId = crypto.randomUUID();
 
     uploadStatuses.set(uploadId, { status: 'processing' });
@@ -45,20 +68,37 @@ survey123Router.route('/upload')
     // Process CSV in background
     console.log(`[survey123] starting background upload for ${uploadId}`);
     Survey123.uploadCsv(filePath)
-      .then((result) => {
+      .then(async (result) => {
         console.log(`[survey123] upload ${uploadId} completed successfully`);
+        const auditStatus = deriveUploadStatus(result);
         uploadStatuses.set(uploadId, {
-          status: 'success',
-          message: `CSV imported successfully. ${result.rowCount} rows processed, ${result.insertRes?.insertedCount ?? 0} inserted, ${result.deleteRes?.deletedCount ?? 0} deleted. Pipeline has been started.`,
+          status: auditStatus === 'failed' ? 'error' : 'success',
+          message: `CSV imported. ${result.rowCount} rows parsed, ${result.accepted} accepted, ${result.skipped.length} skipped, ${result.rejected.length} rejected. Pipeline started.`,
+          result,
+        });
+        await persistUploadAudit({
+          uploadId,
+          source: 'survey123',
+          filename: originalFilename,
+          uploadResult: result,
+          status: auditStatus,
         });
         cleanupStatus(uploadId);
       })
-      .catch((err) => {
+      .catch(async (err) => {
         console.error(`[survey123] upload ${uploadId} FAILED:`, err);
         const errorResponse = generateErrorResponse(err);
         uploadStatuses.set(uploadId, {
           status: 'error',
           message: errorResponse.error || 'Upload failed',
+        });
+        await persistUploadAudit({
+          uploadId,
+          source: 'survey123',
+          filename: originalFilename,
+          uploadResult: null,
+          status: 'failed',
+          errorMessage: errorResponse.error || 'Upload failed',
         });
         cleanupStatus(uploadId);
       })

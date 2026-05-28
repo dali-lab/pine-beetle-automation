@@ -296,6 +296,19 @@ export const parseCountyCsv = async (filename) => {
     const cleanedData = extractModelAttributes(cleanCsv(row));
     const identifier = buildCountyIdentifier(row, rowNumber);
 
+    // Required key fields cannot be blank — mongoose's global '' → 0 cast (for year)
+    // and '' → null cast (for state/county) would otherwise silently corrupt the
+    // compound unique index.
+    const missingKeys = ['state', 'year', 'county'].filter((f) => (
+      cleanedData[f] === undefined || cleanedData[f] === null || cleanedData[f] === ''
+    ));
+    if (missingKeys.length > 0) {
+      rejected.push({
+        rowNumber, identifier, reason: 'MISSING_REQUIRED_FIELD', field: missingKeys.join(','),
+      });
+      return null;
+    }
+
     // pre-validate cast-ability for every numeric field — surfaces what
     // would otherwise be a silent CastError at bulkWrite time
     const castIssues = collectNumericRejections(cleanedData, identifier, rowNumber);
@@ -403,6 +416,19 @@ export const parseCountySpotsCsv = async (filename) => {
     const cleanedData = extractObjectFieldsCreator(spotAttributes)(cleanSpotsCsv(row));
     const identifier = buildCountyIdentifier(row, rowNumber);
 
+    // Required key fields cannot be blank — mongoose's global '' → 0 cast (for year)
+    // and '' → null cast (for state/county) would otherwise silently corrupt the
+    // compound unique index {year, state, county, endobrev}.
+    const missingKeys = ['state', 'year', 'county'].filter((f) => (
+      cleanedData[f] === undefined || cleanedData[f] === null || cleanedData[f] === ''
+    ));
+    if (missingKeys.length > 0) {
+      rejected.push({
+        rowNumber, identifier, reason: 'MISSING_REQUIRED_FIELD', field: missingKeys.join(','),
+      });
+      return null;
+    }
+
     // validate spotst0 + year cast — these are the only numerics here
     if (!tryCastNumber(cleanedData.spotst0).ok) {
       rejected.push({
@@ -410,7 +436,7 @@ export const parseCountySpotsCsv = async (filename) => {
       });
       return null;
     }
-    if (cleanedData.year !== undefined && cleanedData.year !== '' && !tryCastNumber(cleanedData.year).ok) {
+    if (!tryCastNumber(cleanedData.year).ok) {
       rejected.push({
         rowNumber, identifier, reason: 'INVALID_NUMERIC', field: 'year', value: String(cleanedData.year),
       });
@@ -446,7 +472,7 @@ export const parseCountySpotsCsv = async (filename) => {
 
   const validDocs = validRows.map((d) => ({
     ...d,
-    endobrev: endobrevByKey.get(countySpotKey(d)) || null,
+    endobrev: endobrevByKey.has(countySpotKey(d)) ? endobrevByKey.get(countySpotKey(d)) : null,
   }));
   const upsertOperations = validDocs.map(upsertOp);
 

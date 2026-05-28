@@ -73,45 +73,6 @@ export const processCSV = (filename, transformRow = (r) => r, options = {}) => {
 };
 
 /**
- * @description processes CSV file into array of objects, allows async transformation of row
- * @param {String} filename name of CSV file to upload
- * @param {Function} [transformRow] optional async function to transform a row of data
- * @returns {Promise<{ docs: Object[], rowCount: Number}>} function that takes in filename of CSV and returns promise
- */
-export const processCSVAsync = (filename, transformRow = (r) => Promise.resolve(r), options = {}) => {
-  const { collectErrors = false } = options;
-  const filepath = path.resolve(__dirname, `../../${filename}`);
-  const promises = [];
-  const rejections = [];
-  let rowNumber = 0;
-
-  return new Promise((resolve, reject) => {
-    parseFile(filepath, { headers: true })
-      .on('data', (data) => {
-        rowNumber += 1;
-        const currentRow = rowNumber;
-        if (collectErrors) {
-          promises.push(
-            Promise.resolve()
-              .then(() => transformRow(data, currentRow))
-              .catch((err) => {
-                rejections.push({ rowNumber: currentRow, error: err, raw: data });
-                return undefined;
-              }),
-          );
-        } else {
-          promises.push(transformRow(data, currentRow).catch(reject));
-        }
-      })
-      .on('error', (err) => reject(err))
-      .on('end', async (rowCount) => {
-        const docs = await Promise.all(promises).catch(reject);
-        resolve({ docs, rowCount, rejections });
-      });
-  });
-};
-
-/**
  * @description higher-order function that creates a csv downloader function
  * @param {mongoose.Model} ModelName destination Model of download
  * @param {Array<String>} fields model attributes in array (used for fields of the csv file)

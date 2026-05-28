@@ -3,7 +3,6 @@ import {
   csvStreamDownloadCreator,
   deleteFile,
   processCSV,
-  processCSVAsync,
 } from './csv';
 
 import {
@@ -69,7 +68,6 @@ export {
   persistUploadAudit,
   predictionGeneratorCreator,
   processCSV,
-  processCSVAsync,
   callRScript,
   transformSurvey123GlobalID,
   trappingAggregationPipelineCreator,

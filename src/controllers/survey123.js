@@ -170,6 +170,10 @@ export const parseSurvey123Csv = async (filename) => {
         throw newError(RESPONSE_TYPES.BAD_REQUEST, `missing fields: ${missingFields}`);
       }
 
+      const shouldDeleteSurvey = sixWeekData[deleteField] === 'yes';
+      const isFinalCollection = sixWeekData.Is_Final_Collection === 'yes';
+      const shouldInsert = !shouldDeleteSurvey && isFinalCollection;
+
       if (!cleanedData.collectionDate) {
         skipped.push({
           rowNumber, identifier: `${identifier} / week ${weekNum}`, reason: SURVEY123_REASONS.MISSING_COLLECTION_DATE,
@@ -183,12 +187,28 @@ export const parseSurvey123Csv = async (filename) => {
         return undefined;
       }
 
-      // numeric/date cast checks — would otherwise throw at bulkWrite time
-      const castOk = validateCastable(cleanedData, `${identifier} / week ${weekNum}`, rowNumber, rejected);
-      if (!castOk) return undefined;
+      // numeric/date cast checks — only block insertion. For delete-marked rows we still
+      // want the deleteMany to fire even if old data has garbage numerics that triggered
+      // the user to delete the survey in the first place.
+      if (shouldInsert) {
+        // Required key fields cannot be blank — mongoose's global '' → 0 cast (for year)
+        // and '' → null cast (for state) would otherwise silently corrupt the row.
+        const missingKeys = ['state', 'year'].filter((f) => (
+          cleanedData[f] === undefined || cleanedData[f] === null || cleanedData[f] === ''
+        ));
+        if (missingKeys.length > 0) {
+          rejected.push({
+            rowNumber,
+            identifier: `${identifier} / week ${weekNum}`,
+            reason: SURVEY123_REASONS.MISSING_REQUIRED_FIELD,
+            field: missingKeys.join(','),
+          });
+          return undefined;
+        }
 
-      const shouldDeleteSurvey = sixWeekData[deleteField] === 'yes';
-      const isFinalCollection = sixWeekData.Is_Final_Collection === 'yes';
+        const castOk = validateCastable(cleanedData, `${identifier} / week ${weekNum}`, rowNumber, rejected);
+        if (!castOk) return undefined;
+      }
 
       if (shouldDeleteSurvey) {
         skipped.push({
@@ -202,7 +222,7 @@ export const parseSurvey123Csv = async (filename) => {
 
       return {
         ...cleanedData,
-        shouldInsert: !shouldDeleteSurvey && isFinalCollection,
+        shouldInsert,
       };
     }).filter((doc) => !!doc);
   };
@@ -224,7 +244,10 @@ export const parseSurvey123Csv = async (filename) => {
   });
 
   // build bulk operations from valid docs, but additionally surface deleteInsert-level
-  // rejections (e.g. active-days out of range) so the user sees why a survey was dropped
+  // rejections (e.g. active-days out of range) so the user sees why a survey was dropped.
+  // When a survey is rejected for being out-of-range, skip the deleteInsert entirely —
+  // otherwise we would issue a deleteMany with no replacement inserts and silently wipe
+  // existing data for that globalID.
   const bulkOpGroups = docs.map(({ rowNumber, weeks }) => {
     if (!weeks.length) return [];
     const numDaysActive = weeks.reduce((acc, curr) => (
@@ -240,6 +263,7 @@ export const parseSurvey123Csv = async (filename) => {
         field: 'daysActive',
         value: `${numDaysActive} (allowed ${MIN_DAYS_ACTIVE}-${MAX_DAYS_ACTIVE})`,
       });
+      return [];
     }
     return deleteInsert(weeks) || [];
   });

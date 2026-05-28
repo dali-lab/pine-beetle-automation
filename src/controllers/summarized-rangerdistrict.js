@@ -283,6 +283,19 @@ export const parseRdCsv = async (filename) => {
     const cleanedData = extractModelAttributes(cleanCsv(row));
     const identifier = buildRdIdentifier(row, rowNumber);
 
+    // Required key fields cannot be blank — mongoose's global '' → 0 cast (for year)
+    // and '' → null cast (for state/rangerDistrict) would otherwise silently corrupt
+    // the compound unique index.
+    const missingKeys = ['state', 'year', 'rangerDistrict'].filter((f) => (
+      cleanedData[f] === undefined || cleanedData[f] === null || cleanedData[f] === ''
+    ));
+    if (missingKeys.length > 0) {
+      rejected.push({
+        rowNumber, identifier, reason: 'MISSING_REQUIRED_FIELD', field: missingKeys.join(','),
+      });
+      return null;
+    }
+
     const castIssues = collectRdNumericRejections(cleanedData, identifier, rowNumber);
     if (castIssues.length > 0) {
       rejected.push(...castIssues);
@@ -387,13 +400,26 @@ export const parseRdSpotsCsv = async (filename) => {
     const cleanedData = extractObjectFieldsCreator(spotAttributes)(cleanSpotsCsv(row));
     const identifier = buildRdIdentifier(row, rowNumber);
 
+    // Required key fields cannot be blank — mongoose's global '' → 0 cast (for year)
+    // and '' → null cast (for state/rangerDistrict) would otherwise silently corrupt
+    // the compound unique index {year, state, rangerDistrict, endobrev}.
+    const missingKeys = ['state', 'year', 'rangerDistrict'].filter((f) => (
+      cleanedData[f] === undefined || cleanedData[f] === null || cleanedData[f] === ''
+    ));
+    if (missingKeys.length > 0) {
+      rejected.push({
+        rowNumber, identifier, reason: 'MISSING_REQUIRED_FIELD', field: missingKeys.join(','),
+      });
+      return null;
+    }
+
     if (!tryCastNumber(cleanedData.spotst0).ok) {
       rejected.push({
         rowNumber, identifier, reason: 'INVALID_NUMERIC', field: 'spotst0', value: String(cleanedData.spotst0),
       });
       return null;
     }
-    if (cleanedData.year !== undefined && cleanedData.year !== '' && !tryCastNumber(cleanedData.year).ok) {
+    if (!tryCastNumber(cleanedData.year).ok) {
       rejected.push({
         rowNumber, identifier, reason: 'INVALID_NUMERIC', field: 'year', value: String(cleanedData.year),
       });
@@ -429,7 +455,7 @@ export const parseRdSpotsCsv = async (filename) => {
 
   const validDocs = validRows.map((d) => ({
     ...d,
-    endobrev: endobrevByKey.get(rdSpotKey(d)) || null,
+    endobrev: endobrevByKey.has(rdSpotKey(d)) ? endobrevByKey.get(rdSpotKey(d)) : null,
   }));
   const upsertOperations = validDocs.map(upsertOp);
 

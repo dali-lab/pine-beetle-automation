@@ -25,9 +25,17 @@ const UploadAuditSchema = new Schema({
   skipped: { type: [RowOutcomeSchema], default: [] },
   rejected: { type: [RowOutcomeSchema], default: [] },
 
+  // flags whether the persisted skipped/rejected arrays were truncated to fit
+  // MAX_AUDIT_ENTRIES_PER_LIST — surface to the UI so users know the lists are
+  // incomplete when rejectedRows/skippedRows exceed the visible entries.
+  truncated: {
+    skipped: { type: Boolean, default: false },
+    rejected: { type: Boolean, default: false },
+  },
+
   bulkWriteResult: { type: Object, default: null },
 
-  status: { type: String }, // "success" | "partial" | "failed"
+  status: { type: String }, // "processing" | "success" | "partial" | "failed"
   errorMessage: { type: String, default: null },
 });
 

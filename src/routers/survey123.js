@@ -21,13 +21,12 @@ const upload = multer({ dest: './uploads' });
 
 const survey123Router = Router();
 
-// In-memory store for async upload statuses
-const uploadStatuses = new Map();
-
-// Clean up completed statuses after 30 minutes
-const STATUS_TTL_MS = 30 * 60 * 1000;
-const cleanupStatus = (uploadId) => {
-  setTimeout(() => uploadStatuses.delete(uploadId), STATUS_TTL_MS);
+// Map the persisted audit.status to the client-facing /upload/status response.
+// 'partial' is preserved distinct from 'success' so the UI can surface that
+// some rows were rejected even though the upload completed.
+const auditStatusToClientStatus = (auditStatus) => {
+  if (auditStatus === 'failed') return 'error';
+  return auditStatus; // 'processing' | 'success' | 'partial'
 };
 
 survey123Router.route('/upload/preview')
@@ -61,7 +60,15 @@ survey123Router.route('/upload')
     const originalFilename = req.file.originalname;
     const uploadId = crypto.randomUUID();
 
-    uploadStatuses.set(uploadId, { status: 'processing' });
+    // Persist a 'processing' audit row BEFORE returning 202. The DB is the only
+    // source of truth — if the dyno restarts mid-processing, /upload/status can
+    // still return 'processing' instead of 404. No in-memory state.
+    await persistUploadAudit({
+      uploadId,
+      source: 'survey123',
+      filename: originalFilename,
+      status: 'processing',
+    });
 
     // Return 202 immediately to avoid Heroku 30s H12 timeout
     res.status(202).send(generateResponse(RESPONSE_TYPES.SUCCESS, { uploadId }));
@@ -71,28 +78,17 @@ survey123Router.route('/upload')
     Survey123.uploadCsv(filePath)
       .then(async (result) => {
         console.log(`[survey123] upload ${uploadId} completed successfully`);
-        const auditStatus = deriveUploadStatus(result);
-        uploadStatuses.set(uploadId, {
-          status: auditStatus === 'failed' ? 'error' : 'success',
-          message: `CSV imported. ${result.rowCount} rows parsed, ${result.accepted} accepted, ${result.skipped.length} skipped, ${result.rejected.length} rejected. Pipeline started.`,
-          result,
-        });
         await persistUploadAudit({
           uploadId,
           source: 'survey123',
           filename: originalFilename,
           uploadResult: result,
-          status: auditStatus,
+          status: deriveUploadStatus(result),
         });
-        cleanupStatus(uploadId);
       })
       .catch(async (err) => {
         console.error(`[survey123] upload ${uploadId} FAILED:`, err);
         const errorResponse = generateErrorResponse(err);
-        uploadStatuses.set(uploadId, {
-          status: 'error',
-          message: errorResponse.error || 'Upload failed',
-        });
         await persistUploadAudit({
           uploadId,
           source: 'survey123',
@@ -101,7 +97,6 @@ survey123Router.route('/upload')
           status: 'failed',
           errorMessage: errorResponse.error || 'Upload failed',
         });
-        cleanupStatus(uploadId);
       })
       .finally(() => {
         setTimeout(() => deleteFile(filePath), 1000 * 10);
@@ -120,36 +115,37 @@ survey123Router.route('/upload/status')
       return;
     }
 
-    // In-memory status is the source of truth for in-flight uploads. If it's
-    // missing (e.g. the dyno restarted after processing finished), fall back to
-    // the persisted audit row so the client can still resolve the final state.
-    let statusData = uploadStatuses.get(uploadId);
-
-    if (!statusData) {
-      const audit = await UploadAuditModel.findOne({ uploadId }).lean();
-      if (audit) {
-        statusData = {
-          status: audit.status === 'failed' ? 'error' : 'success',
-          message: audit.errorMessage || 'CSV import completed.',
-          result: {
-            rowCount: audit.totalRows,
-            accepted: audit.acceptedRows,
-            skipped: audit.skipped || [],
-            rejected: audit.rejected || [],
-          },
-        };
-      }
-    }
-
-    if (!statusData) {
-      res.status(404).send(generateErrorResponse({
-        type: RESPONSE_TYPES.NOT_FOUND,
-        message: 'Upload not found or expired',
+    let audit;
+    try {
+      audit = await UploadAuditModel.findOne({ uploadId }).lean();
+    } catch (err) {
+      console.error('[survey123] /upload/status DB error:', err);
+      res.status(500).send(generateErrorResponse({
+        type: RESPONSE_TYPES.INTERNAL_ERROR,
+        message: 'Failed to look up upload status',
       }));
       return;
     }
 
-    res.send(generateResponse(RESPONSE_TYPES.SUCCESS, statusData));
+    if (!audit) {
+      res.status(404).send(generateErrorResponse({
+        type: RESPONSE_TYPES.NOT_FOUND,
+        message: 'Upload not found',
+      }));
+      return;
+    }
+
+    res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
+      status: auditStatusToClientStatus(audit.status),
+      message: audit.errorMessage || `CSV import ${audit.status}.`,
+      result: {
+        rowCount: audit.totalRows,
+        accepted: audit.acceptedRows,
+        skipped: audit.skipped || [],
+        rejected: audit.rejected || [],
+        truncated: audit.truncated || { skipped: false, rejected: false },
+      },
+    }));
   });
 
 survey123Router.route('/webhook')

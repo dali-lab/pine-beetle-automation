@@ -311,8 +311,21 @@ export const uploadCsv = async (filename, options = {}) => {
     };
   }
 
+  // No valid operations to perform — return the parsed diagnostics instead of
+  // throwing so the audit log and /upload/status surface the per-row skip/reject
+  // reasons rather than a bare 'no valid data' error.
   if (!bulkOp.length) {
-    throw newError(RESPONSE_TYPES.BAD_REQUEST, 'no valid data');
+    return {
+      rowCount,
+      accepted: 0,
+      willDelete: 0,
+      skippedRows: skipped.length,
+      rejectedRows: rejected.length,
+      skipped,
+      rejected,
+      deleteRes: { deletedCount: 0 },
+      insertRes: { insertedCount: 0 },
+    };
   }
 
   const deleteRes = deleteOp.length

@@ -16,11 +16,29 @@ uploadAuditRouter.route('/')
       const skip = (page - 1) * limit;
 
       // Coerce query params to strings + allowlist status to avoid Mongo
-      // operator injection (e.g. ?status[$ne]=...).
-      const ALLOWED_STATUS = ['success', 'partial', 'failed'];
+      // operator injection (e.g. ?status[$ne]=...). Reject array-valued or
+      // unknown filters with 400 — silently dropping them would return the
+      // full unfiltered set, which the caller did not ask for.
+      const ALLOWED_STATUS = ['processing', 'success', 'partial', 'failed'];
       const filter = {};
-      if (ALLOWED_STATUS.includes(req.query.status)) filter.status = req.query.status;
-      if (req.query.source) filter.source = String(req.query.source);
+      if (req.query.status !== undefined) {
+        if (typeof req.query.status !== 'string' || !ALLOWED_STATUS.includes(req.query.status)) {
+          return res.status(400).send(generateErrorResponse({
+            type: RESPONSE_TYPES.BAD_REQUEST,
+            message: `Invalid status filter. Allowed: ${ALLOWED_STATUS.join(', ')}`,
+          }));
+        }
+        filter.status = req.query.status;
+      }
+      if (req.query.source !== undefined) {
+        if (typeof req.query.source !== 'string') {
+          return res.status(400).send(generateErrorResponse({
+            type: RESPONSE_TYPES.BAD_REQUEST,
+            message: 'Invalid source filter',
+          }));
+        }
+        filter.source = req.query.source;
+      }
 
       const [data, total] = await Promise.all([
         UploadAuditModel.find(filter)
@@ -33,7 +51,7 @@ uploadAuditRouter.route('/')
         UploadAuditModel.countDocuments(filter),
       ]);
 
-      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
+      return res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
         data,
         pagination: {
           page, limit, total, totalPages: Math.ceil(total / limit),
@@ -43,7 +61,7 @@ uploadAuditRouter.route('/')
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;
       console.log(errorMessage);
-      res.status(status).send(errorResponse);
+      return res.status(status).send(errorResponse);
     }
   });
 

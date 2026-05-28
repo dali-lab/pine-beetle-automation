@@ -272,14 +272,30 @@ export const parseSurvey123Csv = async (filename) => {
   const insertOp = bulkOp.filter(({ insertOne }) => !!insertOne);
   const deleteOp = bulkOp.filter(({ deleteMany }) => !!deleteMany);
 
+  // De-dup skipped against rejected: when a survey ultimately lands in rejected
+  // (e.g. ACTIVE_DAYS_OUT_OF_RANGE for the whole row), per-week skipped entries
+  // for the same rowNumber would otherwise inflate skippedRows alongside
+  // rejectedRows for the same survey. Show each survey under one bucket.
+  const rejectedRowNumbers = new Set(rejected.map((r) => r.rowNumber));
+  const dedupedSkipped = skipped.filter((s) => !rejectedRowNumbers.has(s.rowNumber));
+
+  // Count surveys (unique rowNumbers) that produced at least one insert op,
+  // not the raw count of insertOne ops (which is per-week — up to 6 per survey).
+  const acceptedRowNumbers = new Set();
+  docs.forEach(({ rowNumber }, idx) => {
+    if (bulkOpGroups[idx]?.some((op) => op.insertOne)) {
+      acceptedRowNumbers.add(rowNumber);
+    }
+  });
+
   return {
     rowCount,
     bulkOp,
     insertOp,
     deleteOp,
-    skipped,
+    skipped: dedupedSkipped,
     rejected,
-    accepted: insertOp.length,
+    accepted: acceptedRowNumbers.size,
   };
 };
 

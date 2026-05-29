@@ -1,10 +1,13 @@
+import crypto from 'crypto';
 import { Router } from 'express';
 import multer from 'multer';
 
 import {
   deleteFile,
+  deriveUploadStatus,
   generateErrorResponse,
   generateResponse,
+  persistUploadAudit,
 } from '../utils';
 
 import { RESPONSE_TYPES } from '../constants';
@@ -91,6 +94,25 @@ summarizedRangerDistrictRouter.route('/filter')
     }
   });
 
+summarizedRangerDistrictRouter.route('/spots/upload/preview')
+  .post(requireAuth, upload.single('csv'), async (req, res) => {
+    if (!req.file) {
+      res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'missing file'));
+      return;
+    }
+    try {
+      const result = await SummarizedRangerDistrict.uploadSpotsCsv(req.file.path, { dryRun: true });
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    } finally {
+      setTimeout(() => deleteFile(req.file.path), 1000 * 10);
+    }
+  });
+
 summarizedRangerDistrictRouter.route('/spots/upload')
   .post(requireAuth, upload.single('csv'), async (req, res) => {
     if (!req.file) {
@@ -98,24 +120,63 @@ summarizedRangerDistrictRouter.route('/spots/upload')
       return;
     }
 
+    const uploadId = crypto.randomUUID();
+    const originalFilename = req.file.originalname;
+
     try {
       const uploadResult = await SummarizedRangerDistrict.uploadSpotsCsv(req.file.path);
       Pipeline.runPipelineAll().catch((err) => console.error('Pipeline failed after upload:', err));
 
+      await persistUploadAudit({
+        uploadId,
+        source: 'summarized-rangerdistrict-spots',
+        filename: originalFilename,
+        uploadResult,
+        status: deriveUploadStatus(uploadResult),
+      });
+
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
         data: uploadResult,
         message: 'file uploaded successfully',
+        uploadId,
       }));
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;
       console.log(errorMessage);
+      await persistUploadAudit({
+        uploadId,
+        source: 'summarized-rangerdistrict-spots',
+        filename: originalFilename,
+        uploadResult: null,
+        status: 'failed',
+        errorMessage: errorResponse.error || 'Upload failed',
+      });
       res.status(status).send(errorResponse);
     } finally {
       // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists
       setTimeout(() => {
         deleteFile(req.file.path);
       }, 1000 * 10);
+    }
+  });
+
+summarizedRangerDistrictRouter.route('/upload/preview')
+  .post(requireAuth, upload.single('csv'), async (req, res) => {
+    if (!req.file) {
+      res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'missing file'));
+      return;
+    }
+    try {
+      const result = await SummarizedRangerDistrict.uploadCsv(req.file.path, { dryRun: true });
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    } finally {
+      setTimeout(() => deleteFile(req.file.path), 1000 * 10);
     }
   });
 
@@ -126,18 +187,38 @@ summarizedRangerDistrictRouter.route('/upload')
       return;
     }
 
+    const uploadId = crypto.randomUUID();
+    const originalFilename = req.file.originalname;
+
     try {
       const uploadResult = await SummarizedRangerDistrict.uploadCsv(req.file.path);
       Pipeline.runPipelineAll().catch((err) => console.error('Pipeline failed after upload:', err));
 
+      await persistUploadAudit({
+        uploadId,
+        source: 'summarized-rangerdistrict',
+        filename: originalFilename,
+        uploadResult,
+        status: deriveUploadStatus(uploadResult),
+      });
+
       res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
         data: uploadResult,
         message: 'file uploaded successfully',
+        uploadId,
       }));
     } catch (error) {
       const errorResponse = generateErrorResponse(error);
       const { error: errorMessage, status } = errorResponse;
       console.log(errorMessage);
+      await persistUploadAudit({
+        uploadId,
+        source: 'summarized-rangerdistrict',
+        filename: originalFilename,
+        uploadResult: null,
+        status: 'failed',
+        errorMessage: errorResponse.error || 'Upload failed',
+      });
       res.status(status).send(errorResponse);
     } finally {
       // wrapping in a setTimeout to invoke the event loop, so fs knows the file exists

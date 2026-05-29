@@ -1,5 +1,11 @@
-import { newError } from './responses';
 import { RESPONSE_TYPES } from '../constants';
+import { newError } from './responses';
+
+// Active-days bounds for a survey (sum across 6 weeks).
+// Lower bound 12: anything below is too short to be a real survey.
+// Upper bound 90 covers full 6-week spring surveys spanning ~Mar-May (typically 60-70 days).
+export const MIN_DAYS_ACTIVE = 12;
+export const MAX_DAYS_ACTIVE = 90;
 
 /**
  * @description transforms a survey123 globalID to all lowercase and removes curly braces
@@ -27,9 +33,7 @@ export const deleteInsert = (sixWeeksData) => {
     acc + (parseInt(curr.daysActive, 10) || 0)
   ), 0);
 
-  // only insert if data is valid and between 12 and 90 days total active
-  // upper bound 90 covers full 6-week spring surveys spanning ~Mar-May (typically 60-70 days)
-  const insertOps = shouldInsert && numDaysActive >= 12 && numDaysActive <= 90
+  const insertOps = shouldInsert && numDaysActive >= MIN_DAYS_ACTIVE && numDaysActive <= MAX_DAYS_ACTIVE
     ? sixWeeksData.map((weekData) => ({
       insertOne: {
         document: weekData,

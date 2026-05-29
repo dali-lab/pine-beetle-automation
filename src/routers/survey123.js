@@ -4,8 +4,10 @@ import multer from 'multer';
 
 import {
   deleteFile,
+  deriveUploadStatus,
   generateErrorResponse,
   generateResponse,
+  persistUploadAudit,
 } from '../utils';
 
 import { requireAuth } from '../middleware';
@@ -13,19 +15,39 @@ import { requireAuth } from '../middleware';
 import { RESPONSE_TYPES } from '../constants';
 
 import { Survey123 } from '../controllers';
+import { UploadAuditModel } from '../models';
 
 const upload = multer({ dest: './uploads' });
 
 const survey123Router = Router();
 
-// In-memory store for async upload statuses
-const uploadStatuses = new Map();
-
-// Clean up completed statuses after 30 minutes
-const STATUS_TTL_MS = 30 * 60 * 1000;
-const cleanupStatus = (uploadId) => {
-  setTimeout(() => uploadStatuses.delete(uploadId), STATUS_TTL_MS);
+// Map the persisted audit.status to the client-facing /upload/status response.
+// 'partial' is preserved distinct from 'success' so the UI can surface that
+// some rows were rejected even though the upload completed.
+const auditStatusToClientStatus = (auditStatus) => {
+  if (auditStatus === 'failed') return 'error';
+  return auditStatus; // 'processing' | 'success' | 'partial'
 };
+
+survey123Router.route('/upload/preview')
+  .post(requireAuth, upload.single('csv'), async (req, res) => {
+    if (!req.file) {
+      res.send(generateResponse(RESPONSE_TYPES.NO_CONTENT, 'missing file'));
+      return;
+    }
+    const filePath = req.file.path;
+    try {
+      const result = await Survey123.uploadCsv(filePath, { dryRun: true });
+      res.send(generateResponse(RESPONSE_TYPES.SUCCESS, result));
+    } catch (error) {
+      const errorResponse = generateErrorResponse(error);
+      const { error: errorMessage, status } = errorResponse;
+      console.log(errorMessage);
+      res.status(status).send(errorResponse);
+    } finally {
+      setTimeout(() => deleteFile(filePath), 1000 * 10);
+    }
+  });
 
 survey123Router.route('/upload')
   .post(requireAuth, upload.single('csv'), async (req, res) => {
@@ -35,9 +57,18 @@ survey123Router.route('/upload')
     }
 
     const filePath = req.file.path;
+    const originalFilename = req.file.originalname;
     const uploadId = crypto.randomUUID();
 
-    uploadStatuses.set(uploadId, { status: 'processing' });
+    // Persist a 'processing' audit row BEFORE returning 202. The DB is the only
+    // source of truth — if the dyno restarts mid-processing, /upload/status can
+    // still return 'processing' instead of 404. No in-memory state.
+    await persistUploadAudit({
+      uploadId,
+      source: 'survey123',
+      filename: originalFilename,
+      status: 'processing',
+    });
 
     // Return 202 immediately to avoid Heroku 30s H12 timeout
     res.status(202).send(generateResponse(RESPONSE_TYPES.SUCCESS, { uploadId }));
@@ -45,22 +76,27 @@ survey123Router.route('/upload')
     // Process CSV in background
     console.log(`[survey123] starting background upload for ${uploadId}`);
     Survey123.uploadCsv(filePath)
-      .then((result) => {
+      .then(async (result) => {
         console.log(`[survey123] upload ${uploadId} completed successfully`);
-        uploadStatuses.set(uploadId, {
-          status: 'success',
-          message: `CSV imported successfully. ${result.rowCount} rows processed, ${result.insertRes?.insertedCount ?? 0} inserted, ${result.deleteRes?.deletedCount ?? 0} deleted. Pipeline has been started.`,
+        await persistUploadAudit({
+          uploadId,
+          source: 'survey123',
+          filename: originalFilename,
+          uploadResult: result,
+          status: deriveUploadStatus(result),
         });
-        cleanupStatus(uploadId);
       })
-      .catch((err) => {
+      .catch(async (err) => {
         console.error(`[survey123] upload ${uploadId} FAILED:`, err);
         const errorResponse = generateErrorResponse(err);
-        uploadStatuses.set(uploadId, {
-          status: 'error',
-          message: errorResponse.error || 'Upload failed',
+        await persistUploadAudit({
+          uploadId,
+          source: 'survey123',
+          filename: originalFilename,
+          uploadResult: null,
+          status: 'failed',
+          errorMessage: errorResponse.error || 'Upload failed',
         });
-        cleanupStatus(uploadId);
       })
       .finally(() => {
         setTimeout(() => deleteFile(filePath), 1000 * 10);
@@ -68,8 +104,8 @@ survey123Router.route('/upload')
   });
 
 survey123Router.route('/upload/status')
-  .get(requireAuth, (req, res) => {
-    const { uploadId } = req.query;
+  .get(requireAuth, async (req, res) => {
+    const uploadId = String(req.query.uploadId || '');
 
     if (!uploadId) {
       res.status(400).send(generateErrorResponse({
@@ -79,17 +115,37 @@ survey123Router.route('/upload/status')
       return;
     }
 
-    const statusData = uploadStatuses.get(uploadId);
-
-    if (!statusData) {
-      res.status(404).send(generateErrorResponse({
-        type: RESPONSE_TYPES.NOT_FOUND,
-        message: 'Upload not found or expired',
+    let audit;
+    try {
+      audit = await UploadAuditModel.findOne({ uploadId }).lean();
+    } catch (err) {
+      console.error('[survey123] /upload/status DB error:', err);
+      res.status(500).send(generateErrorResponse({
+        type: RESPONSE_TYPES.INTERNAL_ERROR,
+        message: 'Failed to look up upload status',
       }));
       return;
     }
 
-    res.send(generateResponse(RESPONSE_TYPES.SUCCESS, statusData));
+    if (!audit) {
+      res.status(404).send(generateErrorResponse({
+        type: RESPONSE_TYPES.NOT_FOUND,
+        message: 'Upload not found',
+      }));
+      return;
+    }
+
+    res.send(generateResponse(RESPONSE_TYPES.SUCCESS, {
+      status: auditStatusToClientStatus(audit.status),
+      message: audit.errorMessage || `CSV import ${audit.status}.`,
+      result: {
+        rowCount: audit.totalRows,
+        accepted: audit.acceptedRows,
+        skipped: audit.skipped || [],
+        rejected: audit.rejected || [],
+        truncated: audit.truncated || { skipped: false, rejected: false },
+      },
+    }));
   });
 
 survey123Router.route('/webhook')

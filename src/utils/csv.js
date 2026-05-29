@@ -27,13 +27,18 @@ export const deleteFile = async (filename, isAbsolutePath) => {
 /**
  * @description processes CSV file into array of objects
  * @param {String} filename name of CSV file to upload
- * @param {Function} [transformRow] optional function to transform a row of data
- * @returns {Promise<{ docs: Object[], rowCount: Number}>} function that takes in filename of CSV and returns promise
+ * @param {Function} [transformRow] optional function to transform a row of data; receives (row, rowNumber)
+ * @param {Object} [options]
+ * @param {Boolean} [options.collectErrors=false] when true, per-row throws are captured in `rejections` instead of failing the whole parse
+ * @returns {Promise<{ docs: Object[], rowCount: Number, rejections: Array}>}
  */
-export const processCSV = (filename, transformRow = (r) => r) => {
+export const processCSV = (filename, transformRow = (r) => r, options = {}) => {
+  const { collectErrors = false } = options;
   const filepath = path.resolve(__dirname, `../../${filename}`);
   const docs = [];
+  const rejections = [];
   let failed = false;
+  let rowNumber = 0;
 
   return new Promise((resolve, reject) => {
     const stream = parseFile(filepath, { headers: true });
@@ -41,12 +46,18 @@ export const processCSV = (filename, transformRow = (r) => r) => {
     stream
       .on('data', (data) => {
         if (failed) return;
+        rowNumber += 1;
+        const currentRow = rowNumber;
         try {
-          docs.push(transformRow(data));
+          docs.push(transformRow(data, currentRow));
         } catch (err) {
-          failed = true;
-          stream.destroy();
-          reject(err);
+          if (collectErrors) {
+            rejections.push({ rowNumber: currentRow, error: err, raw: data });
+          } else {
+            failed = true;
+            stream.destroy();
+            reject(err);
+          }
         }
       })
       .on('error', (err) => {
@@ -56,28 +67,7 @@ export const processCSV = (filename, transformRow = (r) => r) => {
         }
       })
       .on('end', (rowCount) => {
-        if (!failed) resolve({ docs, rowCount });
-      });
-  });
-};
-
-/**
- * @description processes CSV file into array of objects, allows async transformation of row
- * @param {String} filename name of CSV file to upload
- * @param {Function} [transformRow] optional async function to transform a row of data
- * @returns {Promise<{ docs: Object[], rowCount: Number}>} function that takes in filename of CSV and returns promise
- */
-export const processCSVAsync = (filename, transformRow = (r) => Promise.resolve(r)) => {
-  const filepath = path.resolve(__dirname, `../../${filename}`);
-  const promises = [];
-
-  return new Promise((resolve, reject) => {
-    parseFile(filepath, { headers: true })
-      .on('data', (data) => promises.push(transformRow(data).catch(reject)))
-      .on('error', (err) => reject(err))
-      .on('end', async (rowCount) => {
-        const docs = await Promise.all(promises).catch(reject);
-        resolve({ docs, rowCount });
+        if (!failed) resolve({ docs, rowCount, rejections });
       });
   });
 };

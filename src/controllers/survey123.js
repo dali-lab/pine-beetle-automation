@@ -10,8 +10,12 @@ import {
   deleteInsert,
   extractObjectFieldsCreator,
   getModelAttributes,
+  MAX_DAYS_ACTIVE,
+  MIN_DAYS_ACTIVE,
   processCSV,
   transformSurvey123GlobalID,
+  tryCastDate,
+  tryCastNumber,
   newError,
 } from '../utils';
 
@@ -40,18 +44,80 @@ const ordinalStrings = Object.entries({
   1: '1st', 2: '2nd', 3: '3rd', 4: '4th', 5: '5th', 6: '6th',
 });
 
+// Skip/reject reason codes — used in audit log + frontend display
+export const SURVEY123_REASONS = {
+  MISSING_REQUIRED_FIELD: 'MISSING_REQUIRED_FIELD',
+  MISSING_FORMAT_FIELD: 'MISSING_FORMAT_FIELD',
+  ROW_PROCESSING_ERROR: 'ROW_PROCESSING_ERROR',
+  MISSING_COLLECTION_DATE: 'MISSING_COLLECTION_DATE',
+  ZERO_DAYS_ACTIVE: 'ZERO_DAYS_ACTIVE',
+  MARKED_DELETE: 'MARKED_DELETE',
+  NOT_FINAL_COLLECTION: 'NOT_FINAL_COLLECTION',
+  ACTIVE_DAYS_OUT_OF_RANGE: 'ACTIVE_DAYS_OUT_OF_RANGE',
+  INVALID_NUMERIC: 'INVALID_NUMERIC',
+  INVALID_DATE: 'INVALID_DATE',
+};
+
+// Fields that mongoose will cast to Number / Date at bulkWrite time —
+// pre-validate them in preview so CastError-class failures are surfaced.
+const NUMERIC_FIELDS = ['spbCount', 'cleridCount', 'daysActive', 'latitude', 'longitude', 'year', 'endobrev', 'FIPS'];
+const DATE_FIELDS = ['collectionDate', 'startDate', 'bloomDate'];
+
+const validateCastable = (cleanedData, identifier, rowNumber, rejected) => {
+  let bad = false;
+  NUMERIC_FIELDS.forEach((field) => {
+    const raw = cleanedData[field];
+    if (raw === undefined || raw === null || raw === '') return;
+    if (!tryCastNumber(raw).ok) {
+      rejected.push({
+        rowNumber,
+        identifier,
+        reason: SURVEY123_REASONS.INVALID_NUMERIC,
+        field,
+        value: String(raw),
+      });
+      bad = true;
+    }
+  });
+  DATE_FIELDS.forEach((field) => {
+    const raw = cleanedData[field];
+    if (raw === undefined || raw === null || raw === '') return;
+    if (!tryCastDate(raw).ok) {
+      rejected.push({
+        rowNumber,
+        identifier,
+        reason: SURVEY123_REASONS.INVALID_DATE,
+        field,
+        value: String(raw),
+      });
+      bad = true;
+    }
+  });
+  return !bad;
+};
+
+const buildIdentifier = (row, rowNumber) => {
+  const state = row.USA_State || row.State || '?';
+  const county = row.County || row['County/Parish'] || '?';
+  const year = row.Year || '?';
+  const trap = row.Trap_name || row['Trap name'] || '?';
+  return `row ${rowNumber} / ${state} / ${county} / ${year} / ${trap}`;
+};
+
 /**
- * @description uploads a csv to the unsummarized collection
+ * @description parses + validates a survey123 CSV without writing to DB.
+ * Returns docs ready for commit, plus structured skipped/rejected lists.
  * @param {String} filename the csv filename on disk
  */
-export const uploadCsv = async (filename) => {
-  const unpacker = (sixWeekData) => {
-    // detect CSV format: new field names use underscores, old ones use spaces/special chars
+export const parseSurvey123Csv = async (filename) => {
+  const skipped = [];
+  const rejected = [];
+
+  const unpacker = (sixWeekData, rowNumber) => {
     const isNewFormat = sixWeekData.USA_State !== undefined;
+    const identifier = buildIdentifier(sixWeekData, rowNumber);
 
     return ordinalStrings.map(([weekNum, weekOrdinal]) => {
-      // convert fields to unsummarized schema
-      // supports both old and new Survey123 CSV export formats
       const convertedRawData = isNewFormat ? {
         bloom: sixWeekData.Species_Bloom,
         bloomDate: sixWeekData.Initial_Bloom,
@@ -96,7 +162,6 @@ export const uploadCsv = async (filename) => {
         year: sixWeekData.Year,
       };
 
-      // will throw error if missing fields
       const cleanedData = extractModelAttributes(convertedRawData);
 
       const deleteField = isNewFormat ? 'DeleteSurvey' : 'Delete this survey?';
@@ -105,33 +170,179 @@ export const uploadCsv = async (filename) => {
         throw newError(RESPONSE_TYPES.BAD_REQUEST, `missing fields: ${missingFields}`);
       }
 
-      if (!cleanedData.collectionDate || !cleanedData.daysActive || cleanedData.daysActive === '0') return undefined; // no data for this week
-
       const shouldDeleteSurvey = sixWeekData[deleteField] === 'yes';
       const isFinalCollection = sixWeekData.Is_Final_Collection === 'yes';
+      const shouldInsert = !shouldDeleteSurvey && isFinalCollection;
+
+      if (!cleanedData.collectionDate) {
+        skipped.push({
+          rowNumber, identifier: `${identifier} / week ${weekNum}`, reason: SURVEY123_REASONS.MISSING_COLLECTION_DATE,
+        });
+        return undefined;
+      }
+      if (!cleanedData.daysActive || cleanedData.daysActive === '0') {
+        skipped.push({
+          rowNumber, identifier: `${identifier} / week ${weekNum}`, reason: SURVEY123_REASONS.ZERO_DAYS_ACTIVE,
+        });
+        return undefined;
+      }
+
+      // numeric/date cast checks — only block insertion. For delete-marked rows we still
+      // want the deleteMany to fire even if old data has garbage numerics that triggered
+      // the user to delete the survey in the first place.
+      if (shouldInsert) {
+        // Required key fields cannot be blank — mongoose's global '' → 0 cast (for year)
+        // and '' → null cast (for state) would otherwise silently corrupt the row.
+        const missingKeys = ['state', 'year'].filter((f) => (
+          cleanedData[f] === undefined || cleanedData[f] === null || cleanedData[f] === ''
+        ));
+        if (missingKeys.length > 0) {
+          rejected.push({
+            rowNumber,
+            identifier: `${identifier} / week ${weekNum}`,
+            reason: SURVEY123_REASONS.MISSING_REQUIRED_FIELD,
+            field: missingKeys.join(','),
+          });
+          return undefined;
+        }
+
+        const castOk = validateCastable(cleanedData, `${identifier} / week ${weekNum}`, rowNumber, rejected);
+        if (!castOk) return undefined;
+      }
+
+      if (shouldDeleteSurvey) {
+        skipped.push({
+          rowNumber, identifier: `${identifier} / week ${weekNum}`, reason: SURVEY123_REASONS.MARKED_DELETE,
+        });
+      } else if (!isFinalCollection) {
+        skipped.push({
+          rowNumber, identifier: `${identifier} / week ${weekNum}`, reason: SURVEY123_REASONS.NOT_FINAL_COLLECTION,
+        });
+      }
 
       return {
         ...cleanedData,
-        shouldInsert: !shouldDeleteSurvey && isFinalCollection, // only insert if data is good and final
+        shouldInsert,
       };
-    }).filter((doc) => !!doc); // remove all nulls
+    }).filter((doc) => !!doc);
   };
 
-  const { docs, rowCount } = await processCSV(filename, (row) => {
-    // attempt to unpack all weeks 1-6 and push all
-    const unpackedData = unpacker(row);
-    return unpackedData.map(stateToAbbrevTransform);
+  const { docs, rowCount, rejections } = await processCSV(filename, (row, rowNumber) => ({
+    rowNumber,
+    weeks: unpacker(row, rowNumber).map(stateToAbbrevTransform),
+  }), { collectErrors: true });
+
+  rejections.forEach(({ rowNumber, error, raw }) => {
+    rejected.push({
+      rowNumber,
+      identifier: buildIdentifier(raw, rowNumber),
+      reason: error?.message?.startsWith('missing fields')
+        ? SURVEY123_REASONS.MISSING_REQUIRED_FIELD
+        : SURVEY123_REASONS.ROW_PROCESSING_ERROR,
+      field: error?.message || '',
+    });
   });
 
-  // spread out the operation into sequential deletes and inserts
-  const bulkOp = docs.flatMap(deleteInsert).filter((obj) => !!obj);
+  // build bulk operations from valid docs, but additionally surface deleteInsert-level
+  // rejections (e.g. active-days out of range) so the user sees why a survey was dropped.
+  // When a survey is rejected for being out-of-range, skip the deleteInsert entirely —
+  // otherwise we would issue a deleteMany with no replacement inserts and silently wipe
+  // existing data for that globalID.
+  const bulkOpGroups = docs.map(({ rowNumber, weeks }) => {
+    if (!weeks.length) return [];
+    const numDaysActive = weeks.reduce((acc, curr) => (
+      acc + (parseInt(curr.daysActive, 10) || 0)
+    ), 0);
+    const { shouldInsert } = weeks.find((d) => !!d) || {};
+    if (shouldInsert && (numDaysActive < MIN_DAYS_ACTIVE || numDaysActive > MAX_DAYS_ACTIVE)) {
+      const first = weeks[0] || {};
+      rejected.push({
+        rowNumber,
+        identifier: `row ${rowNumber} / ${first.state || '?'} / ${first.county || '?'} / ${first.year || '?'} / ${first.trap || '?'}`,
+        reason: SURVEY123_REASONS.ACTIVE_DAYS_OUT_OF_RANGE,
+        field: 'daysActive',
+        value: `${numDaysActive} (allowed ${MIN_DAYS_ACTIVE}-${MAX_DAYS_ACTIVE})`,
+      });
+      return [];
+    }
+    return deleteInsert(weeks) || [];
+  });
 
-  if (!bulkOp.length) {
-    throw newError(RESPONSE_TYPES.BAD_REQUEST, 'no valid data');
-  }
-
+  const bulkOp = bulkOpGroups.flat().filter((obj) => !!obj);
   const insertOp = bulkOp.filter(({ insertOne }) => !!insertOne);
   const deleteOp = bulkOp.filter(({ deleteMany }) => !!deleteMany);
+
+  // De-dup skipped against rejected: when a survey ultimately lands in rejected
+  // (e.g. ACTIVE_DAYS_OUT_OF_RANGE for the whole row), per-week skipped entries
+  // for the same rowNumber would otherwise inflate skippedRows alongside
+  // rejectedRows for the same survey. Show each survey under one bucket.
+  const rejectedRowNumbers = new Set(rejected.map((r) => r.rowNumber));
+  const dedupedSkipped = skipped.filter((s) => !rejectedRowNumbers.has(s.rowNumber));
+
+  // Count surveys (unique rowNumbers) that produced at least one insert op,
+  // not the raw count of insertOne ops (which is per-week — up to 6 per survey).
+  const acceptedRowNumbers = new Set();
+  docs.forEach(({ rowNumber }, idx) => {
+    if (bulkOpGroups[idx]?.some((op) => op.insertOne)) {
+      acceptedRowNumbers.add(rowNumber);
+    }
+  });
+
+  return {
+    rowCount,
+    bulkOp,
+    insertOp,
+    deleteOp,
+    skipped: dedupedSkipped,
+    rejected,
+    accepted: acceptedRowNumbers.size,
+  };
+};
+
+/**
+ * @description uploads a csv to the unsummarized collection
+ * @param {String} filename the csv filename on disk
+ * @param {Object} [options]
+ * @param {Boolean} [options.dryRun=false] when true, parse + validate only; do not write to DB
+ */
+export const uploadCsv = async (filename, options = {}) => {
+  const { dryRun = false } = options;
+
+  const parsed = await parseSurvey123Csv(filename);
+  const {
+    rowCount, bulkOp, insertOp, deleteOp, skipped, rejected, accepted,
+  } = parsed;
+
+  if (dryRun) {
+    return {
+      rowCount,
+      accepted,
+      willDelete: deleteOp.length,
+      skippedRows: skipped.length,
+      rejectedRows: rejected.length,
+      skipped,
+      rejected,
+      deleteRes: { deletedCount: 0 },
+      insertRes: { insertedCount: 0 },
+    };
+  }
+
+  // No valid operations to perform — return the parsed diagnostics instead of
+  // throwing so the audit log and /upload/status surface the per-row skip/reject
+  // reasons rather than a bare 'no valid data' error.
+  if (!bulkOp.length) {
+    return {
+      rowCount,
+      accepted: 0,
+      willDelete: 0,
+      skippedRows: skipped.length,
+      rejectedRows: rejected.length,
+      skipped,
+      rejected,
+      deleteRes: { deletedCount: 0 },
+      insertRes: { insertedCount: 0 },
+    };
+  }
 
   const deleteRes = deleteOp.length
     ? await UnsummarizedTrappingModel.bulkWrite(deleteOp, { ordered: false })
@@ -140,12 +351,19 @@ export const uploadCsv = async (filename) => {
     ? await UnsummarizedTrappingModel.bulkWrite(insertOp, { ordered: false })
     : { insertedCount: 0 };
 
-  // run entire pipeline
-  // don't throw the error here since we want to return 200 immediately
-  // also don't await it for the same purpose; run pipeline in background
   runPipelineAll().catch(console.error);
 
-  return { rowCount, deleteRes, insertRes };
+  return {
+    rowCount,
+    accepted,
+    willDelete: deleteOp.length,
+    skippedRows: skipped.length,
+    rejectedRows: rejected.length,
+    skipped,
+    rejected,
+    deleteRes,
+    insertRes,
+  };
 };
 
 /**
